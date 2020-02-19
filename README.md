@@ -1,5 +1,8 @@
 # jwizard
 
+[![Documentation](https://godoc.org/github.com/jenkins-x-labs/jwizard?status.svg)](http://godoc.org/github.com/jenkins-x-labs/jwizard)
+[![Go Report Card](https://goreportcard.com/badge/github.com/jenkins-x-labs/jwizard)](https://goreportcard.com/report/github.com/jenkins-x-labs/jwizard)
+
 JWizard is an experimental CLI to allow quickstarts to be created and repositories to be imported into either [Jenkins](https://jenkins.io/) servers that are setup and managed via GitOps and the [Jenkins Operator](https://jenkinsci.github.io/kubernetes-operator/) or [Jenkins X](https://jenkins-x.io/).
 
 The idea is to provide a single developer UX around creating quickstarts and importing repositories whether you use just Jenkins or just Jenkins X or a combination of both.
