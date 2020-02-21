@@ -55,16 +55,11 @@ func (o *ImportOptions) PickImportDestination(cf *jenkinsutil.ClientFactory, jen
 	}
 
 	handles := o.CommonOptions.GetIOFileHandles()
-	jo := jenkinsutil.JenkinsOptions{
-		ClientFactory: cf,
-		BatchMode:     o.CommonOptions.BatchMode,
-		IOFileHandles: &handles,
-	}
 
 	names := o.Destination.Jenkins.JenkinsServiceNames
 	if len(names) == 0 {
 		var err error
-		names, err = jo.GetJenkinsServiceNames(&o.Destination.Jenkins.JenkinsSelectorOptions)
+		_, names, err = jenkinsutil.FindJenkinsServers(cf, &o.Destination.Jenkins.JenkinsSelectorOptions)
 		if err != nil {
 			return o.Destination, errors.Wrapf(err, "failed to find Jenkins service names")
 		}

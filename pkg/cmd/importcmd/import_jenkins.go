@@ -79,11 +79,11 @@ func (o *ImportOptions) JenkinsClient() (gojenkins.JenkinsClient, error) {
 		IOFileHandles: &handles,
 	}
 
-	name, err := jo.PickCustomJenkinsName(&o.Destination.Jenkins.JenkinsSelectorOptions, true)
+	_, jsvc, err := jo.PickCustomJenkinsName(&o.Destination.Jenkins.JenkinsSelectorOptions, true)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to find a Jenkins server")
 	}
-	return cf.CreateJenkinsClient(name)
+	return jsvc.CreateClient()
 }
 
 func (o *ImportOptions) createJenkinsJob(jc gojenkins.JenkinsClient, organisation string) error {
