@@ -3,7 +3,7 @@ module github.com/jenkins-x-labs/jwizard
 require (
 	github.com/cenkalti/backoff v2.1.1+incompatible
 	github.com/denormal/go-gitignore v0.0.0-20180713143441-75ce8f3e513c
-	github.com/jenkins-x-labs/trigger-pipeline v0.0.0-20200221123521-854534707eaf
+	github.com/jenkins-x-labs/trigger-pipeline v0.0.0-20200221170624-ad1e693a8fcd
 	github.com/jenkins-x/golang-jenkins v0.0.0-20180919102630-65b83ad42314
 	github.com/jenkins-x/jx v0.0.0-20200207164408-3e719ca49349
 	github.com/pkg/errors v0.8.1

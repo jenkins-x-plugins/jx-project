@@ -215,4 +215,7 @@ lint: ## Lint the code
 	./hack/linter.sh
 	./hack/generate.sh
 
+.PHONY: all
+all: fmt build lint test
+
 include Makefile.docker
