@@ -1,7 +1,15 @@
 package importcmd
 
 import (
+	"fmt"
+	"io"
+	"io/ioutil"
+	"os"
+	"path/filepath"
+
+	"github.com/Azure/draft/pkg/osutil"
 	"github.com/pkg/errors"
+	"k8s.io/helm/pkg/chartutil"
 	kchart "k8s.io/helm/pkg/proto/hapi/chart"
 )
 
@@ -10,19 +18,7 @@ CREDIT https://github.com/Azure/draft/blob/9705e36dc23c27c9ef54dc2469dd86ac6093f
 
 This code was originally written in Draft but because Jenkins X build packs doesn't always contain a charts dir we
 want to "continue" when looping around files to copy rather than return an error
- */
-
-import (
-	"fmt"
-	"io"
-	"io/ioutil"
-	"os"
-	"path/filepath"
-
-	"k8s.io/helm/pkg/chartutil"
-
-	"github.com/Azure/draft/pkg/osutil"
-)
+*/
 
 const (
 	ChartsDir = "charts"
@@ -75,7 +71,6 @@ func (p *Pack) SaveDir(dest string) error {
 
 	return nil
 }
-
 
 // CREDIT https://github.com/Azure/draft/blob/9705e36dc23c27c9ef54dc2469dd86ac6093f0f4/pkg/draft/pack/pack.go
 // FromDir takes a string name, tries to resolve it to a file or directory, and then loads it.
