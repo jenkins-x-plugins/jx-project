@@ -1,12 +1,12 @@
 package importcmd
 
 import (
+	"fmt"
 	"io/ioutil"
 	"os"
 	"path/filepath"
 	"sort"
 
-	"github.com/jenkins-x/jx/pkg/buildpacks"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	v1 "github.com/jenkins-x/jx/pkg/apis/jenkins.io/v1"
@@ -287,7 +287,7 @@ func (o *ImportOptions) InvokeDraftPack(i *InvokeDraftPack) (string, error) {
 		return pack, err
 	}
 
-	err = buildpacks.CopyBuildPack(dir, lpack)
+	err = copyBuildPack(dir, lpack)
 	if err != nil {
 		log.Logger().Warnf("Failed to apply the build pack in %s due to %s", dir, err)
 	}
@@ -339,4 +339,20 @@ func (o *ImportOptions) DiscoverBuildPack(dir string, projectConfig *config.Proj
 		return pack, errors.Wrapf(err, "failed to discover task pack in dir %s", dir)
 	}
 	return pack, nil
+}
+
+// Refactor: taken from jx so we can also bring in the draft pack and not fail when copying buildpacks without a charts dir
+// CopyBuildPack copies the build pack from the source dir to the destination dir
+func copyBuildPack(dest, src string) error {
+	// first do some validation that we are copying from a valid pack directory
+	p, err := FromDir(src)
+	if err != nil {
+		return fmt.Errorf("could not load %s: %s", src, err)
+	}
+
+	// lets remove any files we think should be zapped
+	for _, file := range []string{jenkinsfile.PipelineConfigFileName, jenkinsfile.PipelineTemplateFileName} {
+		delete(p.Files, file)
+	}
+	return p.SaveDir(dest)
 }

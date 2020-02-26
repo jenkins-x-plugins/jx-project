@@ -1,6 +1,7 @@
 module github.com/jenkins-x-labs/jwizard
 
 require (
+	github.com/Azure/draft v0.15.0
 	github.com/cenkalti/backoff v2.1.1+incompatible
 	github.com/denormal/go-gitignore v0.0.0-20180713143441-75ce8f3e513c
 	github.com/jenkins-x-labs/trigger-pipeline v0.0.0-20200221170624-ad1e693a8fcd
@@ -13,6 +14,7 @@ require (
 	gopkg.in/src-d/go-git.v4 v4.5.0
 	k8s.io/api v0.0.0-20190718183219-b59d8169aab5
 	k8s.io/apimachinery v0.0.0-20190703205208-4cfb76a8bf76
+	k8s.io/helm v2.7.2+incompatible
 	sigs.k8s.io/yaml v1.1.0
 )
 
@@ -35,3 +37,5 @@ replace github.com/Azure/azure-sdk-for-go => github.com/Azure/azure-sdk-for-go v
 replace github.com/Azure/go-autorest => github.com/Azure/go-autorest v10.14.0+incompatible
 
 replace github.com/banzaicloud/bank-vaults => github.com/banzaicloud/bank-vaults v0.0.0-20190508130850-5673d28c46bd
+
+go 1.13
