@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/jenkins-x-labs/jwizard/pkg/cmd/common"
 	"github.com/jenkins-x-labs/jwizard/pkg/cmd/importcmd"
 	"github.com/jenkins-x/jx/pkg/cmd/create/options"
 
@@ -35,11 +36,11 @@ var (
 	createProjectLong = templates.LongDesc(`
 		Create a new Project by importing code, using a Quickstart or custom wizard for Spring.
 
-` + helper.SeeAlsoText("jwizard create quickstart", "jwizard create spring", "jwizard create jhipster", "jwizard import"))
+`)
 
 	createProjectExample = templates.Examples(`
-		# Create a project
-		jwizard create project
+		# Create a project using the wizard
+		%s project
 	`)
 )
 
@@ -69,7 +70,7 @@ func NewCmdCreateProject(commonOpts *opts.CommonOptions) *cobra.Command {
 		Use:     "project",
 		Short:   "Create a new Project by importing code, using a Quickstart or custom wizard for Spring",
 		Long:    createProjectLong,
-		Example: createProjectExample,
+		Example: fmt.Sprintf(createProjectExample, common.BinaryName),
 		Run: func(cmd *cobra.Command, args []string) {
 			setLoggingLevel(cmd)
 			options.Cmd = cmd

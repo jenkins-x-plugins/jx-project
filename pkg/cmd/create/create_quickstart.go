@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/jenkins-x-labs/jwizard/pkg/cmd/common"
 	"github.com/jenkins-x-labs/jwizard/pkg/cmd/importcmd"
 
 	"github.com/jenkins-x/jx/pkg/cmd/helper"
@@ -32,18 +33,14 @@ var (
 		It will exclude any work-in-progress repos (containing the "WIP-" pattern)
 
 		For more documentation see: [https://jenkins-x.io/developing/create-quickstart/](https://jenkins-x.io/developing/create-quickstart/)
-
-` + helper.SeeAlsoText("jx create project"))
+`)
 
 	createQuickstartExample = templates.Examples(`
-		Create a new project from a sample/starter (found in https://github.com/jenkins-x-quickstarts)
+		# create a new quickstart
+		%s quickstart
 
-		This will create a new project for you from the selected template.
-		It will exclude any work-in-progress repos (containing the "WIP-" pattern)
-
-		jwizard quickstart
-
-		jwizard quickstart -f http
+		# creates a quickstart filtering on http based ones
+		%s quickstart -f http
 	`)
 )
 
@@ -72,7 +69,7 @@ func NewCmdCreateQuickstart(commonOpts *opts.CommonOptions) *cobra.Command {
 		Use:     "quickstart",
 		Short:   "Create a new app from a Quickstart and import the generated code into Git and Jenkins for CI/CD",
 		Long:    createQuickstartLong,
-		Example: createQuickstartExample,
+		Example: fmt.Sprintf(createQuickstartExample, common.BinaryName, common.BinaryName),
 		Aliases: []string{"arch"},
 		Run: func(cmd *cobra.Command, args []string) {
 			options.Cmd = cmd

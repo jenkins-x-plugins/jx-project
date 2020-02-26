@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/jenkins-x-labs/jwizard/pkg/cmd/common"
 	"github.com/jenkins-x-labs/jwizard/pkg/cmd/importcmd"
 
 	"github.com/jenkins-x/jx/pkg/cmd/helper"
@@ -31,16 +32,16 @@ var (
 
 	createSpringExample = templates.Examples(`
 		# Create a Spring Boot application where you use the terminal to pick the values
-		jwizard spring
+		%s spring
 
 		# Creates a Spring Boot application passing in the required dependencies
-		jwizard spring -d web -d actuator
+		%s spring -d web -d actuator
 
 		# To pick the advanced options (such as what package type maven-project/gradle-project) etc then use
-		jwizard spring -x
+		%s spring -x
 
 		# To create a gradle project use:
-		jwizard spring --type gradle-project
+		%s spring --type gradle-project
 	`)
 )
 
@@ -66,7 +67,7 @@ func NewCmdCreateSpring(commonOpts *opts.CommonOptions) *cobra.Command {
 		Use:     "spring",
 		Short:   "Create a new Spring Boot application and import the generated code into Git and Jenkins for CI/CD",
 		Long:    createSpringLong,
-		Example: createSpringExample,
+		Example: fmt.Sprintf(createSpringExample, common.BinaryName, common.BinaryName, common.BinaryName, common.BinaryName),
 		Run: func(cmd *cobra.Command, args []string) {
 			options.Cmd = cmd
 			options.Args = args

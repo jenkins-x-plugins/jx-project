@@ -8,6 +8,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/jenkins-x-labs/jwizard/pkg/cmd/common"
 	"github.com/jenkins-x-labs/trigger-pipeline/pkg/jenkinsutil"
 	"github.com/jenkins-x-labs/trigger-pipeline/pkg/jenkinsutil/factory"
 	jenkinsio "github.com/jenkins-x/jx/pkg/apis/jenkins.io"
@@ -115,26 +116,26 @@ var (
 	    
 		For more documentation see: [https://jenkins-x.io/docs/using-jx/creating/import/](https://jenkins-x.io/docs/using-jx/creating/import/)
 	    
-` + helper.SeeAlsoText("jx create project"))
+`)
 
 	importExample = templates.Examples(`
 		# Import the current folder
-		jwizard import
+		%s import
 
 		# Import a different folder
-		jwizard import /foo/bar
+		%s import /foo/bar
 
 		# Import a Git repository from a URL
-		jwizard import --url https://github.com/jenkins-x/spring-boot-web-example.git
+		%s import --url https://github.com/jenkins-x/spring-boot-web-example.git
 
         # Select a number of repositories from a GitHub organisation
-		jwizard import --github --org myname 
+		%s import --github --org myname 
 
         # Import all repositories from a GitHub organisation selecting ones to not import
-		jwizard import --github --org myname --all 
+		%s import --github --org myname --all 
 
         # Import all repositories from a GitHub organisation which contain the text foo
-		jwizard import --github --org myname --all --filter foo 
+		%s import --github --org myname --all --filter foo 
 		`)
 
 	deployKinds = []string{opts.DeployKindKnative, opts.DeployKindDefault}
@@ -157,7 +158,7 @@ func NewCmdImportAndOptions(commonOpts *opts.CommonOptions) (*cobra.Command, *Im
 		Use:     "import",
 		Short:   "Imports a local project or Git repository into Jenkins",
 		Long:    importLong,
-		Example: importExample,
+		Example: fmt.Sprintf(importExample, common.BinaryName, common.BinaryName, common.BinaryName, common.BinaryName, common.BinaryName, common.BinaryName),
 		Run: func(cmd *cobra.Command, args []string) {
 			options.Cmd = cmd
 			options.Args = args
