@@ -14,7 +14,6 @@ want to "continue" when looping around files to copy rather than return an error
 
 import (
 	"fmt"
-	"github.com/jenkins-x/jx/pkg/jenkinsfile"
 	"io"
 	"io/ioutil"
 	"os"
