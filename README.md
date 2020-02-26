@@ -2,6 +2,9 @@
 
 [![Documentation](https://godoc.org/github.com/jenkins-x-labs/jwizard?status.svg)](https://pkg.go.dev/mod/github.com/jenkins-x-labs/jwizard)
 [![Go Report Card](https://goreportcard.com/badge/github.com/jenkins-x-labs/jwizard)](https://goreportcard.com/report/github.com/jenkins-x-labs/jwizard)
+[![Releases](https://img.shields.io/github/release-pre/jenkins-x-labs/jwizard.svg)](https://github.com/jenkins-x-labs/jwizard/releases)
+[![LICENSE](https://img.shields.io/github/license/jenkins-x-labs/jwizard.svg)](https://github.com/jenkins-x-labs/jwizard/blob/master/LICENSE)
+[![Slack Status](https://img.shields.io/badge/slack-join_chat-white.svg?logo=slack&style=social)](https://slack.k8s.io/)
 
 JWizard is an experimental CLI to allow quickstarts to be created and repositories to be imported into either [Jenkins](https://jenkins.io/) servers that are setup and managed via GitOps and the [Jenkins Operator](https://jenkinsci.github.io/kubernetes-operator/) or [Jenkins X](https://jenkins-x.io/).
 
