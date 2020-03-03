@@ -40,7 +40,7 @@ var (
 
 	createProjectExample = templates.Examples(`
 		# Create a project using the wizard
-		%s project
+		%s
 	`)
 )
 
