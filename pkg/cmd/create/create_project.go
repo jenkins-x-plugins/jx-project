@@ -34,7 +34,7 @@ var (
 	}
 
 	createProjectLong = templates.LongDesc(`
-		Create a new Project by importing code, using a Quickstart or custom wizard for Spring.
+		Create a new project by importing code, creating a quickstart or custom wizard for spring.
 
 `)
 
@@ -68,7 +68,7 @@ func NewCmdCreateProject(commonOpts *opts.CommonOptions) *cobra.Command {
 
 	cmd := &cobra.Command{
 		Use:     "project",
-		Short:   "Create a new Project by importing code, using a Quickstart or custom wizard for Spring",
+		Short:   "Create a new project by importing code, creating a quickstart or custom wizard for spring",
 		Long:    createProjectLong,
 		Example: fmt.Sprintf(createProjectExample, common.BinaryName),
 		Run: func(cmd *cobra.Command, args []string) {
