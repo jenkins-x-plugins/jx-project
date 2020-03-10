@@ -1400,7 +1400,7 @@ func (o *ImportOptions) renameChartToMatchAppName() error {
 	var oldChartsDir string
 	dir := o.Dir
 	chartsDir := filepath.Join(dir, "charts")
-	exists, err := util.FileExists(chartsDir)
+	exists, err := util.DirExists(chartsDir)
 	if err != nil {
 		return errors.Wrapf(err, "failed to check if the charts directory exists %s", chartsDir)
 	}
@@ -1425,7 +1425,7 @@ func (o *ImportOptions) renameChartToMatchAppName() error {
 		// chart expects folder name to be the same as app name
 		newChartsDir := filepath.Join(dir, "charts", o.AppName)
 
-		exists, err := util.FileExists(oldChartsDir)
+		exists, err := util.DirExists(oldChartsDir)
 		if err != nil {
 			return err
 		}
