@@ -99,6 +99,11 @@ func (o *CreateQuickstartOptions) Run() error {
 		return fmt.Errorf("failed to load quickstarts: %s", err)
 	}
 
+	err = o.DefaultsFromTeamSettings()
+	if err != nil {
+		return err
+	}
+
 	q, err := model.CreateSurvey(&o.Filter, o.BatchMode, o.GetIOFileHandles())
 	if err != nil {
 		return err
