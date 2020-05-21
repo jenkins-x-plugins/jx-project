@@ -6,8 +6,10 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/Azure/draft/pkg/osutil"
+	"github.com/jenkins-x/jx/pkg/util"
 	"github.com/pkg/errors"
 	"k8s.io/helm/pkg/chartutil"
 	kchart "k8s.io/helm/pkg/proto/hapi/chart"
@@ -53,12 +55,18 @@ func (p *Pack) SaveDir(dest string) error {
 		path := filepath.Join(dest, relPath)
 		exists, err := osutil.Exists(path)
 		if err != nil {
-			return err
+			return errors.Wrapf(err, "failed to check if path exists %s", path)
 		}
 		if !exists {
+			// lets make sure the parent dir exists
+			parent := filepath.Dir(path)
+			err = os.MkdirAll(parent, util.DefaultWritePermissions)
+			if err != nil {
+				return errors.Wrapf(err, "failed to make directory %s", parent)
+			}
 			newfile, err := os.Create(path)
 			if err != nil {
-				return err
+				return errors.Wrapf(err, "failed to create file %s", path)
 			}
 			defer newfile.Close()
 			defer f.Close()
@@ -86,25 +94,44 @@ func FromDir(dir string) (*Pack, error) {
 		return nil, err
 	}
 
-	files, err := ioutil.ReadDir(topdir)
+	err = loadDirectory(pack, topdir, "")
+	return pack, err
+}
+
+func loadDirectory(pack *Pack, dir string, relPath string) error {
+	files, err := ioutil.ReadDir(dir)
 	if err != nil {
-		return nil, fmt.Errorf("error reading %s: %s", topdir, err)
+		return fmt.Errorf("error reading %s: %s", dir, err)
 	}
 	for _, fInfo := range files {
+		name := fInfo.Name()
 		if fInfo.IsDir() {
-			localChart, err := chartutil.LoadDir(filepath.Join(topdir, fInfo.Name()))
-			if err != nil {
-				continue
+			// assume root folders not starting with dot are chart folders
+			// could replace this logic with checking for charts / preview strings instead?
+			if relPath == "" && !strings.HasPrefix(name, ".") {
+				localChart, err := chartutil.LoadDir(filepath.Join(dir, name))
+				if err != nil {
+					continue
+				}
+				pack.Charts = append(pack.Charts, localChart)
+			} else {
+				// allow other directories to copy across
+				err = loadDirectory(pack, filepath.Join(dir, name), filepath.Join(relPath, name))
+				if err != nil {
+					return err
+				}
 			}
-			pack.Charts = append(pack.Charts, localChart)
 		} else {
-			var f, err = os.Open(filepath.Join(topdir, fInfo.Name()))
+			var f, err = os.Open(filepath.Join(dir, name))
 			if err != nil {
-				return nil, err
+				return err
 			}
-			pack.Files[fInfo.Name()] = f
+			path := name
+			if relPath != "" {
+				path = filepath.Join(relPath, name)
+			}
+			pack.Files[path] = f
 		}
 	}
-
-	return pack, nil
+	return nil
 }

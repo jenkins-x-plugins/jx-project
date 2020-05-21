@@ -312,7 +312,10 @@ func (o *ImportOptions) InvokeDraftPack(i *InvokeDraftPack) (string, error) {
 		if err != nil {
 			return pack, err
 		}
-		if pipelineConfig.BuildPack != pack {
+
+		// only update the build pack if its not currently set to none so that build packs can
+		// use a custom pipeline plugin mechanism
+		if pipelineConfig.BuildPack != pack && pipelineConfig.BuildPack != "none" {
 			pipelineConfig.BuildPack = pack
 			err = pipelineConfig.SaveConfig(jenkinsxYaml)
 			if err != nil {

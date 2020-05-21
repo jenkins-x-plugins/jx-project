@@ -8,14 +8,16 @@ require (
 	github.com/denormal/go-gitignore v0.0.0-20180713143441-75ce8f3e513c
 	github.com/jenkins-x-labs/trigger-pipeline v0.0.4
 	github.com/jenkins-x/golang-jenkins v0.0.0-20180919102630-65b83ad42314
-	github.com/jenkins-x/jx v0.0.0-20200310115539-b64ed22fb7af
+	github.com/jenkins-x/jx v0.0.0-20200519124520-3889239234cd
 	github.com/pkg/errors v0.8.1
 	github.com/spf13/cobra v0.0.5
 	github.com/stretchr/testify v1.4.0
+	github.com/tektoncd/pipeline v0.8.0
 	gopkg.in/AlecAivazis/survey.v1 v1.8.3
-	gopkg.in/src-d/go-git.v4 v4.5.0
+	gopkg.in/src-d/go-git.v4 v4.13.1
 	k8s.io/api v0.0.0-20190718183219-b59d8169aab5
 	k8s.io/apimachinery v0.0.0-20190703205208-4cfb76a8bf76
+	k8s.io/client-go v11.0.1-0.20190409021438-1a26190bd76a+incompatible
 	k8s.io/helm v2.7.2+incompatible
 	sigs.k8s.io/yaml v1.1.0
 )

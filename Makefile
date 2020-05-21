@@ -95,7 +95,7 @@ make-reports-dir:
 	mkdir -p $(REPORTS_DIR)
 
 test: ## Run tests with the "unit" build tag
-	KUBECONFIG=/cluster/connections/not/allowed CGO_ENABLED=$(CGO_ENABLED) $(GOTEST) --tags=unit -failfast -short ./... $(TEST_BUILDFLAGS)
+	KUBECONFIG=/cluster/connections/not/allowed CGO_ENABLED=$(CGO_ENABLED) $(GOTEST) --tags="integration unit" -failfast -short ./... $(TEST_BUILDFLAGS)
 
 test-coverage : make-reports-dir ## Run tests and coverage for all tests with the "unit" build tag
 	CGO_ENABLED=$(CGO_ENABLED) $(GOTEST) --tags=unit $(COVERFLAGS) -failfast -short ./... $(TEST_BUILDFLAGS)

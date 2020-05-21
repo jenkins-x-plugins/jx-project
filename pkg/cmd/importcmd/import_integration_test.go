@@ -3,6 +3,7 @@
 package importcmd_test
 
 import (
+	"github.com/jenkins-x-labs/jwizard/pkg/cmd/fakejxfactory"
 	"github.com/jenkins-x-labs/jwizard/pkg/cmd/importcmd"
 	"github.com/jenkins-x/jx/pkg/cmd/testhelpers"
 	"github.com/jenkins-x/jx/pkg/config"
@@ -70,7 +71,7 @@ func TestImportProjectsToJenkins(t *testing.T) {
 		if f.IsDir() {
 			name := f.Name()
 			srcDir := filepath.Join(testData, name)
-			testImportProject(t, tempDir, name, srcDir, false)
+			testImportProject(t, tempDir, name, srcDir, false, "")
 		}
 	}
 }
@@ -106,12 +107,12 @@ func TestImportProjectToJenkinsX(t *testing.T) {
 				continue
 			}
 			srcDir := filepath.Join(testData, name)
-			testImportProject(t, tempDir, name, srcDir, true)
+			testImportProject(t, tempDir, name, srcDir, true, "")
 		}
 	}
 }
 
-func testImportProject(t *testing.T, tempDir string, testcase string, srcDir string, importToJenkinsX bool) {
+func testImportProject(t *testing.T, tempDir string, testcase string, srcDir string, importToJenkinsX bool, buildPackURL string) {
 	testDirSuffix := "jenkins"
 	if importToJenkinsX {
 		testDirSuffix = "jx"
@@ -128,7 +129,7 @@ func testImportProject(t *testing.T, tempDir string, testcase string, srcDir str
 			util.RenameDir(gitDir, dotGitDir, true)
 		}
 	}
-	err := assertImport(t, testDir, testcase, importToJenkinsX)
+	err := assertImport(t, testDir, testcase, importToJenkinsX, "")
 	assert.NoError(t, err, "Importing dir %s from source %s", testDir, srcDir)
 }
 
@@ -160,7 +161,7 @@ func createFakeGitProvider() *gits.FakeProvider {
 	return fakeGitProvider
 }
 
-func assertImport(t *testing.T, testDir string, testcase string, importToJenkinsX bool) error {
+func assertImport(t *testing.T, testDir string, testcase string, importToJenkinsX bool, buildPackURL string) error {
 	_, dirName := filepath.Split(testDir)
 	dirName = naming.ToValidName(dirName)
 	o := &importcmd.ImportOptions{
@@ -168,6 +169,7 @@ func assertImport(t *testing.T, testDir string, testcase string, importToJenkins
 	}
 
 	o.SetFactory(fake_clients.NewFakeFactory())
+	o.JXFactory = fakejxfactory.NewFakeFactory()
 	o.GitProvider = createFakeGitProvider()
 
 	k8sObjects := []runtime.Object{}
@@ -192,6 +194,9 @@ func assertImport(t *testing.T, testDir string, testcase string, importToJenkins
 		o.Destination.JenkinsX.Enabled = true
 		callback := func(env *v1.Environment) error {
 			env.Spec.TeamSettings.ImportMode = v1.ImportModeTypeYAML
+			if buildPackURL != "" {
+				env.Spec.TeamSettings.BuildPackURL = buildPackURL
+			}
 			return nil
 		}
 		err := o.ModifyDevEnvironment(callback)

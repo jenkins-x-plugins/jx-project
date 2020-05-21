@@ -13,6 +13,7 @@ import (
 	"github.com/jenkins-x-labs/trigger-pipeline/pkg/jenkinsutil/factory"
 	jenkinsio "github.com/jenkins-x/jx/pkg/apis/jenkins.io"
 	"github.com/jenkins-x/jx/pkg/cmd/step/create/pr"
+	"github.com/jenkins-x/jx/pkg/jxfactory"
 	"github.com/jenkins-x/jx/pkg/maven"
 	"github.com/jenkins-x/jx/pkg/tekton/syntax"
 
@@ -89,6 +90,7 @@ type ImportOptions struct {
 	GitUserAuth            *auth.UserAuth
 	GitProvider            gits.GitProvider
 	PostDraftPackCallback  CallbackFn
+	JXFactory              jxfactory.Factory
 
 	Destination          ImportDestination
 	reporter             ImportReporter
@@ -366,7 +368,7 @@ func (o *ImportOptions) Run() error {
 	}
 	o.AppName = naming.ToValidName(strings.ToLower(o.AppName))
 
-	o.jenkinsClientFactory, err = factory.NewClientFactory()
+	o.jenkinsClientFactory, err = factory.NewClientFactoryFromFactory(o.GetJXFactory())
 	if err != nil {
 		return errors.Wrapf(err, "failed to create the Jenkins ClientFactory")
 	}
@@ -466,6 +468,14 @@ func (o *ImportOptions) Run() error {
 	}
 
 	return o.doImport()
+}
+
+// GetJXFactory lazily creates a new jx factory
+func (o *ImportOptions) GetJXFactory() jxfactory.Factory {
+	if o.JXFactory == nil {
+		o.JXFactory = jxfactory.NewFactory()
+	}
+	return o.JXFactory
 }
 
 // ImportProjectsFromGitHub import projects from github
