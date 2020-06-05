@@ -6,9 +6,9 @@ require (
 	github.com/Azure/draft v0.15.0
 	github.com/cenkalti/backoff v2.1.1+incompatible
 	github.com/denormal/go-gitignore v0.0.0-20180713143441-75ce8f3e513c
-	github.com/jenkins-x-labs/trigger-pipeline v0.0.4
+	github.com/jenkins-x-labs/trigger-pipeline v0.0.5
 	github.com/jenkins-x/golang-jenkins v0.0.0-20180919102630-65b83ad42314
-	github.com/jenkins-x/jx v0.0.0-20200519124520-3889239234cd
+	github.com/jenkins-x/jx v1.3.981-0.20200605070345-2c10fe601319
 	github.com/pkg/errors v0.8.1
 	github.com/spf13/cobra v0.0.5
 	github.com/stretchr/testify v1.4.0

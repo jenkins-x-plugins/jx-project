@@ -45,7 +45,22 @@ func (p *Pack) SaveDir(dest string) error {
 		}
 	}
 	for _, chart := range p.Charts {
-		if err := chartutil.SaveDir(chart, chartPath); err != nil {
+		// lets make any new directories we need
+		for _, f := range chart.Files {
+			path := f.TypeUrl
+			if path != "" {
+				fullPath := filepath.Join(chartPath, chart.Metadata.Name, path)
+				dir := filepath.Dir(fullPath)
+
+				// lets ensure the dir exists
+				err = os.MkdirAll(dir, util.DefaultWritePermissions)
+				if err != nil {
+					return errors.Wrapf(err, "failed to create dir %s", dir)
+				}
+			}
+		}
+
+		if err := SaveDir(chart, chartPath); err != nil {
 			return err
 		}
 	}
@@ -80,6 +95,60 @@ func (p *Pack) SaveDir(dest string) error {
 	return nil
 }
 
+// SaveDir saves a chart as files in a directory.
+func SaveDir(c *kchart.Chart, dest string) error {
+	// Create the chart directory
+	outdir := filepath.Join(dest, c.Metadata.Name)
+	if err := os.MkdirAll(outdir, 0755); err != nil {
+		return err
+	}
+
+	// Save the chart file.
+	if err := chartutil.SaveChartfile(filepath.Join(outdir, chartutil.ChartfileName), c.Metadata); err != nil {
+		return err
+	}
+
+	// Save values.yaml
+	if c.Values != nil && len(c.Values.Raw) > 0 {
+		vf := filepath.Join(outdir, chartutil.ValuesfileName)
+		if err := ioutil.WriteFile(vf, []byte(c.Values.Raw), 0755); err != nil {
+			return err
+		}
+	}
+
+	for _, d := range []string{chartutil.TemplatesDir, ChartsDir} {
+		if err := os.MkdirAll(filepath.Join(outdir, d), 0755); err != nil {
+			return err
+		}
+	}
+
+	// Save templates
+	for _, f := range c.Templates {
+		n := filepath.Join(outdir, f.Name)
+		if err := ioutil.WriteFile(n, f.Data, 0755); err != nil {
+			return err
+		}
+	}
+
+	// Save files
+	for _, f := range c.Files {
+		n := filepath.Join(outdir, f.TypeUrl)
+		if err := ioutil.WriteFile(n, f.Value, 0755); err != nil {
+			return err
+		}
+	}
+
+	// Save dependencies
+	base := filepath.Join(outdir, ChartsDir)
+	for _, dep := range c.Dependencies {
+		// Here, we write each dependency as a tar file.
+		if _, err := chartutil.Save(dep, base); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 // CREDIT https://github.com/Azure/draft/blob/9705e36dc23c27c9ef54dc2469dd86ac6093f0f4/pkg/draft/pack/pack.go
 // FromDir takes a string name, tries to resolve it to a file or directory, and then loads it.
 //
@@ -108,12 +177,26 @@ func loadDirectory(pack *Pack, dir string, relPath string) error {
 		if fInfo.IsDir() {
 			// assume root folders not starting with dot are chart folders
 			// could replace this logic with checking for charts / preview strings instead?
-			if relPath == "" && !strings.HasPrefix(name, ".") {
+			if relPath == "" && !(strings.HasPrefix(name, ".")) {
 				localChart, err := chartutil.LoadDir(filepath.Join(dir, name))
 				if err != nil {
 					continue
 				}
 				pack.Charts = append(pack.Charts, localChart)
+
+				// lets see if there's a nested resources folder
+				resourceDir := filepath.Join(dir, name, "resources")
+				exists, err := util.DirExists(resourceDir)
+				if err != nil {
+					return errors.Wrapf(err, "checking if resources dir exists %s", resourceDir)
+				}
+				if exists {
+					_, packName := filepath.Split(dir)
+					err = loadDirectory(pack, resourceDir, filepath.Join(relPath, name, packName, "resources"))
+					if err != nil {
+						return err
+					}
+				}
 			} else {
 				// allow other directories to copy across
 				err = loadDirectory(pack, filepath.Join(dir, name), filepath.Join(relPath, name))

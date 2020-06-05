@@ -407,6 +407,8 @@ github.com/jenkins-x-labs/trigger-pipeline v0.0.0-20200221170624-ad1e693a8fcd h1
 github.com/jenkins-x-labs/trigger-pipeline v0.0.0-20200221170624-ad1e693a8fcd/go.mod h1:aiqfUuZO2rFP/v7mI4l6dNWh4Gj4pzn54gY/Qkdtpzo=
 github.com/jenkins-x-labs/trigger-pipeline v0.0.4 h1:JvZG2VPB9+VRk8Rqa0dcVPHNc7dVPuCldUDp0UnTKH0=
 github.com/jenkins-x-labs/trigger-pipeline v0.0.4/go.mod h1:aiqfUuZO2rFP/v7mI4l6dNWh4Gj4pzn54gY/Qkdtpzo=
+github.com/jenkins-x-labs/trigger-pipeline v0.0.5 h1:g8E4W/qOx04juigpdsXwe/fbZdWIsy4mQLz0kEMUPDk=
+github.com/jenkins-x-labs/trigger-pipeline v0.0.5/go.mod h1:QdF7jKPwZlJRklgsE9/vKy+KAbbWWi/Wyi6Tr9XhX74=
 github.com/jenkins-x/draft-repo v0.0.0-20180417100212-2f66cc518135 h1:3zy/Nvdi9V95Jfu6+W4NAJrHDeypB58FSLyzI3XfO/4=
 github.com/jenkins-x/draft-repo v0.0.0-20180417100212-2f66cc518135/go.mod h1:K/L25ViEpDx196rOZyjn433tAM5zr2F/IouK+3g+DkE=
 github.com/jenkins-x/golang-jenkins v0.0.0-20180919102630-65b83ad42314 h1:kyBMx/ucSV92S+umX/V6DDaPNynlFFOM9MGJWApltoU=
@@ -421,6 +423,8 @@ github.com/jenkins-x/jx v0.0.0-20200421152447-4d416a432901 h1:nEaH0yobbDQboQHIKv
 github.com/jenkins-x/jx v0.0.0-20200421152447-4d416a432901/go.mod h1:dMUw5aJ5km/5kr6cAE0mpKZ0StUeh9cweUUFWMjKfbw=
 github.com/jenkins-x/jx v0.0.0-20200519124520-3889239234cd h1:c9o7FSGHr6WoA2JLZAIGk300tWqEcvj8Ayd+kC31yLQ=
 github.com/jenkins-x/jx v0.0.0-20200519124520-3889239234cd/go.mod h1:dMUw5aJ5km/5kr6cAE0mpKZ0StUeh9cweUUFWMjKfbw=
+github.com/jenkins-x/jx v1.3.981-0.20200605070345-2c10fe601319 h1:ac6uSBIdf1XIenufKd2Y3sWTb/237AAHmMVantZMUoo=
+github.com/jenkins-x/jx v1.3.981-0.20200605070345-2c10fe601319/go.mod h1:dMUw5aJ5km/5kr6cAE0mpKZ0StUeh9cweUUFWMjKfbw=
 github.com/jessevdk/go-flags v1.4.0/go.mod h1:4FA24M0QyGHXBuZZK/XkWh8h0e1EYbRYJSGM75WSRxI=
 github.com/jetstack/cert-manager v0.5.2 h1:qs74mdAprZ5kcCYF3arzmEAZtbt+9HneldSJrk21tKs=
 github.com/jetstack/cert-manager v0.5.2/go.mod h1:nbddmhjWxYGt04bxvwVGUSeLhZ2PCyNvd7MpXdq+yWY=
