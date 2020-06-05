@@ -35,7 +35,7 @@ type Pack struct {
 }
 
 // SaveDir saves a pack as files in a directory.
-func (p *Pack) SaveDir(dest string) error {
+func (p *Pack) SaveDir(dest string, packName string) error {
 	// Create the chart directory
 	chartPath := filepath.Join(dest, ChartsDir)
 	_, err := os.Stat(chartPath)
@@ -46,10 +46,14 @@ func (p *Pack) SaveDir(dest string) error {
 	}
 	for _, chart := range p.Charts {
 		// lets make any new directories we need
+		chartName := packName
+		if chart.Metadata.Name == "preview" {
+			chartName = chart.Metadata.Name
+		}
 		for _, f := range chart.Files {
 			path := f.TypeUrl
 			if path != "" {
-				fullPath := filepath.Join(chartPath, chart.Metadata.Name, path)
+				fullPath := filepath.Join(chartPath, chartName, path)
 				dir := filepath.Dir(fullPath)
 
 				// lets ensure the dir exists
@@ -60,7 +64,7 @@ func (p *Pack) SaveDir(dest string) error {
 			}
 		}
 
-		if err := SaveDir(chart, chartPath); err != nil {
+		if err := SaveDir(chart, chartPath, chartName); err != nil {
 			return err
 		}
 	}
@@ -96,9 +100,9 @@ func (p *Pack) SaveDir(dest string) error {
 }
 
 // SaveDir saves a chart as files in a directory.
-func SaveDir(c *kchart.Chart, dest string) error {
+func SaveDir(c *kchart.Chart, dest string, packName string) error {
 	// Create the chart directory
-	outdir := filepath.Join(dest, c.Metadata.Name)
+	outdir := filepath.Join(dest, packName)
 	if err := os.MkdirAll(outdir, 0755); err != nil {
 		return err
 	}

@@ -357,5 +357,6 @@ func copyBuildPack(dest, src string) error {
 	for _, file := range []string{jenkinsfile.PipelineConfigFileName, jenkinsfile.PipelineTemplateFileName} {
 		delete(p.Files, file)
 	}
-	return p.SaveDir(dest)
+	_, packName := filepath.Split(src)
+	return p.SaveDir(dest, packName)
 }
