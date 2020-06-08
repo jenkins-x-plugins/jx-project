@@ -1,33 +1,33 @@
-# jwizard
+# jx project
 
 [![Documentation](https://godoc.org/github.com/jenkins-x/jx-project?status.svg)](https://pkg.go.dev/mod/github.com/jenkins-x/jx-project)
 [![Go Report Card](https://goreportcard.com/badge/github.com/jenkins-x/jx-project)](https://goreportcard.com/report/github.com/jenkins-x/jx-project)
-[![Releases](https://img.shields.io/github/release-pre/jenkins-x-labs/jwizard.svg)](https://github.com/jenkins-x/jx-project/releases)
-[![LICENSE](https://img.shields.io/github/license/jenkins-x-labs/jwizard.svg)](https://github.com/jenkins-x/jx-project/blob/master/LICENSE)
+[![Releases](https://img.shields.io/github/release-pre/jenkins-x/jx-project.svg)](https://github.com/jenkins-x/jx-project/releases)
+[![LICENSE](https://img.shields.io/github/license/jenkins-x/jx-project.svg)](https://github.com/jenkins-x/jx-project/blob/master/LICENSE)
 [![Slack Status](https://img.shields.io/badge/slack-join_chat-white.svg?logo=slack&style=social)](https://slack.k8s.io/)
 
-JWizard is an experimental CLI to allow quickstarts to be created and repositories to be imported into either [Jenkins](https://jenkins.io/) servers that are setup and managed via GitOps and the [Jenkins Operator](https://jenkinsci.github.io/kubernetes-operator/) or [Jenkins X](https://jenkins-x.io/).
+`jx project` is an experimental binary plugin to allow quickstarts to be created and repositories to be imported into either [Jenkins](https://jenkins.io/) servers or [Jenkins X](https://jenkins-x.io/).
 
 The idea is to provide a single developer UX around creating quickstarts and importing repositories whether you use just Jenkins or just Jenkins X or a combination of both.
 
 ## Getting Started
 
-To setup a Kubernetes cluster with Jenkins and/or Jenkins X installed please follow the  [helmboot getting started guide](https://github.com/jenkins-x-labs/helmboot#creating-a-new-installation).
+Download the [jx-alpha-project binary](https://github.com/jenkins-x/jx-project/releases) for your operating system and add it to your `$PATH`.
 
-In particularly make sure you use `helmboot --jenkins` if you want to try out the integration between Jenkins and Jenkins X.
+There will be an `app` you can install soon too...
 
 ## Importing Repositories and Creating Quickstarts
 
-Just run the `jwizard` command line and follow the instructions.
+Just run the `jx alpha project` command line and follow the instructions.
 
 If you have ever seen [Jenkins X](https://jenkins-x.io/) or have used `jx import` or `jx create quickstart` you can try run those directly via:
 
-* `jwizard quickstart`
-* `jwizard import`
+* `jx alpha project quickstart`
+* `jx alpha project import`
  
 ## How it works
 
-When importing a project `jwizard` looks for a `Jenkinfile` in the source code. 
+When importing a project `jx project` looks for a `Jenkinfile` in the source code. 
 
 If there is no `Jenkinsfile` then the wizard assumes you wish to proceed with a [Jenkins X Pipeline](https://jenkins-x.io/docs/concepts/jenkins-x-pipelines/) based on Tekton and imports it in the usual Jenkins X way. You also get to confirm the kind of build pack and language you wish to use for the automated CI/CD - so its easy to import any workload whether its a library, a binary, a container image, a helm chart or a fully blown microservice for automated kubernetes based CI/CD.
 
@@ -52,10 +52,10 @@ When importing a project these approaches are supported:
 For those of you who know [Jenkins X](https://jenkins-x.io/) and have used [jx import](https://jenkins-x.io/commands/jx_import/) before this wizard is a little different:
 
 * the commands are a little different:
-  * `jx create import` is now `jwizard import`
-  * `jx create quickstart` is now `jwizard quickstart`
-  * `jx create project` is now `jwizard`
-  * `jx create spring` is now `jwizard spring`
+  * `jx create import` is now `jx alpha project import`
+  * `jx create quickstart` is now `jx alpha project quickstart`
+  * `jx create project` is now `jx alpha project`
+  * `jx create spring` is now `jx alpha project spring`
 * when importing to Jenkins X we ask which build pack you wish to use (e.g. classic or kubernetes) so that you can import java libraries or node modules easily in addition to kubernetes native applications
 * the wizard will prompt you for the pack name (language) once the detection has occurred. Usually the pack name detection is good enough. e.g. detecting `maven` but you may wish to change the version of the pack (e.g. `maven-java11`)
 * when importing a project and you are using Jenkins X and Jenkins in the same cluster you get asked whether you want to import the project into [Jenkins X](https://jenkins-x.io/) or to pick which Jenkins server to use
