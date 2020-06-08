@@ -3,7 +3,7 @@ package main
 import (
 	"os"
 
-	"github.com/jenkins-x-labs/jwizard/cmd/app"
+	"github.com/jenkins-x/jx-project/cmd/app"
 )
 
 // Entrypoint for the command

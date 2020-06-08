@@ -6,7 +6,7 @@ import (
 	"os"
 	"syscall"
 
-	"github.com/jenkins-x-labs/jwizard/pkg/cmd/create"
+	"github.com/jenkins-x/jx-project/pkg/cmd/create"
 	"github.com/jenkins-x/jx/pkg/cmd/clients"
 	"github.com/jenkins-x/jx/pkg/cmd/opts"
 )

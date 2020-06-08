@@ -3,8 +3,8 @@
 package importcmd_test
 
 import (
-	"github.com/jenkins-x-labs/jwizard/pkg/cmd/fakejxfactory"
-	"github.com/jenkins-x-labs/jwizard/pkg/cmd/importcmd"
+	"github.com/jenkins-x/jx-project/pkg/cmd/fakejxfactory"
+	"github.com/jenkins-x/jx-project/pkg/cmd/importcmd"
 	"github.com/jenkins-x/jx/pkg/cmd/testhelpers"
 	"github.com/jenkins-x/jx/pkg/config"
 	"github.com/jenkins-x/jx/pkg/kube/naming"

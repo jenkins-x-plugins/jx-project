@@ -8,9 +8,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/jenkins-x-labs/jwizard/pkg/cmd/common"
 	"github.com/jenkins-x-labs/trigger-pipeline/pkg/jenkinsutil"
 	"github.com/jenkins-x-labs/trigger-pipeline/pkg/jenkinsutil/factory"
+	"github.com/jenkins-x/jx-project/pkg/cmd/common"
 	jenkinsio "github.com/jenkins-x/jx/pkg/apis/jenkins.io"
 	"github.com/jenkins-x/jx/pkg/cmd/step/create/pr"
 	"github.com/jenkins-x/jx/pkg/jxfactory"

@@ -1,4 +1,4 @@
-module github.com/jenkins-x-labs/jwizard
+module github.com/jenkins-x/jx-project
 
 go 1.12
 

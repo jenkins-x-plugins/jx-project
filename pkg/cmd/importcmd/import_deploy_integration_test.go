@@ -10,7 +10,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/jenkins-x-labs/jwizard/pkg/cmd/importcmd"
+	"github.com/jenkins-x/jx-project/pkg/cmd/importcmd"
 	v1 "github.com/jenkins-x/jx/pkg/apis/jenkins.io/v1"
 	"github.com/jenkins-x/jx/pkg/cmd/clients/fake"
 	"github.com/jenkins-x/jx/pkg/cmd/edit"

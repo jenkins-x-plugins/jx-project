@@ -13,10 +13,10 @@ var TopLevelCommand string
 func init() {
 	BinaryName = os.Getenv("BINARY_NAME")
 	if BinaryName == "" {
-		BinaryName = "jwizard"
+		BinaryName = "jx project"
 	}
 	TopLevelCommand = os.Getenv("TOP_LEVEL_COMMAND")
 	if TopLevelCommand == "" {
-		TopLevelCommand = "jwizard"
+		TopLevelCommand = "jx project"
 	}
 }

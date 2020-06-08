@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/jenkins-x-labs/jwizard/pkg/cmd/common"
-	"github.com/jenkins-x-labs/jwizard/pkg/cmd/importcmd"
+	"github.com/jenkins-x/jx-project/pkg/cmd/common"
+	"github.com/jenkins-x/jx-project/pkg/cmd/importcmd"
 	"github.com/jenkins-x/jx/pkg/cmd/create/options"
 
 	"github.com/jenkins-x/jx/pkg/cmd/helper"
