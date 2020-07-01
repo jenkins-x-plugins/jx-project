@@ -16,7 +16,7 @@ func Run(args []string) error {
 	configureTerminalForAnsiEscapes()
 	f := clients.NewFactory()
 	commonOptions := opts.NewCommonOptionsWithTerm(f, os.Stdin, os.Stdout, os.Stderr)
-	cmd := create.NewCmdCreateProject(commonOptions)
+	cmd := root.NewCmdCreateProject(commonOptions)
 	if len(args) > 0 {
 		args = args[1:]
 		cmd.SetArgs(args)

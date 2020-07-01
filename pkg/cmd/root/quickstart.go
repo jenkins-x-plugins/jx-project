@@ -1,4 +1,4 @@
-package create
+package root
 
 import (
 	"fmt"
@@ -46,7 +46,7 @@ var (
 
 // CreateQuickstartOptions the options for the create quickstart command
 type CreateQuickstartOptions struct {
-	CreateProjectOptions
+	Options
 
 	GitHubOrganisations []string
 	Filter              quickstarts.QuickstartFilter
@@ -58,7 +58,7 @@ type CreateQuickstartOptions struct {
 // NewCmdCreateQuickstart creates a command object for the "create" command
 func NewCmdCreateQuickstart(commonOpts *opts.CommonOptions) *cobra.Command {
 	options := &CreateQuickstartOptions{
-		CreateProjectOptions: CreateProjectOptions{
+		Options: Options{
 			ImportOptions: importcmd.ImportOptions{
 				CommonOptions: commonOpts,
 			},
@@ -218,7 +218,7 @@ func (o *CreateQuickstartOptions) CreateQuickStart(q *quickstarts.QuickstartForm
 	}
 	o.GetReporter().CreatedProject(genDir)
 
-	o.CreateProjectOptions.ImportOptions.GitProvider = o.GitProvider
+	o.Options.ImportOptions.GitProvider = o.GitProvider
 
 	if details != nil {
 		o.ConfigureImportOptions(details)

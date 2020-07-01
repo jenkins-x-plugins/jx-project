@@ -1,13 +1,13 @@
 // +build integration
 
-package create_test
+package root_test
 
 import (
 	"io/ioutil"
 	"path/filepath"
 	"testing"
 
-	"github.com/jenkins-x/jx-project/pkg/cmd/create"
+	"github.com/jenkins-x/jx-project/pkg/cmd/root"
 	"github.com/jenkins-x/jx-project/pkg/cmd/importcmd"
 	"github.com/jenkins-x/jx/pkg/cmd/testhelpers"
 
@@ -41,8 +41,8 @@ func TestCreateQuickstartProjects(t *testing.T) {
 
 	appName := "myvets"
 
-	o := &create.CreateQuickstartOptions{
-		CreateProjectOptions: create.CreateProjectOptions{
+	o := &root.CreateQuickstartOptions{
+		Options: root.Options{
 			ImportOptions: importcmd.ImportOptions{
 				CommonOptions: &opts.CommonOptions{},
 			},

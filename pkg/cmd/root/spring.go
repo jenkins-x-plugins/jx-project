@@ -1,4 +1,4 @@
-package create
+package root
 
 import (
 	"fmt"
@@ -47,7 +47,7 @@ var (
 
 // CreateSpringOptions the options for the create spring command
 type CreateSpringOptions struct {
-	CreateProjectOptions
+	Options
 
 	Advanced   bool
 	SpringForm spring.SpringBootForm
@@ -56,7 +56,7 @@ type CreateSpringOptions struct {
 // NewCmdCreateSpring creates a command object for the "create" command
 func NewCmdCreateSpring(commonOpts *opts.CommonOptions) *cobra.Command {
 	options := &CreateSpringOptions{
-		CreateProjectOptions: CreateProjectOptions{
+		Options: Options{
 			ImportOptions: importcmd.ImportOptions{
 				CommonOptions: commonOpts,
 			},

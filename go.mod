@@ -5,12 +5,14 @@ go 1.12
 require (
 	github.com/Azure/draft v0.15.0
 	github.com/cenkalti/backoff v2.1.1+incompatible
+	github.com/cpuguy83/go-md2man v1.0.10
 	github.com/denormal/go-gitignore v0.0.0-20180713143441-75ce8f3e513c
 	github.com/jenkins-x-labs/trigger-pipeline v0.0.5
 	github.com/jenkins-x/golang-jenkins v0.0.0-20180919102630-65b83ad42314
 	github.com/jenkins-x/jx v1.3.981-0.20200605070345-2c10fe601319
 	github.com/pkg/errors v0.8.1
 	github.com/spf13/cobra v0.0.5
+	github.com/spf13/pflag v1.0.3
 	github.com/stretchr/testify v1.4.0
 	github.com/tektoncd/pipeline v0.8.0
 	gopkg.in/AlecAivazis/survey.v1 v1.8.3

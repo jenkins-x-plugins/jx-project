@@ -1,4 +1,4 @@
-package create
+package root
 
 import (
 	"fmt"
@@ -6,6 +6,7 @@ import (
 
 	"github.com/jenkins-x/jx-project/pkg/cmd/common"
 	"github.com/jenkins-x/jx-project/pkg/cmd/importcmd"
+	"github.com/jenkins-x/jx/pkg/cmd/clients"
 	"github.com/jenkins-x/jx/pkg/cmd/create/options"
 
 	"github.com/jenkins-x/jx/pkg/cmd/helper"
@@ -44,8 +45,8 @@ var (
 	`)
 )
 
-// CreateProjectOptions contains the command line options
-type CreateProjectOptions struct {
+// Options contains the command line options
+type Options struct {
 	importcmd.ImportOptions
 
 	OutDir             string
@@ -53,14 +54,21 @@ type CreateProjectOptions struct {
 	GithubAppInstalled bool
 }
 
-// CreateProjectWizardOptions the options for the command
-type CreateProjectWizardOptions struct {
+// WizardOptions the options for the command
+type WizardOptions struct {
 	options.CreateOptions
 }
 
-// NewCmdCreateProject creates a command object for the "create" command
-func NewCmdCreateProject(commonOpts *opts.CommonOptions) *cobra.Command {
-	options := &CreateProjectWizardOptions{
+// NewCmdMain creates a command object for the command
+func NewCmdMain() (*cobra.Command, *WizardOptions) {
+	f := clients.NewFactory()
+	commonOptions := opts.NewCommonOptionsWithTerm(f, os.Stdin, os.Stdout, os.Stderr)
+	return NewCmdMainWithOptions(commonOptions)
+}
+
+// NewCmdMainWithOptions creates a command object for the command
+func NewCmdMainWithOptions(commonOpts *opts.CommonOptions) (*cobra.Command, *WizardOptions)  {
+	options := &WizardOptions{
 		CreateOptions: options.CreateOptions{
 			CommonOptions: commonOpts,
 		},
@@ -84,11 +92,11 @@ func NewCmdCreateProject(commonOpts *opts.CommonOptions) *cobra.Command {
 	cmd.AddCommand(NewCmdCreateSpring(commonOpts))
 	cmd.AddCommand(importcmd.NewCmdImport(commonOpts))
 
-	return cmd
+	return cmd, options
 }
 
 // Run implements the command
-func (o *CreateProjectWizardOptions) Run() error {
+func (o *WizardOptions) Run() error {
 	name, err := util.PickName(createProjectNames, "Which kind of project you want to create: ",
 		"there are a number of different wizards for creating or importing new projects.",
 		o.GetIOFileHandles())
@@ -111,19 +119,19 @@ func (o *CreateProjectWizardOptions) Run() error {
 	}
 }
 
-func (o *CreateProjectWizardOptions) createQuickstart() error {
+func (o *WizardOptions) createQuickstart() error {
 	w := &CreateQuickstartOptions{}
 	w.CommonOptions = o.CommonOptions
 	return w.Run()
 }
 
-func (o *CreateProjectWizardOptions) createSpring() error {
+func (o *WizardOptions) createSpring() error {
 	w := &CreateSpringOptions{}
 	w.CommonOptions = o.CommonOptions
 	return w.Run()
 }
 
-func (o *CreateProjectWizardOptions) importDir() error {
+func (o *WizardOptions) importDir() error {
 	wd, err := os.Getwd()
 	if err != nil {
 		return err
@@ -140,7 +148,7 @@ func (o *CreateProjectWizardOptions) importDir() error {
 	return w.Run()
 }
 
-func (o *CreateProjectWizardOptions) importGit() error {
+func (o *WizardOptions) importGit() error {
 	repoUrl, err := util.PickValue("Which git repository URL to import: ", "", true,
 		"Please specify the git URL which contains the source code you want to use for your new project", o.GetIOFileHandles())
 	if err != nil {
@@ -154,7 +162,7 @@ func (o *CreateProjectWizardOptions) importGit() error {
 	return w.Run()
 }
 
-func (o *CreateProjectWizardOptions) importGithubProject() error {
+func (o *WizardOptions) importGithubProject() error {
 	w := &importcmd.ImportOptions{
 		GitHub: true,
 	}
@@ -163,7 +171,7 @@ func (o *CreateProjectWizardOptions) importGithubProject() error {
 }
 
 // DoImport imports the project created at the given directory
-func (o *CreateProjectOptions) ImportCreatedProject(outDir string) error {
+func (o *Options) ImportCreatedProject(outDir string) error {
 	if o.DisableImport {
 		return nil
 	}
@@ -174,7 +182,7 @@ func (o *CreateProjectOptions) ImportCreatedProject(outDir string) error {
 	return importOptions.Run()
 }
 
-func (o *CreateProjectOptions) addCreateAppFlags(cmd *cobra.Command) {
+func (o *Options) addCreateAppFlags(cmd *cobra.Command) {
 	cmd.Flags().BoolVarP(&o.DisableImport, "no-import", "", false, "Disable import after the creation")
 	cmd.Flags().StringVarP(&o.OutDir, opts.OptionOutputDir, "o", "", "Directory to output the project to. Defaults to the current directory")
 
