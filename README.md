@@ -12,7 +12,7 @@ The idea is to provide a single developer UX around creating quickstarts and imp
 
 ## Getting Started
 
-Download the [jx-alpha-project binary](https://github.com/jenkins-x/jx-project/releases) for your operating system and add it to your `$PATH`.
+Download the [jx-project binary](https://github.com/jenkins-x/jx-project/releases) for your operating system and add it to your `$PATH`.
 
 There will be an `app` you can install soon too...
 
