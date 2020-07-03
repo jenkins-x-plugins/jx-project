@@ -61,6 +61,7 @@ func TestCreateQuickstartProjects(t *testing.T) {
 	o.Verbose = true
 	o.IgnoreTeam = true
 	o.Repository = appName
+	o.CommonOptions.SetHelm(helm.NewHelmCLI("helm", helm.V3, "", false))
 
 	err = o.Run()
 	assert.NoError(t, err)

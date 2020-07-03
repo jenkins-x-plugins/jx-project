@@ -8,6 +8,7 @@ import (
 	"github.com/jenkins-x/jx-project/pkg/cmd/importcmd"
 	"github.com/jenkins-x/jx/v2/pkg/cmd/clients"
 	"github.com/jenkins-x/jx/v2/pkg/cmd/create/options"
+	"github.com/jenkins-x/jx/v2/pkg/helm"
 
 	"github.com/jenkins-x/jx/v2/pkg/cmd/helper"
 
@@ -63,6 +64,7 @@ type WizardOptions struct {
 func NewCmdMain() (*cobra.Command, *WizardOptions) {
 	f := clients.NewFactory()
 	commonOptions := opts.NewCommonOptionsWithTerm(f, os.Stdin, os.Stdout, os.Stderr)
+	commonOptions.SetHelm(helm.NewHelmCLI("helm", helm.V3, "", false))
 	return NewCmdMainWithOptions(commonOptions)
 }
 
@@ -73,7 +75,6 @@ func NewCmdMainWithOptions(commonOpts *opts.CommonOptions) (*cobra.Command, *Wiz
 			CommonOptions: commonOpts,
 		},
 	}
-
 	cmd := &cobra.Command{
 		Use:     "project",
 		Short:   "Create a new project by importing code, creating a quickstart or custom wizard for spring",

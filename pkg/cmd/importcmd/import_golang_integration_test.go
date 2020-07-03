@@ -65,6 +65,7 @@ func TestImportGoLangProject(t *testing.T) {
 		CommonOptions: &opts.CommonOptions{},
 	}
 
+
 	o.SetFactory(fake_clients.NewFakeFactory())
 	o.JXFactory = fakejxfactory.NewFakeFactory()
 	o.GitProvider = createFakeGitProvider()

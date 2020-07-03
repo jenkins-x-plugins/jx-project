@@ -167,6 +167,7 @@ func assertImport(t *testing.T, testDir string, testcase string, importToJenkins
 	o := &importcmd.ImportOptions{
 		CommonOptions: &opts.CommonOptions{},
 	}
+	o.CommonOptions.SetHelm(helm.NewHelmCLI("helm", helm.V3, "", false))
 
 	o.SetFactory(fake_clients.NewFakeFactory())
 	o.JXFactory = fakejxfactory.NewFakeFactory()
