@@ -5,22 +5,12 @@ go 1.13
 require (
 	github.com/Azure/draft v0.15.0
 	github.com/cenkalti/backoff v2.2.1+incompatible
-	github.com/cli/cli v0.6.2
 	github.com/cpuguy83/go-md2man v1.0.10
 	github.com/denormal/go-gitignore v0.0.0-20180713143441-75ce8f3e513c
-	github.com/google/go-cmp v0.4.0
-	github.com/google/uuid v1.1.1
 	github.com/jenkins-x-labs/trigger-pipeline v0.1.0
-	github.com/jenkins-x/go-scm v1.5.143
 	github.com/jenkins-x/golang-jenkins v0.0.0-20180919102630-65b83ad42314
-	github.com/jenkins-x/jx-api v0.0.11
-	github.com/jenkins-x/jx-apps v0.0.1
-	github.com/jenkins-x/jx-helpers v1.0.25
-	github.com/jenkins-x/jx-kube-client v0.0.8
 	github.com/jenkins-x/jx-logging v0.0.10
 	github.com/jenkins-x/jx/v2 v2.1.90
-	github.com/mitchellh/go-homedir v1.1.0
-	github.com/petergtz/pegomock v2.7.0+incompatible
 	github.com/pkg/errors v0.9.1
 	github.com/spf13/cobra v1.0.0
 	github.com/spf13/pflag v1.0.5
@@ -28,12 +18,10 @@ require (
 	github.com/tektoncd/pipeline v0.11.3
 	gopkg.in/AlecAivazis/survey.v1 v1.8.8
 	gopkg.in/src-d/go-git.v4 v4.13.1
-	gopkg.in/yaml.v3 v3.0.0-20200313102051-9f266ea9e77c
 	k8s.io/api v0.17.2
 	k8s.io/apimachinery v0.17.2
 	k8s.io/client-go v11.0.1-0.20190805182717-6502b5e7b1b5+incompatible
 	k8s.io/helm v2.7.2+incompatible
-	k8s.io/kubernetes v1.14.0
 	sigs.k8s.io/yaml v1.2.0
 
 )
