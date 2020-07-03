@@ -11,32 +11,32 @@ import (
 	"github.com/jenkins-x-labs/trigger-pipeline/pkg/jenkinsutil"
 	"github.com/jenkins-x-labs/trigger-pipeline/pkg/jenkinsutil/factory"
 	"github.com/jenkins-x/jx-project/pkg/cmd/common"
-	jenkinsio "github.com/jenkins-x/jx/pkg/apis/jenkins.io"
-	"github.com/jenkins-x/jx/pkg/cmd/step/create/pr"
-	"github.com/jenkins-x/jx/pkg/jxfactory"
-	"github.com/jenkins-x/jx/pkg/maven"
-	"github.com/jenkins-x/jx/pkg/tekton/syntax"
+	jenkinsio "github.com/jenkins-x/jx/v2/pkg/apis/jenkins.io"
+	"github.com/jenkins-x/jx/v2/pkg/cmd/step/create/pr"
+	"github.com/jenkins-x/jx/v2/pkg/jxfactory"
+	"github.com/jenkins-x/jx/v2/pkg/maven"
+	"github.com/jenkins-x/jx/v2/pkg/tekton/syntax"
 
 	"github.com/cenkalti/backoff"
 	"github.com/denormal/go-gitignore"
 	gojenkins "github.com/jenkins-x/golang-jenkins"
-	v1 "github.com/jenkins-x/jx/pkg/apis/jenkins.io/v1"
-	"github.com/jenkins-x/jx/pkg/auth"
-	"github.com/jenkins-x/jx/pkg/cloud/amazon"
-	"github.com/jenkins-x/jx/pkg/cmd/edit"
-	"github.com/jenkins-x/jx/pkg/cmd/helper"
-	"github.com/jenkins-x/jx/pkg/cmd/opts"
-	"github.com/jenkins-x/jx/pkg/cmd/start"
-	"github.com/jenkins-x/jx/pkg/cmd/templates"
-	"github.com/jenkins-x/jx/pkg/config"
-	"github.com/jenkins-x/jx/pkg/github"
-	"github.com/jenkins-x/jx/pkg/gits"
-	"github.com/jenkins-x/jx/pkg/jenkinsfile"
-	"github.com/jenkins-x/jx/pkg/kube"
-	"github.com/jenkins-x/jx/pkg/kube/naming"
-	"github.com/jenkins-x/jx/pkg/log"
-	"github.com/jenkins-x/jx/pkg/prow"
-	"github.com/jenkins-x/jx/pkg/util"
+	v1 "github.com/jenkins-x/jx/v2/pkg/apis/jenkins.io/v1"
+	"github.com/jenkins-x/jx/v2/pkg/auth"
+	"github.com/jenkins-x/jx/v2/pkg/cloud/amazon"
+	"github.com/jenkins-x/jx/v2/pkg/cmd/edit"
+	"github.com/jenkins-x/jx/v2/pkg/cmd/helper"
+	"github.com/jenkins-x/jx/v2/pkg/cmd/opts"
+	"github.com/jenkins-x/jx/v2/pkg/cmd/start"
+	"github.com/jenkins-x/jx/v2/pkg/cmd/templates"
+	"github.com/jenkins-x/jx/v2/pkg/config"
+	"github.com/jenkins-x/jx/v2/pkg/github"
+	"github.com/jenkins-x/jx/v2/pkg/gits"
+	"github.com/jenkins-x/jx/v2/pkg/jenkinsfile"
+	"github.com/jenkins-x/jx/v2/pkg/kube"
+	"github.com/jenkins-x/jx/v2/pkg/kube/naming"
+	"github.com/jenkins-x/jx-logging/pkg/log"
+	"github.com/jenkins-x/jx/v2/pkg/prow"
+	"github.com/jenkins-x/jx/v2/pkg/util"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"gopkg.in/AlecAivazis/survey.v1"
@@ -1163,7 +1163,7 @@ func (o *ImportOptions) getOrCreateSourceRepository(gitInfo *gits.GitRepository,
 			u = gitInfo.URLWithoutUser()
 		}
 		if u == "" {
-			u = gitInfo.HttpCloneURL()
+			u = gitInfo.CloneURL
 		}
 		sr.Spec.ProviderKind = gitKind
 		sr.Spec.Provider = gitInfo.HostURLWithoutUser()
@@ -1173,7 +1173,7 @@ func (o *ImportOptions) getOrCreateSourceRepository(gitInfo *gits.GitRepository,
 		}
 		sr.Spec.HTTPCloneURL = u
 		if sr.Spec.HTTPCloneURL == "" {
-			sr.Spec.HTTPCloneURL = gitInfo.HttpCloneURL()
+			sr.Spec.HTTPCloneURL = gitInfo.HTMLURL
 		}
 		sr.Spec.SSHCloneURL = gitInfo.SSHURL
 	}

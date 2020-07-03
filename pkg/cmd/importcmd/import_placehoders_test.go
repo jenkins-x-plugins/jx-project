@@ -10,7 +10,7 @@ import (
 
 	"github.com/jenkins-x/jx-project/pkg/cmd/importcmd"
 
-	"github.com/jenkins-x/jx/pkg/util"
+	"github.com/jenkins-x/jx/v2/pkg/util"
 	"github.com/stretchr/testify/assert"
 )
 

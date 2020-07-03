@@ -5,9 +5,9 @@ package importcmd_test
 import (
 	"github.com/jenkins-x/jx-project/pkg/cmd/fakejxfactory"
 	"github.com/jenkins-x/jx-project/pkg/cmd/importcmd"
-	"github.com/jenkins-x/jx/pkg/cmd/testhelpers"
-	"github.com/jenkins-x/jx/pkg/config"
-	"github.com/jenkins-x/jx/pkg/kube/naming"
+	"github.com/jenkins-x/jx/v2/pkg/cmd/testhelpers"
+	"github.com/jenkins-x/jx/v2/pkg/config"
+	"github.com/jenkins-x/jx/v2/pkg/kube/naming"
 
 	"io/ioutil"
 	"os"
@@ -19,18 +19,18 @@ import (
 	"github.com/stretchr/testify/require"
 	"k8s.io/apimachinery/pkg/runtime"
 
-	v1 "github.com/jenkins-x/jx/pkg/apis/jenkins.io/v1"
-	fake_clients "github.com/jenkins-x/jx/pkg/cmd/clients/fake"
-	"github.com/jenkins-x/jx/pkg/jenkinsfile"
-	resources_test "github.com/jenkins-x/jx/pkg/kube/resources/mocks"
-	"github.com/jenkins-x/jx/pkg/log"
+	v1 "github.com/jenkins-x/jx/v2/pkg/apis/jenkins.io/v1"
+	fake_clients "github.com/jenkins-x/jx/v2/pkg/cmd/clients/fake"
+	"github.com/jenkins-x/jx/v2/pkg/jenkinsfile"
+	resources_test "github.com/jenkins-x/jx/v2/pkg/kube/resources/mocks"
+	"github.com/jenkins-x/jx-logging/pkg/log"
 
-	"github.com/jenkins-x/jx/pkg/auth"
-	"github.com/jenkins-x/jx/pkg/cmd/opts"
-	"github.com/jenkins-x/jx/pkg/gits"
-	"github.com/jenkins-x/jx/pkg/helm"
-	"github.com/jenkins-x/jx/pkg/tests"
-	"github.com/jenkins-x/jx/pkg/util"
+	"github.com/jenkins-x/jx/v2/pkg/auth"
+	"github.com/jenkins-x/jx/v2/pkg/cmd/opts"
+	"github.com/jenkins-x/jx/v2/pkg/gits"
+	"github.com/jenkins-x/jx/v2/pkg/helm"
+	"github.com/jenkins-x/jx/v2/pkg/tests"
+	"github.com/jenkins-x/jx/v2/pkg/util"
 	"github.com/stretchr/testify/assert"
 )
 

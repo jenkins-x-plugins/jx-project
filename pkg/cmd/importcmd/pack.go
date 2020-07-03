@@ -9,7 +9,7 @@ import (
 	"strings"
 
 	"github.com/Azure/draft/pkg/osutil"
-	"github.com/jenkins-x/jx/pkg/util"
+	"github.com/jenkins-x/jx/v2/pkg/util"
 	"github.com/pkg/errors"
 	"k8s.io/helm/pkg/chartutil"
 	kchart "k8s.io/helm/pkg/proto/hapi/chart"

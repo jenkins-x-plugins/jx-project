@@ -1,10 +1,10 @@
 package fakejxfactory
 
 import (
-	"github.com/jenkins-x/jx/pkg/client/clientset/versioned"
-	v1fake "github.com/jenkins-x/jx/pkg/client/clientset/versioned/fake"
-	"github.com/jenkins-x/jx/pkg/jxfactory"
-	"github.com/jenkins-x/jx/pkg/kube"
+	"github.com/jenkins-x/jx/v2/pkg/client/clientset/versioned"
+	v1fake "github.com/jenkins-x/jx/v2/pkg/client/clientset/versioned/fake"
+	"github.com/jenkins-x/jx/v2/pkg/jxfactory"
+	"github.com/jenkins-x/jx/v2/pkg/kube"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/kubernetes"

@@ -5,7 +5,7 @@ import (
 	"strings"
 
 	"github.com/jenkins-x-labs/trigger-pipeline/pkg/jenkinsutil"
-	"github.com/jenkins-x/jx/pkg/util"
+	"github.com/jenkins-x/jx/v2/pkg/util"
 	"github.com/pkg/errors"
 )
 

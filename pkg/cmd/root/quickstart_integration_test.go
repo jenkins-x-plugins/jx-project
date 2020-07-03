@@ -9,13 +9,13 @@ import (
 
 	"github.com/jenkins-x/jx-project/pkg/cmd/root"
 	"github.com/jenkins-x/jx-project/pkg/cmd/importcmd"
-	"github.com/jenkins-x/jx/pkg/cmd/testhelpers"
+	"github.com/jenkins-x/jx/v2/pkg/cmd/testhelpers"
 
-	"github.com/jenkins-x/jx/pkg/cmd/opts"
-	"github.com/jenkins-x/jx/pkg/gits"
-	"github.com/jenkins-x/jx/pkg/helm"
-	"github.com/jenkins-x/jx/pkg/quickstarts"
-	"github.com/jenkins-x/jx/pkg/tests"
+	"github.com/jenkins-x/jx/v2/pkg/cmd/opts"
+	"github.com/jenkins-x/jx/v2/pkg/gits"
+	"github.com/jenkins-x/jx/v2/pkg/helm"
+	"github.com/jenkins-x/jx/v2/pkg/quickstarts"
+	"github.com/jenkins-x/jx/v2/pkg/tests"
 	"github.com/stretchr/testify/assert"
 )
 

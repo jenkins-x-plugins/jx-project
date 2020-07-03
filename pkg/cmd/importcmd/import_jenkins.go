@@ -8,13 +8,13 @@ import (
 	"github.com/jenkins-x-labs/trigger-pipeline/pkg/jenkinsutil"
 	"github.com/jenkins-x-labs/trigger-pipeline/pkg/jenkinsutil/factory"
 	gojenkins "github.com/jenkins-x/golang-jenkins"
-	v1 "github.com/jenkins-x/jx/pkg/apis/jenkins.io/v1"
-	"github.com/jenkins-x/jx/pkg/auth"
-	"github.com/jenkins-x/jx/pkg/gits"
-	"github.com/jenkins-x/jx/pkg/jenkins"
-	"github.com/jenkins-x/jx/pkg/log"
-	"github.com/jenkins-x/jx/pkg/pipelinescheduler"
-	"github.com/jenkins-x/jx/pkg/util"
+	v1 "github.com/jenkins-x/jx/v2/pkg/apis/jenkins.io/v1"
+	"github.com/jenkins-x/jx/v2/pkg/auth"
+	"github.com/jenkins-x/jx/v2/pkg/gits"
+	"github.com/jenkins-x/jx/v2/pkg/jenkins"
+	"github.com/jenkins-x/jx-logging/pkg/log"
+	"github.com/jenkins-x/jx/v2/pkg/pipelinescheduler"
+	"github.com/jenkins-x/jx/v2/pkg/util"
 	"github.com/pkg/errors"
 )
 
@@ -263,17 +263,17 @@ func (o *ImportOptions) GenerateProwConfig(currentNamespace string, devEnv *v1.E
 
 // LogImportedProject logs more details for an imported project
 func (o *ImportOptions) LogImportedProject(isEnvironment bool, gitInfo *gits.GitRepository) {
-	log.Blank()
+	log.Logger().Infof("")
 	if !isEnvironment {
 		if !o.Destination.Jenkins.Enabled {
 			log.Logger().Infof("Watch pipeline activity via:    %s", util.ColorInfo(fmt.Sprintf("jx get activity -f %s -w", gitInfo.Name)))
 			log.Logger().Infof("Browse the pipeline log via:    %s", util.ColorInfo(fmt.Sprintf("jx get build logs %s", gitInfo.PipelinePath())))
 			log.Logger().Infof("You can list the pipelines via: %s", util.ColorInfo("jx get pipelines"))
 			log.Logger().Infof("When the pipeline is complete:  %s", util.ColorInfo("jx get applications"))
-			log.Blank()
+			log.Logger().Infof("")
 		}
 		log.Logger().Infof("For more help on available commands see: %s", util.ColorInfo("https://jenkins-x.io/developing/browsing/"))
-		log.Blank()
+		log.Logger().Infof("")
 	}
 	log.Logger().Info(util.ColorStatus("Note that your first pipeline may take a few minutes to start while the necessary images get downloaded!\n"))
 }
