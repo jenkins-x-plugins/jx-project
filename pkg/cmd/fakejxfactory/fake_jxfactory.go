@@ -5,6 +5,7 @@ import (
 	v1fake "github.com/jenkins-x/jx/v2/pkg/client/clientset/versioned/fake"
 	"github.com/jenkins-x/jx/v2/pkg/jxfactory"
 	"github.com/jenkins-x/jx/v2/pkg/kube"
+	versioned2 "github.com/tektoncd/pipeline/pkg/client/resource/clientset/versioned"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/kubernetes"
@@ -79,6 +80,10 @@ func (f *FakeFactory) CreateTektonClient() (tektonclient.Interface, string, erro
 
 func (f *FakeFactory) KubeConfig() kube.Kuber {
 	return f
+}
+
+func (f *FakeFactory) CreateTektonPipelineResourceClient() (versioned2.Interface, string, error) {
+	panic("implement me")
 }
 
 func (f *FakeFactory) LoadConfig() (*api.Config, *clientcmd.PathOptions, error) {
