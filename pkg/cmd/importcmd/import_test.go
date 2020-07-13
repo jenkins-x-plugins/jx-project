@@ -15,6 +15,7 @@ import (
 	"github.com/jenkins-x/jx/v2/pkg/prow"
 	"github.com/jenkins-x/jx/v2/pkg/util"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/yaml"
 )
@@ -220,6 +221,9 @@ func TestWriteSourceRepoToYaml(t *testing.T) {
 	defer os.RemoveAll(path)
 
 	outDir := filepath.Join(path, "repositories", "templates")
+
+	err = os.MkdirAll(outDir, util.DefaultWritePermissions)
+	require.NoError(t, err, "failed to create templates dir")
 
 	sr := &v1.SourceRepository{
 		ObjectMeta: metav1.ObjectMeta{

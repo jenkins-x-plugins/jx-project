@@ -8,18 +8,14 @@ import (
 	"strings"
 	"time"
 
-	"github.com/jenkins-x-labs/trigger-pipeline/pkg/jenkinsutil"
-	"github.com/jenkins-x-labs/trigger-pipeline/pkg/jenkinsutil/factory"
-	"github.com/jenkins-x/jx-project/pkg/cmd/common"
-	jenkinsio "github.com/jenkins-x/jx/v2/pkg/apis/jenkins.io"
-	"github.com/jenkins-x/jx/v2/pkg/cmd/step/create/pr"
-	"github.com/jenkins-x/jx/v2/pkg/jxfactory"
-	"github.com/jenkins-x/jx/v2/pkg/maven"
-	"github.com/jenkins-x/jx/v2/pkg/tekton/syntax"
-
 	"github.com/cenkalti/backoff"
 	"github.com/denormal/go-gitignore"
+	"github.com/jenkins-x-labs/trigger-pipeline/pkg/jenkinsutil"
+	"github.com/jenkins-x-labs/trigger-pipeline/pkg/jenkinsutil/factory"
 	gojenkins "github.com/jenkins-x/golang-jenkins"
+	"github.com/jenkins-x/jx-logging/pkg/log"
+	"github.com/jenkins-x/jx-project/pkg/cmd/common"
+	jenkinsio "github.com/jenkins-x/jx/v2/pkg/apis/jenkins.io"
 	v1 "github.com/jenkins-x/jx/v2/pkg/apis/jenkins.io/v1"
 	"github.com/jenkins-x/jx/v2/pkg/auth"
 	"github.com/jenkins-x/jx/v2/pkg/cloud/amazon"
@@ -27,15 +23,18 @@ import (
 	"github.com/jenkins-x/jx/v2/pkg/cmd/helper"
 	"github.com/jenkins-x/jx/v2/pkg/cmd/opts"
 	"github.com/jenkins-x/jx/v2/pkg/cmd/start"
+	"github.com/jenkins-x/jx/v2/pkg/cmd/step/create/pr"
 	"github.com/jenkins-x/jx/v2/pkg/cmd/templates"
 	"github.com/jenkins-x/jx/v2/pkg/config"
 	"github.com/jenkins-x/jx/v2/pkg/github"
 	"github.com/jenkins-x/jx/v2/pkg/gits"
 	"github.com/jenkins-x/jx/v2/pkg/jenkinsfile"
+	"github.com/jenkins-x/jx/v2/pkg/jxfactory"
 	"github.com/jenkins-x/jx/v2/pkg/kube"
 	"github.com/jenkins-x/jx/v2/pkg/kube/naming"
-	"github.com/jenkins-x/jx-logging/pkg/log"
+	"github.com/jenkins-x/jx/v2/pkg/maven"
 	"github.com/jenkins-x/jx/v2/pkg/prow"
+	"github.com/jenkins-x/jx/v2/pkg/tekton/syntax"
 	"github.com/jenkins-x/jx/v2/pkg/util"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
@@ -1198,13 +1197,23 @@ func (o *ImportOptions) getOrCreateSourceRepository(gitInfo *gits.GitRepository,
 
 // writeSourceRepoToYaml marshals a SourceRepository to the given directory, making sure it can be loaded by boot.
 func writeSourceRepoToYaml(dir string, sr *v1.SourceRepository) error {
+	// lets check if we have a new jx 3 source repository
 	outDir := filepath.Join(dir, "repositories", "templates")
-	err := os.MkdirAll(outDir, util.DefaultWritePermissions)
+	fileName := filepath.Join(outDir, sr.Name+"-sr.yaml")
+	exists, err := util.DirExists(outDir)
+	if err != nil {
+		return errors.Wrapf(err, "failed to check if file exists %s", outDir)
+	}
+	if !exists {
+		// lets default to the jx 3 location
+		outDir = filepath.Join(dir, "src", "base", "namespaces", "jx", "source-repositories")
+		fileName = filepath.Join(outDir, sr.Name+".yaml")
+	}
+	err = os.MkdirAll(outDir, util.DefaultWritePermissions)
 	if err != nil {
 		return errors.Wrapf(err, "failed to make directories %s", outDir)
 	}
 
-	fileName := filepath.Join(outDir, sr.Name+"-sr.yaml")
 	// lets clear the fields we don't need to save
 	clearSourceRepositoryMetadata(&sr.ObjectMeta)
 	// Ensure it has the type information it needs
