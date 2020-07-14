@@ -1,8 +1,8 @@
 package fakejxfactory
 
 import (
-	"github.com/jenkins-x/jx/v2/pkg/client/clientset/versioned"
-	v1fake "github.com/jenkins-x/jx/v2/pkg/client/clientset/versioned/fake"
+	"github.com/jenkins-x/jx-api/pkg/client/clientset/versioned"
+	v1fake "github.com/jenkins-x/jx-api/pkg/client/clientset/versioned/fake"
 	"github.com/jenkins-x/jx/v2/pkg/jxfactory"
 	"github.com/jenkins-x/jx/v2/pkg/kube"
 	versioned2 "github.com/tektoncd/pipeline/pkg/client/resource/clientset/versioned"

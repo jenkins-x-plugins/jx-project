@@ -11,7 +11,7 @@ import (
 	"testing"
 
 	"github.com/jenkins-x/jx-project/pkg/cmd/importcmd"
-	v1 "github.com/jenkins-x/jx/v2/pkg/apis/jenkins.io/v1"
+	v1 "github.com/jenkins-x/jx-api/pkg/apis/jenkins.io/v1"
 	"github.com/jenkins-x/jx/v2/pkg/cmd/clients/fake"
 	"github.com/jenkins-x/jx/v2/pkg/cmd/edit"
 	"github.com/jenkins-x/jx/v2/pkg/cmd/opts"

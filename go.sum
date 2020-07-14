@@ -368,6 +368,7 @@ github.com/go-ldap/ldap v3.0.2+incompatible/go.mod h1:qfd9rJvER9Q0/D/Sqn1DfHRoBp
 github.com/go-logfmt/logfmt v0.3.0/go.mod h1:Qt1PoO58o5twSAckw1HlFXLmHsOX5/0LbT9GBnD5lWE=
 github.com/go-logfmt/logfmt v0.4.0/go.mod h1:3RMwSq7FuexP4Kalkev3ejPJsZTpXXBr9+V4qmtdjCk=
 github.com/go-logr/logr v0.1.0/go.mod h1:ixOQHD9gLJUVQQ2ZOR7zLEifBX6tGkNJF4QyIY7sIas=
+github.com/go-logr/logr v0.2.0/go.mod h1:z6/tIYblkpsD+a4lm/fGIIU9mZ+XfAiaFtq7xTgseGU=
 github.com/go-logr/zapr v0.1.0/go.mod h1:tabnROwaDl0UNxkVeFRbY8bwB37GwRv0P8lg6aAiEnk=
 github.com/go-logr/zapr v0.1.1/go.mod h1:tabnROwaDl0UNxkVeFRbY8bwB37GwRv0P8lg6aAiEnk=
 github.com/go-martini/martini v0.0.0-20170121215854-22fa46961aab/go.mod h1:/P9AEU963A2AYjv4d1V5eVL1CQbEJq6aCNHDDjibzu8=
@@ -680,6 +681,9 @@ github.com/jenkins-x/go-scm v1.5.143 h1:3Ao/pdpbo9OF3qjyMkZs1uz+37Ls4P1aUi/i6/cJ
 github.com/jenkins-x/go-scm v1.5.143/go.mod h1:PCT338UhP/pQ0IeEeMEf/hoLTYKcH7qjGEKd7jPkeYg=
 github.com/jenkins-x/golang-jenkins v0.0.0-20180919102630-65b83ad42314 h1:kyBMx/ucSV92S+umX/V6DDaPNynlFFOM9MGJWApltoU=
 github.com/jenkins-x/golang-jenkins v0.0.0-20180919102630-65b83ad42314/go.mod h1:C6j5HgwlHGjRU27W4XCs6jXksqYFo8OdBu+p44jqQeM=
+github.com/jenkins-x/jx-api v0.0.13 h1:vK77HgVmw17ik/pbOzJKdrd/itBaFPVWI+VVM9jGHGo=
+github.com/jenkins-x/jx-api v0.0.13/go.mod h1:/TyG05VMeX2hydFPHh6nDfPPXTBCQaFCuet/pdPvjUA=
+github.com/jenkins-x/jx-logging v0.0.8/go.mod h1:mjEejiArk2Mk+J+72/YcSKGo9bZlJ/LwKYjMgAiv+G4=
 github.com/jenkins-x/jx-logging v0.0.10 h1:K1+2NaWOOk2pP9dJlErjlOvYbA24oQ9D9ItJIa+j2Q0=
 github.com/jenkins-x/jx-logging v0.0.10/go.mod h1:mjEejiArk2Mk+J+72/YcSKGo9bZlJ/LwKYjMgAiv+G4=
 github.com/jenkins-x/jx/v2 v2.1.90 h1:Eqx64xg6y7QE8uzuBZ7TG5DS0ITpIiA8LYDCen3vvok=
@@ -717,6 +721,8 @@ github.com/json-iterator/go v1.1.8/go.mod h1:KdQUCv79m/52Kvf8AW2vK1V8akMuk1QjK/u
 github.com/json-iterator/go v1.1.9 h1:9yzud/Ht36ygwatGx56VwCZtlI/2AD15T1X2sjSuGns=
 github.com/json-iterator/go v1.1.9/go.mod h1:KdQUCv79m/52Kvf8AW2vK1V8akMuk1QjK/uOdHXbAo4=
 github.com/jstemmer/go-junit-report v0.0.0-20190106144839-af01ea7f8024/go.mod h1:6v2b51hI/fHJwM22ozAgKL4VKDeJcHhJFhtBdhmNjmU=
+github.com/jstrachan/jx/v2 v2.0.0-20200714060340-71604a560ac7 h1:G6+nT+OvlC9GDWo1iObmAHsLGWQwgkHFS7E03pcq3Nc=
+github.com/jstrachan/jx/v2 v2.0.0-20200714060340-71604a560ac7/go.mod h1:gszLGbo65HRFg3m9UUxUgnRda6RrCDqvDjDFlelliMA=
 github.com/jtnord/logrus v1.4.2-0.20190423161236-606ffcaf8f5d h1:95Dc4I4Pw81p6Gc1IUqOtLPPf2qnhrcC3Lsv3tLdb1I=
 github.com/jtnord/logrus v1.4.2-0.20190423161236-606ffcaf8f5d/go.mod h1:ni0Sbl8bgC9z8RoU9G6nDWqqs/fq4eDPysMBDgk/93Q=
 github.com/jtolds/gls v4.2.1+incompatible/go.mod h1:QJZ7F/aHp+rZTRtaJ1ow/lLfFfVYBRgL+9YlvaHOwJU=
