@@ -11,7 +11,7 @@ require (
 	github.com/jenkins-x/golang-jenkins v0.0.0-20180919102630-65b83ad42314
 	github.com/jenkins-x/jx-api v0.0.13
 	github.com/jenkins-x/jx-logging v0.0.10
-	github.com/jenkins-x/jx/v2 v2.1.90
+	github.com/jenkins-x/jx/v2 v2.1.99
 	github.com/pkg/errors v0.9.1
 	github.com/spf13/cobra v1.0.0
 	github.com/spf13/pflag v1.0.5
@@ -54,6 +54,3 @@ replace github.com/TV4/logrus-stackdriver-formatter => github.com/jenkins-x/logr
 replace k8s.io/test-infra => github.com/jenkins-x/test-infra v0.0.0-20200611142252-211a92405c22
 
 replace gomodules.xyz/jsonpatch/v2 => gomodules.xyz/jsonpatch/v2 v2.0.1
-
-// TODO replace with real release ASAP
-replace github.com/jenkins-x/jx/v2 => github.com/jstrachan/jx/v2 v2.0.0-20200714060340-71604a560ac7
