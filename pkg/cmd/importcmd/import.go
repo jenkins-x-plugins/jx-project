@@ -48,7 +48,7 @@ import (
 // CallbackFn callback function
 type CallbackFn func() error
 
-// ImportOptions options struct for jwizard import
+// ImportOptions options struct for jx-project import
 type ImportOptions struct {
 	*opts.CommonOptions
 
@@ -144,13 +144,13 @@ var (
 	removeSourceRepositoryAnnotations = []string{"kubectl.kubernetes.io/last-applied-configuration", "jenkins.io/chart"}
 )
 
-// NewCmdImport the cobra command for jwizard import
+// NewCmdImport the cobra command for jx-project import
 func NewCmdImport(commonOpts *opts.CommonOptions) *cobra.Command {
 	cmd, _ := NewCmdImportAndOptions(commonOpts)
 	return cmd
 }
 
-// NewCmdImportAndOptions creates the cobra command for jwizard import and the options
+// NewCmdImportAndOptions creates the cobra command for jx-project import and the options
 func NewCmdImportAndOptions(commonOpts *opts.CommonOptions) (*cobra.Command, *ImportOptions) {
 	options := &ImportOptions{
 		CommonOptions: commonOpts,

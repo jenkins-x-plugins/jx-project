@@ -1,4 +1,4 @@
 #!/usr/bin/env sh
 
 dir=$(dirname "$0")
-dlv --log-dest 2 --listen=:2345 --headless=true --api-version=2 exec "${dir}/../build/jwizard" -- "$@" > /dev/null 2>&1
+dlv --log-dest 2 --listen=:2345 --headless=true --api-version=2 exec "${dir}/../build/jx-project" -- "$@" > /dev/null 2>&1

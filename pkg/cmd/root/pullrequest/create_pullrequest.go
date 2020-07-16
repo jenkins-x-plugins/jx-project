@@ -93,6 +93,7 @@ func NewCmdCreatePullRequest(commonOpts *opts.CommonOptions) *cobra.Command {
 	cmd.Flags().BoolVarP(&options.Push, "push", "", false, "If true the contents of the source directory will be committed, pushed, and used to create the pull request")
 	cmd.Flags().BoolVarP(&options.Fork, "fork", "", false, "If true, and the username configured to push the repo is different from the org name a PR is being created against, assume that this is a fork")
 
+	cmd.Flags().BoolVarP(&options.BatchMode, "batch-mode", "b", false, "Enables batch mode which avoids prompting for user input")
 	return cmd
 }
 

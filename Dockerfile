@@ -2,6 +2,6 @@ FROM centos:7
 
 RUN yum install -y git
 
-ENTRYPOINT ["jwizard"]
+ENTRYPOINT ["jx-project"]
 
-COPY ./build/linux/jwizard /usr/bin/jwizard
+COPY ./build/linux/jx-project /usr/bin/jx-project
