@@ -6,6 +6,7 @@ import (
 
 	"github.com/jenkins-x/jx-project/pkg/cmd/common"
 	"github.com/jenkins-x/jx-project/pkg/cmd/importcmd"
+	"github.com/jenkins-x/jx-project/pkg/cmd/root/pullrequest"
 	"github.com/jenkins-x/jx/v2/pkg/cmd/clients"
 	"github.com/jenkins-x/jx/v2/pkg/cmd/create/options"
 	"github.com/jenkins-x/jx/v2/pkg/helm"
@@ -69,7 +70,7 @@ func NewCmdMain() (*cobra.Command, *WizardOptions) {
 }
 
 // NewCmdMainWithOptions creates a command object for the command
-func NewCmdMainWithOptions(commonOpts *opts.CommonOptions) (*cobra.Command, *WizardOptions)  {
+func NewCmdMainWithOptions(commonOpts *opts.CommonOptions) (*cobra.Command, *WizardOptions) {
 	options := &WizardOptions{
 		CreateOptions: options.CreateOptions{
 			CommonOptions: commonOpts,
@@ -92,6 +93,7 @@ func NewCmdMainWithOptions(commonOpts *opts.CommonOptions) (*cobra.Command, *Wiz
 	cmd.AddCommand(NewCmdCreateQuickstart(commonOpts))
 	cmd.AddCommand(NewCmdCreateSpring(commonOpts))
 	cmd.AddCommand(importcmd.NewCmdImport(commonOpts))
+	cmd.AddCommand(pullrequest.NewCmdCreatePullRequest(commonOpts))
 
 	return cmd, options
 }
