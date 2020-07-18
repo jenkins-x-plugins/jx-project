@@ -13,10 +13,10 @@ import (
 	"github.com/jenkins-x-labs/trigger-pipeline/pkg/jenkinsutil"
 	"github.com/jenkins-x-labs/trigger-pipeline/pkg/jenkinsutil/factory"
 	gojenkins "github.com/jenkins-x/golang-jenkins"
-	"github.com/jenkins-x/jx-logging/pkg/log"
-	"github.com/jenkins-x/jx-project/pkg/cmd/common"
 	jenkinsio "github.com/jenkins-x/jx-api/pkg/apis/jenkins.io"
 	v1 "github.com/jenkins-x/jx-api/pkg/apis/jenkins.io/v1"
+	"github.com/jenkins-x/jx-logging/pkg/log"
+	"github.com/jenkins-x/jx-project/pkg/cmd/common"
 	"github.com/jenkins-x/jx/v2/pkg/auth"
 	"github.com/jenkins-x/jx/v2/pkg/cloud/amazon"
 	"github.com/jenkins-x/jx/v2/pkg/cmd/edit"
@@ -52,44 +52,47 @@ type CallbackFn func() error
 type ImportOptions struct {
 	*opts.CommonOptions
 
-	RepoURL                string
-	Dir                    string
-	Organisation           string
-	Repository             string
-	Credentials            string
-	AppName                string
-	SelectFilter           string
-	Jenkinsfile            string
-	BranchPattern          string
-	ImportGitCommitMessage string
-	Pack                   string
-	DockerRegistryOrg      string
-	DeployKind             string
-	SchedulerName          string
-	GitConfDir             string
-	PipelineUserName       string
-	PipelineServer         string
-	ImportMode             string
-	ServiceAccount         string
-	DisableMaven           bool
-	UseDefaultGit          bool
-	GithubAppInstalled     bool
-	GitHub                 bool
-	DryRun                 bool
-	SelectAll              bool
-	DisableBuildPack       bool
-	DisableWebhooks        bool
-	DisableDotGitSearch    bool
-	InitialisedGit         bool
-	DeployOptions          v1.DeployOptions
-	GitRepositoryOptions   gits.GitRepositoryOptions
-	GitDetails             gits.CreateRepoData
-	Jenkins                gojenkins.JenkinsClient
-	GitServer              *auth.AuthServer
-	GitUserAuth            *auth.UserAuth
-	GitProvider            gits.GitProvider
-	PostDraftPackCallback  CallbackFn
-	JXFactory              jxfactory.Factory
+	RepoURL                            string
+	Dir                                string
+	Organisation                       string
+	Repository                         string
+	Credentials                        string
+	AppName                            string
+	SelectFilter                       string
+	Jenkinsfile                        string
+	BranchPattern                      string
+	ImportGitCommitMessage             string
+	Pack                               string
+	DockerRegistryOrg                  string
+	DeployKind                         string
+	SchedulerName                      string
+	GitConfDir                         string
+	PipelineUserName                   string
+	PipelineServer                     string
+	ImportMode                         string
+	ServiceAccount                     string
+	DisableMaven                       bool
+	UseDefaultGit                      bool
+	GithubAppInstalled                 bool
+	GitHub                             bool
+	DryRun                             bool
+	SelectAll                          bool
+	DisableBuildPack                   bool
+	DisableWebhooks                    bool
+	DisableDotGitSearch                bool
+	InitialisedGit                     bool
+	WaitForSourceRepositoryPullRequest bool
+	PullRequestPollPeriod              time.Duration
+	PullRequestPollTimeout             time.Duration
+	DeployOptions                      v1.DeployOptions
+	GitRepositoryOptions               gits.GitRepositoryOptions
+	GitDetails                         gits.CreateRepoData
+	Jenkins                            gojenkins.JenkinsClient
+	GitServer                          *auth.AuthServer
+	GitUserAuth                        *auth.UserAuth
+	GitProvider                        gits.GitProvider
+	PostDraftPackCallback              CallbackFn
+	JXFactory                          jxfactory.Factory
 
 	Destination          ImportDestination
 	reporter             ImportReporter
@@ -206,6 +209,10 @@ func (o *ImportOptions) AddImportFlags(cmd *cobra.Command, createProject bool) {
 	cmd.Flags().StringVarP(&o.Destination.JenkinsfileRunner.Image, "jenkinsfilerunner", "", "", "if you want to import into Jenkins X with Jenkinsfilerunner this argument lets you specify the container image to use")
 	cmd.Flags().StringVar(&o.ServiceAccount, "service-account", "tekton-bot", "The Kubernetes ServiceAccount to use to run the initial pipeline")
 	cmd.Flags().BoolVarP(&o.BatchMode, "batch-mode", "b", false, "Runs in batch mode without prompting for user input")
+
+	cmd.Flags().BoolVarP(&o.WaitForSourceRepositoryPullRequest, "wait-for-pr", "", true, "waits for the Pull Request generated on the development envirionment git repository to merge")
+	cmd.Flags().DurationVarP(&o.PullRequestPollPeriod, "pr-poll-period", "", time.Second*10, "the time between polls of the Pull Request on the development environment git repository")
+	cmd.Flags().DurationVarP(&o.PullRequestPollTimeout, "pr-poll-timeout", "", time.Minute*10, "the maximum amount of time we wait for the Pull Request on the development environment git repository")
 
 	opts.AddGitRepoOptionsArguments(cmd, &o.GitRepositoryOptions)
 }
@@ -1120,6 +1127,13 @@ func (o *ImportOptions) addProwConfig(gitURL string, gitKind string) error {
 			prURL := ""
 			if pro.Results != nil && pro.Results.PullRequest != nil {
 				prURL = pro.Results.PullRequest.URL
+
+				if o.WaitForSourceRepositoryPullRequest {
+					err = o.waitForSourceRepositoryPullRequest(pro.Results, devGitURL)
+					if err != nil {
+						return errors.Wrapf(err, "failed to wait for the Pull Request %s to merge", prURL)
+					}
+				}
 			}
 			o.GetReporter().CreatedDevRepoPullRequest(prURL, devGitURL)
 		}
@@ -1831,4 +1845,51 @@ func (o *ImportOptions) PickBuildPackName(i *InvokeDraftPack, dir string, chosen
 	name, err := util.PickNameWithDefault(names, "Confirm the build pack name you wish to use on this project", chosenPack,
 		"the build pack name is used to determine the automated pipeline for your source code", o.GetIOFileHandles())
 	return name, err
+}
+
+func (o *ImportOptions) waitForSourceRepositoryPullRequest(pullRequestInfo *gits.PullRequestInfo, devEnvGitURL string) error {
+	logNoMergeCommitSha := false
+	logHasMergeSha := false
+	end := time.Now().Add(o.PullRequestPollTimeout)
+
+	if pullRequestInfo != nil {
+		for {
+			pr := pullRequestInfo.PullRequest
+			gitProvider, _, err := o.CreateGitProviderForURLWithoutKind(devEnvGitURL)
+			if err != nil {
+				return errors.Wrapf(err, "creating git provider for %s", devEnvGitURL)
+			}
+			err = gitProvider.UpdatePullRequestStatus(pr)
+			if err != nil {
+				log.Logger().Warnf("Failed to query the Pull Request status for %s %s", pr.URL, err)
+			} else {
+				if pr.Merged != nil && *pr.Merged {
+					if pr.MergeCommitSHA == nil {
+						if !logNoMergeCommitSha {
+							logNoMergeCommitSha = true
+							log.Logger().Infof("Pull Request %s is merged but we don't yet have a merge SHA", util.ColorInfo(pr.URL))
+							return nil
+						}
+					} else {
+						mergeSha := *pr.MergeCommitSHA
+						if !logHasMergeSha {
+							logHasMergeSha = true
+							log.Logger().Infof("Pull Request %s is merged at sha %s", util.ColorInfo(pr.URL), util.ColorInfo(mergeSha))
+							return nil
+						}
+					}
+				} else {
+					if pr.IsClosed() {
+						log.Logger().Warnf("Pull Request %s is closed", util.ColorInfo(pr.URL))
+						return nil
+					}
+				}
+			}
+			if time.Now().After(end) {
+				return fmt.Errorf("Timed out waiting for pull request %s to merge. Waited %s", pr.URL, o.PullRequestPollTimeout.String())
+			}
+			time.Sleep(o.PullRequestPollPeriod)
+		}
+	}
+	return nil
 }
