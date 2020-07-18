@@ -1851,8 +1851,14 @@ func (o *ImportOptions) waitForSourceRepositoryPullRequest(pullRequestInfo *gits
 	logNoMergeCommitSha := false
 	logHasMergeSha := false
 	end := time.Now().Add(o.PullRequestPollTimeout)
+	durationString := o.PullRequestPollTimeout.String()
 
 	if pullRequestInfo != nil {
+		if pullRequestInfo.PullRequest != nil {
+			log.Logger().Infof("waiting up to %s for the pull request %s to merge....", durationString, util.ColorInfo(pullRequestInfo.PullRequest.URL))
+		} else {
+			log.Logger().Infof("waiting up to %s for the pull request on repository %s to merge....", durationString, util.ColorInfo(devEnvGitURL))
+		}
 		for {
 			pr := pullRequestInfo.PullRequest
 			gitProvider, _, err := o.CreateGitProviderForURLWithoutKind(devEnvGitURL)
@@ -1886,7 +1892,7 @@ func (o *ImportOptions) waitForSourceRepositoryPullRequest(pullRequestInfo *gits
 				}
 			}
 			if time.Now().After(end) {
-				return fmt.Errorf("Timed out waiting for pull request %s to merge. Waited %s", pr.URL, o.PullRequestPollTimeout.String())
+				return fmt.Errorf("Timed out waiting for pull request %s to merge. Waited %s", pr.URL, durationString)
 			}
 			time.Sleep(o.PullRequestPollPeriod)
 		}
