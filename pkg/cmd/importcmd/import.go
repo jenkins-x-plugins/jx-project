@@ -82,6 +82,7 @@ type ImportOptions struct {
 	DisableDotGitSearch                bool
 	InitialisedGit                     bool
 	WaitForSourceRepositoryPullRequest bool
+	NoDevPullRequest                   bool
 	PullRequestPollPeriod              time.Duration
 	PullRequestPollTimeout             time.Duration
 	DeployOptions                      v1.DeployOptions
@@ -211,6 +212,7 @@ func (o *ImportOptions) AddImportFlags(cmd *cobra.Command, createProject bool) {
 	cmd.Flags().BoolVarP(&o.BatchMode, "batch-mode", "b", false, "Runs in batch mode without prompting for user input")
 
 	cmd.Flags().BoolVarP(&o.WaitForSourceRepositoryPullRequest, "wait-for-pr", "", true, "waits for the Pull Request generated on the development envirionment git repository to merge")
+	cmd.Flags().BoolVarP(&o.NoDevPullRequest, "no-dev-pr", "", true, "disables generating a Pull Request on the development git repository")
 	cmd.Flags().DurationVarP(&o.PullRequestPollPeriod, "pr-poll-period", "", time.Second*10, "the time between polls of the Pull Request on the development environment git repository")
 	cmd.Flags().DurationVarP(&o.PullRequestPollTimeout, "pr-poll-timeout", "", time.Minute*10, "the maximum amount of time we wait for the Pull Request on the development environment git repository")
 
@@ -1101,7 +1103,7 @@ func (o *ImportOptions) addProwConfig(gitURL string, gitKind string) error {
 		}
 
 		devGitURL := devEnv.Spec.Source.URL
-		if devGitURL != "" && !gha {
+		if devGitURL != "" && !gha && !o.NoDevPullRequest {
 			// lets generate a PR
 			base := devEnv.Spec.Source.Ref
 			if base == "" {
