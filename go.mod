@@ -8,19 +8,20 @@ require (
 	github.com/cpuguy83/go-md2man v1.0.10
 	github.com/denormal/go-gitignore v0.0.0-20180713143441-75ce8f3e513c
 	github.com/jenkins-x-labs/trigger-pipeline v0.1.0
+	github.com/jenkins-x/go-scm v1.5.153 // indirect
 	github.com/jenkins-x/golang-jenkins v0.0.0-20180919102630-65b83ad42314
-	github.com/jenkins-x/jx-api v0.0.13
-	github.com/jenkins-x/jx-logging v0.0.10
-	github.com/jenkins-x/jx/v2 v2.1.99
+	github.com/jenkins-x/jx-api v0.0.17
+	github.com/jenkins-x/jx-logging v0.0.11
+	github.com/jenkins-x/jx/v2 v2.1.121
 	github.com/pkg/errors v0.9.1
 	github.com/spf13/cobra v1.0.0
 	github.com/spf13/pflag v1.0.5
 	github.com/stretchr/testify v1.6.1
-	github.com/tektoncd/pipeline v0.11.3
+	github.com/tektoncd/pipeline v0.14.2
 	gopkg.in/AlecAivazis/survey.v1 v1.8.8
 	gopkg.in/src-d/go-git.v4 v4.13.1
-	k8s.io/api v0.17.2
-	k8s.io/apimachinery v0.17.2
+	k8s.io/api v0.18.1
+	k8s.io/apimachinery v0.18.1
 	k8s.io/client-go v11.0.1-0.20190805182717-6502b5e7b1b5+incompatible
 	k8s.io/helm v2.7.2+incompatible
 	sigs.k8s.io/yaml v1.2.0
