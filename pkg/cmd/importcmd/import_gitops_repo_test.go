@@ -1,0 +1,94 @@
+// +build integration
+
+package importcmd_test
+
+import (
+	"github.com/jenkins-x/jx-project/pkg/cmd/fakejxfactory"
+	"github.com/jenkins-x/jx-project/pkg/cmd/importcmd"
+	"github.com/jenkins-x/jx/v2/pkg/cmd/testhelpers"
+	"github.com/jenkins-x/jx/v2/pkg/kube/naming"
+
+	"io/ioutil"
+	"os"
+	"path/filepath"
+	"testing"
+
+	"github.com/stretchr/testify/require"
+	"k8s.io/apimachinery/pkg/runtime"
+
+	v1 "github.com/jenkins-x/jx-api/pkg/apis/jenkins.io/v1"
+	fake_clients "github.com/jenkins-x/jx/v2/pkg/cmd/clients/fake"
+	"github.com/jenkins-x/jx/v2/pkg/cmd/opts"
+	"github.com/jenkins-x/jx/v2/pkg/gits"
+	"github.com/jenkins-x/jx/v2/pkg/helm"
+	resources_test "github.com/jenkins-x/jx/v2/pkg/kube/resources/mocks"
+	"github.com/jenkins-x/jx/v2/pkg/tests"
+	"github.com/jenkins-x/jx/v2/pkg/util"
+	"github.com/stretchr/testify/assert"
+)
+
+func TestImportGitOpsRepository(t *testing.T) {
+	originalJxHome, tempJxHome, err := testhelpers.CreateTestJxHomeDir()
+	assert.NoError(t, err)
+	defer func() {
+		err := testhelpers.CleanupTestJxHomeDir(originalJxHome, tempJxHome)
+		assert.NoError(t, err)
+	}()
+	originalKubeCfg, tempKubeCfg, err := testhelpers.CreateTestKubeConfigDir()
+	assert.NoError(t, err)
+	defer func() {
+		err := testhelpers.CleanupTestKubeConfigDir(originalKubeCfg, tempKubeCfg)
+		assert.NoError(t, err)
+	}()
+
+	tempDir, err := ioutil.TempDir("", "test-import-jx-gha-")
+	assert.NoError(t, err)
+
+	name := "import_gitops_repo"
+	srcDir := filepath.Join("test_data", name)
+	require.DirExists(t, srcDir, "source dir does not exist")
+
+	buildPackURL := "https://github.com/jenkins-x/jxr-packs-kubernetes.git"
+
+	testDir := tempDir
+
+	util.CopyDir(srcDir, testDir, true)
+	_, dirName := filepath.Split(testDir)
+	dirName = naming.ToValidName(dirName)
+	o := &importcmd.ImportOptions{
+		CommonOptions: &opts.CommonOptions{},
+	}
+
+	o.SetFactory(fake_clients.NewFakeFactory())
+	o.JXFactory = fakejxfactory.NewFakeFactory()
+	o.GitProvider = createFakeGitProvider()
+
+	k8sObjects := []runtime.Object{}
+	jxObjects := []runtime.Object{}
+	helmer := helm.NewHelmCLI("helm", helm.V3, dirName, true)
+	testhelpers.ConfigureTestOptionsWithResources(o.CommonOptions, k8sObjects, jxObjects, gits.NewGitCLI(), nil, helmer, resources_test.NewMockInstaller())
+	if o.Out == nil {
+		o.Out = tests.Output()
+	}
+	if o.Out == nil {
+		o.Out = os.Stdout
+	}
+	o.Dir = testDir
+	o.DryRun = true
+	o.DisableMaven = true
+	o.UseDefaultGit = true
+
+	o.Destination.JenkinsX.Enabled = true
+	callback := func(env *v1.Environment) error {
+		env.Spec.TeamSettings.ImportMode = v1.ImportModeTypeYAML
+		if buildPackURL != "" {
+			env.Spec.TeamSettings.BuildPackURL = buildPackURL
+		}
+		return nil
+	}
+	err = o.ModifyDevEnvironment(callback)
+	require.NoError(t, err, "failed to modify Dev Environment")
+
+	err = o.Run()
+	require.NoError(t, err, "Failed %s with %s", dirName, err)
+}

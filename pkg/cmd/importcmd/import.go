@@ -26,6 +26,7 @@ import (
 	"github.com/jenkins-x/jx/v2/pkg/cmd/step/create/pr"
 	"github.com/jenkins-x/jx/v2/pkg/cmd/templates"
 	"github.com/jenkins-x/jx/v2/pkg/config"
+	"github.com/jenkins-x/jx/v2/pkg/dependencymatrix"
 	"github.com/jenkins-x/jx/v2/pkg/github"
 	"github.com/jenkins-x/jx/v2/pkg/gits"
 	"github.com/jenkins-x/jx/v2/pkg/jenkinsfile"
@@ -400,11 +401,20 @@ func (o *ImportOptions) Run() error {
 		}
 	}
 
+	gitOpsRepo, err := IsGitOpsRepositoryWithPipeline(o.Dir)
+	if err != nil {
+		return errors.Wrapf(err, "failed to check if dir contains a gitops repository %s", o.Dir)
+	}
+	if gitOpsRepo {
+		o.DisableBuildPack = true
+	}
+
 	if !o.DisableBuildPack {
 		err = o.EvaluateBuildPack(jenkinsfile)
 		if err != nil {
 			return err
 		}
+
 	}
 	err = o.fixDockerIgnoreFile()
 	if err != nil {
@@ -1104,6 +1114,8 @@ func (o *ImportOptions) addProwConfig(gitURL string, gitKind string) error {
 
 		devGitURL := devEnv.Spec.Source.URL
 		if devGitURL != "" && !gha && !o.NoDevPullRequest {
+			configureDependencyMatrix()
+
 			// lets generate a PR
 			base := devEnv.Spec.Source.Ref
 			if base == "" {
@@ -1119,7 +1131,13 @@ func (o *ImportOptions) addProwConfig(gitURL string, gitKind string) error {
 			pro.CommonOptions = o.CommonOptions
 
 			changeFn := func(dir string, gitInfo *gits.GitRepository) ([]string, error) {
-				return nil, writeSourceRepoToYaml(dir, sr)
+				err := writeSourceRepoToYaml(dir, sr)
+				if err != nil {
+					return nil, errors.Wrapf(err, "failed to write SourceRepository %s to dir %s", sr.Name, dir)
+				}
+
+				err = o.modifyDevEnvironmentSource(dir, gitInfo, gitURL, gitKind)
+				return nil, err
 			}
 
 			err := pro.CreatePullRequest("resource", changeFn)
@@ -1902,4 +1920,9 @@ func (o *ImportOptions) waitForSourceRepositoryPullRequest(pullRequestInfo *gits
 		}
 	}
 	return nil
+}
+
+func configureDependencyMatrix() {
+	// lets configure the dependency matrix path
+	dependencymatrix.DependencyMatrixDirName = filepath.Join(".jx", "dependencies")
 }
