@@ -1140,6 +1140,13 @@ func (o *ImportOptions) addProwConfig(gitURL string, gitKind string) error {
 				return nil, err
 			}
 
+			if pro.Username == "" {
+				pro.Username = o.Username
+				if pro.Username == "" && o.GitUserAuth != nil {
+					pro.Username = o.GitUserAuth.Username
+				}
+				log.Logger().Infof("defaulting the user name to %s so we can create a PullRequest", pro.Username)
+			}
 			err := pro.CreatePullRequest("resource", changeFn)
 			if err != nil {
 				return errors.Wrapf(err, "failed to create Pull Request on the development environment git repository %s", devGitURL)
@@ -1240,7 +1247,7 @@ func writeSourceRepoToYaml(dir string, sr *v1.SourceRepository) error {
 	}
 	if !exists {
 		// lets default to the jx 3 location
-		outDir = filepath.Join(dir, "src", "base", "namespaces", "jx", "source-repositories")
+		outDir = filepath.Join(dir, "versionStream", "src", "base", "namespaces", "jx", "source-repositories")
 		fileName = filepath.Join(outDir, sr.Name+".yaml")
 	}
 	err = os.MkdirAll(outDir, util.DefaultWritePermissions)
