@@ -17,7 +17,7 @@ require (
 	github.com/spf13/cobra v1.0.0
 	github.com/spf13/pflag v1.0.5
 	github.com/stretchr/testify v1.6.1
-	github.com/tektoncd/pipeline v0.14.2
+	github.com/tektoncd/pipeline v0.15.2
 	gopkg.in/AlecAivazis/survey.v1 v1.8.8
 	gopkg.in/src-d/go-git.v4 v4.13.1
 	k8s.io/api v0.18.1
