@@ -9,7 +9,7 @@ require (
 	github.com/denormal/go-gitignore v0.0.0-20180713143441-75ce8f3e513c
 	github.com/jenkins-x/golang-jenkins v0.0.0-20180919102630-65b83ad42314
 	github.com/jenkins-x/jx-api v0.0.17
-	github.com/jenkins-x/jx-gitops v0.0.222
+	github.com/jenkins-x/jx-gitops v0.0.230
 	github.com/jenkins-x/jx-jenkins v0.0.22
 	github.com/jenkins-x/jx-logging v0.0.11
 	github.com/jenkins-x/jx/v2 v2.1.133
