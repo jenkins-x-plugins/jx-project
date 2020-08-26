@@ -7,10 +7,10 @@ require (
 	github.com/cenkalti/backoff v2.2.1+incompatible
 	github.com/cpuguy83/go-md2man v1.0.10
 	github.com/denormal/go-gitignore v0.0.0-20180713143441-75ce8f3e513c
-	github.com/jenkins-x-labs/trigger-pipeline v0.1.0
 	github.com/jenkins-x/golang-jenkins v0.0.0-20180919102630-65b83ad42314
 	github.com/jenkins-x/jx-api v0.0.17
 	github.com/jenkins-x/jx-gitops v0.0.222
+	github.com/jenkins-x/jx-jenkins v0.0.22
 	github.com/jenkins-x/jx-logging v0.0.11
 	github.com/jenkins-x/jx/v2 v2.1.133
 	github.com/pkg/errors v0.9.1
