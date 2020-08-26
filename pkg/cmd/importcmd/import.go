@@ -15,6 +15,7 @@ import (
 	gojenkins "github.com/jenkins-x/golang-jenkins"
 	jenkinsio "github.com/jenkins-x/jx-api/pkg/apis/jenkins.io"
 	v1 "github.com/jenkins-x/jx-api/pkg/apis/jenkins.io/v1"
+	"github.com/jenkins-x/jx-gitops/pkg/cmd/repository/export"
 	"github.com/jenkins-x/jx-logging/pkg/log"
 	"github.com/jenkins-x/jx-project/pkg/cmd/common"
 	"github.com/jenkins-x/jx/v2/pkg/auth"
@@ -214,8 +215,8 @@ func (o *ImportOptions) AddImportFlags(cmd *cobra.Command, createProject bool) {
 
 	cmd.Flags().BoolVarP(&o.WaitForSourceRepositoryPullRequest, "wait-for-pr", "", true, "waits for the Pull Request generated on the development envirionment git repository to merge")
 	cmd.Flags().BoolVarP(&o.NoDevPullRequest, "no-dev-pr", "", false, "disables generating a Pull Request on the development git repository")
-	cmd.Flags().DurationVarP(&o.PullRequestPollPeriod, "pr-poll-period", "", time.Second*10, "the time between polls of the Pull Request on the development environment git repository")
-	cmd.Flags().DurationVarP(&o.PullRequestPollTimeout, "pr-poll-timeout", "", time.Minute*10, "the maximum amount of time we wait for the Pull Request on the development environment git repository")
+	cmd.Flags().DurationVarP(&o.PullRequestPollPeriod, "pr-poll-period", "", time.Second*20, "the time between polls of the Pull Request on the development environment git repository")
+	cmd.Flags().DurationVarP(&o.PullRequestPollTimeout, "pr-poll-timeout", "", time.Minute*20, "the maximum amount of time we wait for the Pull Request on the development environment git repository")
 
 	opts.AddGitRepoOptionsArguments(cmd, &o.GitRepositoryOptions)
 }
@@ -1246,9 +1247,19 @@ func writeSourceRepoToYaml(dir string, sr *v1.SourceRepository) error {
 		return errors.Wrapf(err, "failed to check if file exists %s", outDir)
 	}
 	if !exists {
+
 		// lets default to the jx 3 location
-		outDir = filepath.Join(dir, "versionStream", "src", "base", "namespaces", "jx", "source-repositories")
-		fileName = filepath.Join(outDir, sr.Name+".yaml")
+		eo := &export.Options{
+			Dir: dir,
+		}
+		srList := []v1.SourceRepository{
+			*sr,
+		}
+		err = eo.PopulateSourceConfig(srList)
+		if err != nil {
+			return errors.Wrapf(err, "failed to populate SourceConfig")
+		}
+		return nil
 	}
 	err = os.MkdirAll(outDir, util.DefaultWritePermissions)
 	if err != nil {
