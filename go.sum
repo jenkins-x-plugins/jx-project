@@ -892,6 +892,8 @@ github.com/jenkins-x/jx-api v0.0.17/go.mod h1:QKLHk4VzI+sDBPSzN4K+QdEjNIBnCHS3DK
 github.com/jenkins-x/jx-apps v0.0.4/go.mod h1:aazqQIaAsaJjsFL1NdilvQ9l41hjVT6L+dWe9ULravM=
 github.com/jenkins-x/jx-gitops v0.0.222 h1:ffNTlTYdyd5wQrcme01FBkqpTXBJnZdYtOWMsxbq4TI=
 github.com/jenkins-x/jx-gitops v0.0.222/go.mod h1:tqewNtNRZwRsC7RsaAqnvZGPpn1RWoBohPJDbUIkIfE=
+github.com/jenkins-x/jx-gitops v0.0.240 h1:0JPYzO3JJ8iqSHR/pu7JKdi4qDhXKOvj1ZrcWPRPd+c=
+github.com/jenkins-x/jx-gitops v0.0.240/go.mod h1:ilO7XGwlUqA/aDqExCLZAMcYLy+mGVRDo8sZA0LgJ5A=
 github.com/jenkins-x/jx-helpers v1.0.9/go.mod h1:JldgSKYWU4cwWGynlLHtR4BhhEjjppoKG8TKaaiiumY=
 github.com/jenkins-x/jx-helpers v1.0.45 h1:FMYxotMkt/VFDiZn3YBIaEWBF7JgjGB+w20gOCMFZ+k=
 github.com/jenkins-x/jx-helpers v1.0.45/go.mod h1:rJvVFOjVUx0urq93P8mVw/MMuBjd6qwbTYJw+rcU2jA=
@@ -2141,6 +2143,7 @@ sigs.k8s.io/kustomize/api v0.4.1/go.mod h1:NqxqT+wbYHrD0P19Uu4dXiMsVwI1IwQs+MJHl
 sigs.k8s.io/kustomize/kyaml v0.1.11/go.mod h1:72/rLkSi+L/pHM1oCjwrf3ClU+tH5kZQvvdLSqIHwWU=
 sigs.k8s.io/kustomize/kyaml v0.6.0 h1:Z/9TxsiG21sbcd6JD4IeM6BVZ2+04001KKzbxCf+qeY=
 sigs.k8s.io/kustomize/kyaml v0.6.0/go.mod h1:bEzbO5pN9OvlEeCLvFHo8Pu7SA26Herc2m60UeWZBdI=
+sigs.k8s.io/kustomize/kyaml v0.6.1/go.mod h1:bEzbO5pN9OvlEeCLvFHo8Pu7SA26Herc2m60UeWZBdI=
 sigs.k8s.io/structured-merge-diff v0.0.0-20190302045857-e85c7b244fd2/go.mod h1:wWxsB5ozmmv/SG7nM11ayaAW51xMvak/t1r0CSlcokI=
 sigs.k8s.io/structured-merge-diff v0.0.0-20190525122527-15d366b2352e/go.mod h1:wWxsB5ozmmv/SG7nM11ayaAW51xMvak/t1r0CSlcokI=
 sigs.k8s.io/structured-merge-diff v1.0.1-0.20191108220359-b1b620dd3f06/go.mod h1:/ULNhyfzRopfcjskuui0cTITekDduZ7ycKN3oUT9R18=
