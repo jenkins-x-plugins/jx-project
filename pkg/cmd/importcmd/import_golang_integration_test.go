@@ -65,7 +65,6 @@ func TestImportGoLangProject(t *testing.T) {
 		CommonOptions: &opts.CommonOptions{},
 	}
 
-
 	o.SetFactory(fake_clients.NewFakeFactory())
 	o.JXFactory = fakejxfactory.NewFakeFactory()
 	o.GitProvider = createFakeGitProvider()
@@ -101,8 +100,8 @@ func TestImportGoLangProject(t *testing.T) {
 
 	assert.FileExists(t, filepath.Join(testDir, "Dockerfile"))
 	assert.FileExists(t, filepath.Join(testDir, "charts", dirName, "Chart.yaml"))
-	assert.FileExists(t, filepath.Join(testDir, "charts", "preview", "requirements.yaml"))
 	assert.FileExists(t, filepath.Join(testDir, "charts", dirName, "resources", "README.md"))
+	assert.FileExists(t, filepath.Join(testDir, "preview", "helmfile.yaml"))
 	assert.FileExists(t, filepath.Join(testDir, config.ProjectConfigFileName))
 
 	projectConfig, projectFileName, err := config.LoadProjectConfig(testDir)
