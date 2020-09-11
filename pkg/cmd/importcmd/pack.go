@@ -181,7 +181,7 @@ func loadDirectory(pack *Pack, dir string, relPath string) error {
 		if fInfo.IsDir() {
 			// assume root folders not starting with dot are chart folders
 			// could replace this logic with checking for charts / preview strings instead?
-			if relPath == "" && !(strings.HasPrefix(name, ".")) {
+			if relPath == "" && name != "preview" && !(strings.HasPrefix(name, ".")) {
 				localChart, err := chartutil.LoadDir(filepath.Join(dir, name))
 				if err != nil {
 					continue
