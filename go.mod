@@ -9,10 +9,10 @@ require (
 	github.com/denormal/go-gitignore v0.0.0-20180713143441-75ce8f3e513c
 	github.com/jenkins-x/golang-jenkins v0.0.0-20180919102630-65b83ad42314
 	github.com/jenkins-x/jx-api v0.0.17
-	github.com/jenkins-x/jx-gitops v0.0.264
+	github.com/jenkins-x/jx-gitops v0.0.282
 	github.com/jenkins-x/jx-jenkins v0.0.22
 	github.com/jenkins-x/jx-logging v0.0.11
-	github.com/jenkins-x/jx/v2 v2.1.142
+	github.com/jenkins-x/jx/v2 v2.1.143
 	github.com/pkg/errors v0.9.1
 	github.com/spf13/cobra v1.0.0
 	github.com/spf13/pflag v1.0.5
