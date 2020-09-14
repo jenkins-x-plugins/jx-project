@@ -931,6 +931,8 @@ github.com/jenkins-x/jx-gitops v0.0.288/go.mod h1:s3MSa7VE6htWUtR4fCDEnMTjS5wOW3
 github.com/jenkins-x/jx-helpers v1.0.9/go.mod h1:JldgSKYWU4cwWGynlLHtR4BhhEjjppoKG8TKaaiiumY=
 github.com/jenkins-x/jx-helpers v1.0.58 h1:SRLCiV1VHm0KXZ3zjOtDj53Odl7/3hbJqfdBbg7WLR8=
 github.com/jenkins-x/jx-helpers v1.0.58/go.mod h1:GcR4f3e1183/StDPUbU9I3ie2ZtWkg+sq+oPb3RotRg=
+github.com/jenkins-x/jx-helpers v1.0.59 h1:CZLs4drsMerWR2mYKuJ+juIldEvdNNkt3mpTwuNbPE4=
+github.com/jenkins-x/jx-helpers v1.0.59/go.mod h1:VQQ5HOZacb7g5OS0D6AlVP4GJulxeWx78viRyMLvjOw=
 github.com/jenkins-x/jx-jenkins v0.0.22 h1:ObhIkWRjfHqqnCpxQ2RKdE0OqAwkKCzqL7UK3uE/Uug=
 github.com/jenkins-x/jx-jenkins v0.0.22/go.mod h1:L+kzmIg+eeW4TuQfZzrT7js08a64IYjj6jEtMLmrlVo=
 github.com/jenkins-x/jx-kube-client v0.0.8 h1:XK/TP2qnhHPb/vhaGHmvVilWGDtARIZ1DOEHp/6/h0Y=
@@ -2160,6 +2162,8 @@ k8s.io/kube-openapi v0.0.0-20200410145947-bcb3869e6f29 h1:NeQXVJ2XFSkRoPzRo8AId0
 k8s.io/kube-openapi v0.0.0-20200410145947-bcb3869e6f29/go.mod h1:F+5wygcW0wmRTnM3cOgIqGivxkwSWIWT5YdsDbeAOaU=
 k8s.io/kubernetes v1.14.0 h1:6T2iAEoOYQnzQb3WvPlUkcczEEXZ7+YPlAO8olwujRw=
 k8s.io/kubernetes v1.14.0/go.mod h1:ocZa8+6APFNC2tX1DZASIbocyYT5jHzqFVsY5aoB7Jk=
+k8s.io/kubernetes v1.14.7 h1:wJx/r2HuPVaaBeCUk/P47GSK0eyrj3mI/kESRFBp6/A=
+k8s.io/kubernetes v1.14.7/go.mod h1:ocZa8+6APFNC2tX1DZASIbocyYT5jHzqFVsY5aoB7Jk=
 k8s.io/legacy-cloud-providers v0.17.0/go.mod h1:DdzaepJ3RtRy+e5YhNtrCYwlgyK87j/5+Yfp0L9Syp8=
 k8s.io/legacy-cloud-providers v0.17.4/go.mod h1:FikRNoD64ECjkxO36gkDgJeiQWwyZTuBkhu+yxOc1Js=
 k8s.io/metrics v0.0.0-20190819143841-305e1cef1ab1 h1:vNxfr8VBLdY4B4AkyKUHhFV4X9Vec3QLrb6xFzZ25h4=
