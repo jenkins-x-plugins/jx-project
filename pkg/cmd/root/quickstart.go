@@ -89,8 +89,26 @@ func (o *CreateQuickstartOptions) Run() error {
 		return errors.Wrapf(err, "failed to validate options")
 	}
 
+	devEnvGitURL := o.DevEnv.Spec.Source.URL
+	if devEnvGitURL == "" {
+		return errors.Errorf("no spec.source.url for dev environment so cannot clone the version stream")
+	}
+	devEnvCloneDir, err := gitclient.CloneToDir(o.Git(), devEnvGitURL, "")
+	if err != nil {
+		return errors.Wrapf(err, "failed to clone dev environment git repository %s", devEnvGitURL)
+	}
+
+	versionStreamDir := filepath.Join(devEnvCloneDir, "versionStream")
+	exists, err := files.DirExists(versionStreamDir)
+	if err != nil {
+		return errors.Wrapf(err, "failed to check if dir exists %s", versionStreamDir)
+	}
+	if !exists {
+		return errors.Errorf("the dev Environment git repository %s does not include a versionStream directory", devEnvGitURL)
+	}
+
 	qo := &quickstarts.Options{
-		VersionsDir: "",
+		VersionsDir: versionStreamDir,
 		Namespace:   o.Namespace,
 		CurrentUser: "",
 		JXClient:    o.JXClient,

@@ -1,9 +1,5 @@
 package quickstarts
 
-import (
-	"github.com/jenkins-x/jx/v2/pkg/gits"
-)
-
 type Quickstart struct {
 	ID             string
 	Owner          string
@@ -15,7 +11,6 @@ type Quickstart struct {
 	DownloadZipURL string
 	GitServer      string
 	GitKind        string
-	GitProvider    gits.GitProvider
 }
 
 type QuickstartModel struct {

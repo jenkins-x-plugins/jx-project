@@ -5,17 +5,18 @@ import (
 	"os"
 
 	"github.com/jenkins-x/jx-helpers/pkg/cobras/helper"
+	"github.com/jenkins-x/jx-helpers/pkg/homedir"
 	"github.com/jenkins-x/jx-helpers/pkg/stringhelpers"
 	"github.com/jenkins-x/jx-helpers/pkg/termcolor"
 	"github.com/jenkins-x/jx-project/pkg/cmd/common"
 	"github.com/jenkins-x/jx-project/pkg/cmd/importcmd"
+	"github.com/pkg/errors"
 
 	"github.com/spf13/cobra"
 
 	"github.com/jenkins-x/jx-helpers/pkg/cobras/templates"
 	"github.com/jenkins-x/jx-logging/pkg/log"
-	"github.com/jenkins-x/jx/v2/pkg/spring"
-	"github.com/jenkins-x/jx/v2/pkg/util"
+	"github.com/jenkins-x/jx-project/pkg/spring"
 )
 
 var (
@@ -85,7 +86,12 @@ func NewCmdCreateSpring() *cobra.Command {
 
 // Run implements the command
 func (o *CreateSpringOptions) Run() error {
-	cacheDir, err := util.CacheDir()
+	err := o.Validate()
+	if err != nil {
+		return errors.Wrapf(err, "failed to validate options")
+	}
+
+	cacheDir, err := homedir.CacheDir(os.Getenv("JX3_HOME"), ".jx3")
 	if err != nil {
 		return err
 	}

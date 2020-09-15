@@ -6,9 +6,9 @@ import (
 	"github.com/jenkins-x/go-scm/scm"
 	v1 "github.com/jenkins-x/jx-api/pkg/apis/jenkins.io/v1"
 	"github.com/jenkins-x/jx-api/pkg/client/clientset/versioned"
+	"github.com/jenkins-x/jx-helpers/pkg/gitclient/giturl"
 	"github.com/jenkins-x/jx-helpers/pkg/kube/jxclient"
 	"github.com/jenkins-x/jx-helpers/pkg/versionstream"
-	"github.com/jenkins-x/jx/v2/pkg/gits"
 	"github.com/pkg/errors"
 )
 
@@ -123,15 +123,15 @@ func (o *Options) loadQuickStartLocations(gitHubOrganisations []string, ignoreTe
 	for _, org := range gitHubOrganisations {
 		found := false
 		for _, loc := range locations {
-			if loc.GitURL == gits.GitHubURL && loc.Owner == org {
+			if loc.GitURL == giturl.GitHubURL && loc.Owner == org {
 				found = true
 				break
 			}
 		}
 		if !found {
 			locations = append(locations, v1.QuickStartLocation{
-				GitURL:   gits.GitHubURL,
-				GitKind:  gits.KindGitHub,
+				GitURL:   giturl.GitHubURL,
+				GitKind:  giturl.KindGitHub,
 				Owner:    org,
 				Includes: []string{"*"},
 				Excludes: []string{"WIP-*"},

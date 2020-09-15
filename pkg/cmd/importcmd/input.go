@@ -4,12 +4,12 @@ import (
 	"context"
 	"fmt"
 	"sort"
+	"strings"
 
 	"github.com/jenkins-x/go-scm/scm"
 	"github.com/jenkins-x/jx-helpers/pkg/scmhelpers"
 	"github.com/jenkins-x/jx-helpers/pkg/termcolor"
 	"github.com/jenkins-x/jx-logging/pkg/log"
-	"github.com/jenkins-x/jx/v2/pkg/util"
 	"github.com/pkg/errors"
 )
 
@@ -37,9 +37,24 @@ func (o *ImportOptions) PickOwner(userName string) (string, error) {
 }
 
 // PickRepoName picks the repository name
-func (o *ImportOptions) PickRepoName(owner string, defaultName string) (string, error) {
+func (o *ImportOptions) PickRepoName(owner string, defaultName string, allowExistingRepo bool) (string, error) {
 	help := fmt.Sprintf("enter the name of the git repository to create within the %s owner", owner)
-	name, err := o.Input.PickValue("git repository name:", defaultName, true, help)
+
+	validator := func(val interface{}) error {
+		str, ok := val.(string)
+		if !ok {
+			return fmt.Errorf("Expected string value")
+		}
+		if strings.TrimSpace(str) == "" {
+			return fmt.Errorf("Repository name is required")
+		}
+		if allowExistingRepo {
+			return nil
+		}
+		return o.ValidateRepositoryName(owner, str)
+	}
+
+	name, err := o.Input.PickValidValue("git repository name:", defaultName, validator, help)
 	if err != nil {
 		return "", errors.Wrapf(err, "failed to choose the git repository")
 	}
@@ -108,7 +123,7 @@ func (o *ImportOptions) PickNewOrExistingGitRepository() (*CreateRepoData, error
 		}
 	}
 
-	log.Logger().Infof("Using Git provider %s", util.ColorInfo(server.Description()))
+	log.Logger().Infof("Using Git provider %s", termcolor.ColorInfo(server.Description()))
 	url := server.URL
 
 	if userAuth == nil {
@@ -166,7 +181,7 @@ func (o *ImportOptions) PickNewOrExistingGitRepository() (*CreateRepoData, error
 	}
 
 	gitUsername := userAuth.Username
-	log.Logger().Debugf("About to create repository %s on server %s with user %s", util.ColorInfo(defaultRepoName), util.ColorInfo(url), util.ColorInfo(gitUsername))
+	log.Logger().Debugf("About to create repository %s on server %s with user %s", termcolor.ColorInfo(defaultRepoName), termcolor.ColorInfo(url), termcolor.ColorInfo(gitUsername))
 
 	provider, err := CreateProvider(server, userAuth, git)
 	if err != nil {
@@ -188,13 +203,13 @@ func (o *ImportOptions) PickNewOrExistingGitRepository() (*CreateRepoData, error
 			return nil, err
 		}
 	} else {
-		log.Logger().Infof(util.QuestionAnswer("Using organisation", owner))
+		log.Logger().Infof(QuestionAnswer("Using organisation", owner))
 	}
 
 	defaultRepoName := ""
 	repoName := repoOptions.Name
 	if repoName == "" {
-		repoName, err = o.PickRepoName(owner, defaultRepoName)
+		repoName, err = o.PickRepoName(owner, defaultRepoName, false)
 		if err != nil {
 			return nil, err
 		}
@@ -209,7 +224,7 @@ func (o *ImportOptions) PickNewOrExistingGitRepository() (*CreateRepoData, error
 	}
 
 	fullName := scm.Join(owner, repoName)
-	log.Logger().Infof("Creating repository %s", util.ColorInfo(fullName))
+	log.Logger().Infof("Creating repository %s", termcolor.ColorInfo(fullName))
 
 	return &CreateRepoData{
 		Organisation: owner,

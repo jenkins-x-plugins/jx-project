@@ -4,7 +4,7 @@ go 1.13
 
 require (
 	github.com/Azure/draft v0.15.0
-	github.com/cenkalti/backoff v2.2.1+incompatible
+	github.com/alexflint/go-filemutex v0.0.0-20171028004239-d358565f3c3f
 	github.com/cpuguy83/go-md2man v1.0.10
 	github.com/denormal/go-gitignore v0.0.0-20180713143441-75ce8f3e513c
 	github.com/jenkins-x/golang-jenkins v0.0.0-20180919102630-65b83ad42314
@@ -19,10 +19,7 @@ require (
 	github.com/spf13/cobra v1.0.0
 	github.com/spf13/pflag v1.0.5
 	github.com/stretchr/testify v1.6.1
-	github.com/tektoncd/pipeline v0.14.2
 	gopkg.in/AlecAivazis/survey.v1 v1.8.8
-	gopkg.in/src-d/go-git.v4 v4.13.1
-	k8s.io/api v0.18.1
 	k8s.io/apimachinery v0.18.1
 	k8s.io/client-go v11.0.1-0.20190805182717-6502b5e7b1b5+incompatible
 	k8s.io/helm v2.16.10+incompatible

@@ -2,8 +2,6 @@ package quickstarts
 
 import (
 	"strings"
-
-	"github.com/jenkins-x/jx/v2/pkg/util"
 )
 
 func (q *Quickstart) SurveyName() string {
@@ -34,7 +32,7 @@ func (f *QuickstartFilter) Matches(q *Quickstart) bool {
 	if framework != "" && strings.ToLower(q.Framework) != framework {
 		return false
 	}
-	if !f.AllowML && util.StartsWith(q.Name, "ML-") {
+	if !f.AllowML && strings.HasPrefix(q.Name, "ML-") {
 		return false
 	}
 	return true

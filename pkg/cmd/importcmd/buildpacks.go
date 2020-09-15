@@ -18,8 +18,8 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/jenkins-x/jx-logging/pkg/log"
+	jxdraft "github.com/jenkins-x/jx-project/pkg/draft"
 	"github.com/jenkins-x/jx/v2/pkg/config"
-	jxdraft "github.com/jenkins-x/jx/v2/pkg/draft"
 	"github.com/jenkins-x/jx/v2/pkg/jenkinsfile"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 )

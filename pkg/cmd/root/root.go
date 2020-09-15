@@ -4,17 +4,13 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/jenkins-x/jx-helpers/pkg/cobras/helper"
 	"github.com/jenkins-x/jx-helpers/pkg/input"
 	"github.com/jenkins-x/jx-project/pkg/cmd/common"
 	"github.com/jenkins-x/jx-project/pkg/cmd/importcmd"
 	"github.com/jenkins-x/jx-project/pkg/cmd/root/pullrequest"
-	"github.com/jenkins-x/jx/v2/pkg/cmd/clients"
-	"github.com/jenkins-x/jx/v2/pkg/helm"
-
-	"github.com/jenkins-x/jx-helpers/pkg/cobras/helper"
 
 	"github.com/jenkins-x/jx-helpers/pkg/cobras/templates"
-	"github.com/jenkins-x/jx/v2/pkg/cmd/opts"
 	"github.com/spf13/cobra"
 )
 
@@ -62,14 +58,6 @@ type WizardOptions struct {
 
 // NewCmdMain creates a command object for the command
 func NewCmdMain() (*cobra.Command, *WizardOptions) {
-	f := clients.NewFactory()
-	commonOptions := opts.NewCommonOptionsWithTerm(f, os.Stdin, os.Stdout, os.Stderr)
-	commonOptions.SetHelm(helm.NewHelmCLI("helm", helm.V3, "", false))
-	return NewCmdMainWithOptions(commonOptions)
-}
-
-// NewCmdMainWithOptions creates a command object for the command
-func NewCmdMainWithOptions(commonOpts *opts.CommonOptions) (*cobra.Command, *WizardOptions) {
 	options := &WizardOptions{}
 	cmd := &cobra.Command{
 		Use:     "project",
@@ -174,7 +162,7 @@ func (o *Options) ImportCreatedProject(outDir string) error {
 
 func (o *Options) addCreateAppFlags(cmd *cobra.Command) {
 	cmd.Flags().BoolVarP(&o.DisableImport, "no-import", "", false, "Disable import after the creation")
-	cmd.Flags().StringVarP(&o.OutDir, opts.OptionOutputDir, "o", "", "Directory to output the project to. Defaults to the current directory")
+	cmd.Flags().StringVarP(&o.OutDir, "output-dir", "o", "", "Directory to output the project to. Defaults to the current directory")
 
 	o.AddImportFlags(cmd, true)
 }

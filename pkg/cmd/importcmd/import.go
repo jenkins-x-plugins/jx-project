@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"io/ioutil"
+	"net/url"
 	"os"
 	"path/filepath"
 	"strings"
@@ -33,13 +34,10 @@ import (
 	"github.com/jenkins-x/jx-helpers/pkg/termcolor"
 	"github.com/jenkins-x/jx-logging/pkg/log"
 	"github.com/jenkins-x/jx-project/pkg/cmd/common"
+	"github.com/jenkins-x/jx-project/pkg/maven"
+	"github.com/jenkins-x/jx-project/pkg/prow"
 	"github.com/jenkins-x/jx-promote/pkg/environments"
-	"github.com/jenkins-x/jx/v2/pkg/cmd/opts"
 	"github.com/jenkins-x/jx/v2/pkg/dependencymatrix"
-	"github.com/jenkins-x/jx/v2/pkg/gits"
-	"github.com/jenkins-x/jx/v2/pkg/maven"
-	"github.com/jenkins-x/jx/v2/pkg/prow"
-	"github.com/jenkins-x/jx/v2/pkg/util"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"k8s.io/client-go/kubernetes"
@@ -91,20 +89,19 @@ type ImportOptions struct {
 	PullRequestPollTimeout             time.Duration
 	DeployOptions                      v1.DeployOptions
 	GitRepositoryOptions               scm.RepositoryInput
-
-	KubeClient    kubernetes.Interface
-	JXClient      versioned.Interface
-	Input         input.Interface
-	ScmFactory    scmhelpers.Factory
-	ScmClient     *scm.Client
-	Gitter        gitclient.Interface
-	CommandRunner cmdrunner.CommandRunner
+	KubeClient                         kubernetes.Interface
+	JXClient                           versioned.Interface
+	Input                              input.Interface
+	ScmFactory                         scmhelpers.Factory
+	ScmClient                          *scm.Client
+	Gitter                             gitclient.Interface
+	CommandRunner                      cmdrunner.CommandRunner
+	DevEnv                             *v1.Environment
 
 	PostDraftPackCallback CallbackFn
-
-	gitInfo     *giturl.GitRepository
-	Destination ImportDestination
-	reporter    ImportReporter
+	gitInfo               *giturl.GitRepository
+	Destination           ImportDestination
+	reporter              ImportReporter
 
 	/*
 		TODO jenkins support
@@ -160,7 +157,7 @@ var (
 		%s import --github --org myname --all --filter foo 
 		`)
 
-	deployKinds = []string{opts.DeployKindKnative, opts.DeployKindDefault}
+	deployKinds = []string{DeployKindKnative, DeployKindDefault}
 
 	removeSourceRepositoryAnnotations = []string{"kubectl.kubernetes.io/last-applied-configuration", "jenkins.io/chart"}
 )
@@ -218,8 +215,8 @@ func (o *ImportOptions) AddImportFlags(cmd *cobra.Command, createProject bool) {
 	cmd.Flags().StringVarP(&o.ImportMode, "import-mode", "m", "", fmt.Sprintf("The import mode to use. Should be one of %s", strings.Join(v1.ImportModeStrings, ", ")))
 	cmd.Flags().BoolVarP(&o.UseDefaultGit, "use-default-git", "", false, "use default git account")
 	cmd.Flags().StringVarP(&o.DeployKind, "deploy-kind", "", "", fmt.Sprintf("The kind of deployment to use for the project. Should be one of %s", strings.Join(deployKinds, ", ")))
-	cmd.Flags().BoolVarP(&o.DeployOptions.Canary, opts.OptionCanary, "", false, "should we use canary rollouts (progressive delivery) by default for this application. e.g. using a Canary deployment via flagger. Requires the installation of flagger and istio/gloo in your cluster")
-	cmd.Flags().BoolVarP(&o.DeployOptions.HPA, opts.OptionHPA, "", false, "should we enable the Horizontal Pod Autoscaler for this application.")
+	cmd.Flags().BoolVarP(&o.DeployOptions.Canary, OptionCanary, "", false, "should we use canary rollouts (progressive delivery) by default for this application. e.g. using a Canary deployment via flagger. Requires the installation of flagger and istio/gloo in your cluster")
+	cmd.Flags().BoolVarP(&o.DeployOptions.HPA, OptionHPA, "", false, "should we enable the Horizontal Pod Autoscaler for this application.")
 	cmd.Flags().BoolVarP(&o.Destination.JenkinsX.Enabled, "jx", "", false, "if you want to default to importing this project into Jenkins X instead of a Jenkins server if you have a mixed Jenkins X and Jenkins cluster")
 	cmd.Flags().StringVarP(&o.Destination.JenkinsfileRunner.Image, "jenkinsfilerunner", "", "", "if you want to import into Jenkins X with Jenkinsfilerunner this argument lets you specify the container image to use")
 	cmd.Flags().StringVar(&o.ServiceAccount, "service-account", "tekton-bot", "The Kubernetes ServiceAccount to use to run the initial pipeline")
@@ -250,23 +247,24 @@ func (o *ImportOptions) Validate() error {
 	if o.CommandRunner == nil {
 		o.CommandRunner = cmdrunner.QuietCommandRunner
 	}
-	o.DiscoveredGitURL = o.RepoURL
-	if o.RepoURL == "" {
-		o.DiscoveredGitURL, err = gitdiscovery.FindGitURLFromDir(o.Dir)
+
+	if o.DevEnv == nil {
+		o.DevEnv, err = jxenv.GetDevEnvironment(o.JXClient, o.Namespace)
 		if err != nil {
-			return errors.Wrapf(err, "failed to discover the git URL")
-		}
-	}
-	if o.DiscoveredGitURL != "" {
-		o.gitInfo, err = giturl.ParseGitURL(o.DiscoveredGitURL)
-		if err != nil {
-			return err
+			return errors.Wrapf(err, "failed to find the dev Environment")
 		}
 	}
 
 	if o.ScmClient == nil {
 		if o.ScmFactory.GitServerURL == "" && o.gitInfo != nil {
 			o.ScmFactory.GitServerURL = o.gitInfo.HostURL()
+		}
+
+		if o.ScmFactory.GitServerURL == "" {
+			o.ScmFactory.GitServerURL, err = o.defaultGitServerURLFromDevEnv()
+			if err != nil {
+				return errors.Wrapf(err, "failed to default the git server URL from the dev Environment")
+			}
 		}
 		if o.ScmFactory.GitServerURL == "" {
 			return options.MissingOption("git-server")
@@ -306,6 +304,25 @@ func (o *ImportOptions) Run() error {
 	err := o.Validate()
 	if err != nil {
 		return errors.Wrapf(err, "failed to validate options")
+	}
+
+	o.DiscoveredGitURL = o.RepoURL
+	if o.RepoURL == "" {
+		err = o.DiscoverGit()
+		if err != nil {
+			return err
+		}
+
+		o.DiscoveredGitURL, err = gitdiscovery.FindGitURLFromDir(o.Dir)
+		if err != nil {
+			return errors.Wrapf(err, "failed to discover the git URL")
+		}
+	}
+	if o.DiscoveredGitURL != "" {
+		o.gitInfo, err = giturl.ParseGitURL(o.DiscoveredGitURL)
+		if err != nil {
+			return err
+		}
 	}
 
 	err = o.DefaultsFromTeamSettings()
@@ -560,11 +577,24 @@ func (o *ImportOptions) EvaluateBuildPack(jenkinsfile string) error {
 		}
 	}
 
-	if o.gitInfo == nil {
-		return errors.Errorf("no git server name available")
+	gitServerName := ""
+	if o.gitInfo != nil {
+		gitServerName = o.gitInfo.Host
 	}
-
-	gitServerName := o.gitInfo.Host
+	gitServerURL := o.ScmFactory.GitServerURL
+	if gitServerName == "" {
+		if gitServerURL == "" {
+			return errors.Errorf("no git server URL")
+		}
+		u, err := url.Parse(gitServerURL)
+		if err != nil {
+			return errors.Wrapf(err, "failed to parse git server URL %s", gitServerURL)
+		}
+		gitServerName = u.Host
+	}
+	if gitServerName == "" {
+		return errors.Errorf("no git server name")
+	}
 
 	if o.Organisation == "" {
 		o.Organisation, err = o.PickOwner("")
@@ -577,7 +607,7 @@ func (o *ImportOptions) EvaluateBuildPack(jenkinsfile string) error {
 		dir := o.Dir
 		_, defaultRepoName := filepath.Split(dir)
 
-		o.AppName, err = o.PickRepoName(o.Organisation, defaultRepoName)
+		o.AppName, err = o.PickRepoName(o.Organisation, defaultRepoName, false)
 		if err != nil {
 			return err
 		}
@@ -674,13 +704,19 @@ func (o *ImportOptions) CreateNewRemoteRepository() error {
 
 	}
 	if details.Name == "" {
-		details.Name, err = o.PickRepoName(o.Organisation, defaultRepoName)
+		details.Name, err = o.PickRepoName(o.Organisation, defaultRepoName, false)
 		if err != nil {
 			return errors.Wrapf(err, "failed to pick repository name")
 		}
 	}
 	ctx := context.Background()
-	repo, _, err := o.ScmClient.Repositories.Create(ctx, &o.GitRepositoryOptions)
+	createRepo := o.GitRepositoryOptions
+
+	// need to clear the owner if its a user
+	if o.getCurrentUser() == createRepo.Namespace {
+		createRepo.Namespace = ""
+	}
+	repo, _, err := o.ScmClient.Repositories.Create(ctx, &createRepo)
 	if err != nil {
 		return errors.Wrapf(err, "failed to create git repository %s/%s", o.GitRepositoryOptions.Namespace, o.GitRepositoryOptions.Name)
 	}
@@ -787,7 +823,7 @@ func (o *ImportOptions) CloneRepository() error {
 	if err != nil {
 		return fmt.Errorf("failed to parse Git URL %s due to: %s", url, err)
 	}
-	if gitInfo.Host == gits.GitHubHost && strings.HasPrefix(gitInfo.Scheme, "http") {
+	if gitInfo.Host == giturl.GitHubHost && strings.HasPrefix(gitInfo.Scheme, "http") {
 		if !strings.HasSuffix(url, ".git") {
 			url += ".git"
 		}
@@ -807,10 +843,9 @@ func (o *ImportOptions) CloneRepository() error {
 }
 
 // DiscoverGit checks if there is a git clone or prompts the user to import it
-/** TODO
 func (o *ImportOptions) DiscoverGit() error {
 	if !o.DisableDotGitSearch {
-		root, gitConf, err := o.Git().FindGitConfigDir(o.Dir)
+		root, gitConf, err := gitclient.FindGitConfigDir(o.Dir)
 		if err != nil {
 			return err
 		}
@@ -832,21 +867,17 @@ func (o *ImportOptions) DiscoverGit() error {
 	// lets prompt the user to initialise the Git repository
 	if !o.BatchMode {
 		o.GetReporter().Trace("The directory %s is not yet using git", termcolor.ColorInfo(dir))
-		flag := false
-		prompt := &survey.Confirm{
-			Message: "Would you like to initialise git now?",
-			Default: true,
-		}
-		err := survey.AskOne(prompt, &flag, nil, surveyOpts)
+
+		flag, err := o.Input.Confirm("Would you like to initialise git now?", true, "We need to initialise git in the directory to continue")
 		if err != nil {
-			return err
+			return errors.Wrapf(err, "failed to confirm git initialise")
 		}
 		if !flag {
 			return fmt.Errorf("please initialise git yourself then try again")
 		}
 	}
 	o.InitialisedGit = true
-	err := o.Git().Init(dir)
+	err := gitclient.Init(o.Git(), dir)
 	if err != nil {
 		return err
 	}
@@ -855,16 +886,16 @@ func (o *ImportOptions) DiscoverGit() error {
 	if err != nil {
 		return err
 	}
-	err = o.Git().Add(dir, ".gitignore")
+	err = gitclient.Add(o.Git(), dir, ".gitignore")
 	if err != nil {
 		log.Logger().Debug("failed to add .gitignore")
 	}
-	err = o.Git().Add(dir, "*")
+	err = gitclient.Add(o.Git(), dir, "*")
 	if err != nil {
 		return err
 	}
 
-	err = o.Git().Status(dir)
+	_, err = gitclient.Status(o.Git(), dir)
 	if err != nil {
 		return err
 	}
@@ -874,24 +905,19 @@ func (o *ImportOptions) DiscoverGit() error {
 		if o.BatchMode {
 			message = "Initial import"
 		} else {
-			messagePrompt := &survey.Input{
-				Message: "Commit message: ",
-				Default: "Initial import",
-			}
-			err = survey.AskOne(messagePrompt, &message, nil, surveyOpts)
+			message, err = o.Input.PickValue("Commit message: ", "fix: initial import", true, "Please enter the initial git commit message")
 			if err != nil {
-				return err
+				return errors.Wrapf(err, "failed to confirm commit message")
 			}
 		}
 	}
-	err = o.Git().CommitIfChanges(dir, message)
+	err = gitclient.CommitIfChanges(o.Git(), dir, message)
 	if err != nil {
 		return err
 	}
 	o.GetReporter().GitRepositoryCreated()
 	return nil
 }
-*/
 
 // DefaultGitIgnore creates a default .gitignore
 func (o *ImportOptions) DefaultGitIgnore() error {
@@ -901,7 +927,7 @@ func (o *ImportOptions) DefaultGitIgnore() error {
 		return err
 	}
 	if !exists {
-		data := []byte(opts.DefaultGitIgnoreFile)
+		data := []byte(DefaultGitIgnoreFile)
 		err = ioutil.WriteFile(name, data, files.DefaultFileWritePermissions)
 		if err != nil {
 			return fmt.Errorf("failed to write %s due to %s", name, err)
@@ -1146,18 +1172,17 @@ func (o *ImportOptions) ReplacePlaceholders(gitServerName, dockerRegistryOrg str
 	}
 
 	replacer := strings.NewReplacer(
-		util.PlaceHolderAppName, strings.ToLower(o.AppName),
-		// TODO
-		//util.PlaceHolderScmClient, strings.ToLower(gitServerName),
-		util.PlaceHolderOrg, strings.ToLower(o.Organisation),
-		util.PlaceHolderDockerRegistryOrg, strings.ToLower(dockerRegistryOrg))
+		PlaceHolderAppName, strings.ToLower(o.AppName),
+		PlaceHolderGitProvider, strings.ToLower(gitServerName),
+		PlaceHolderOrg, strings.ToLower(o.Organisation),
+		PlaceHolderDockerRegistryOrg, strings.ToLower(dockerRegistryOrg))
 
 	pathsToRename := []string{} // Renaming must be done post-Walk
 	if err := filepath.Walk(o.Dir, func(f string, fi os.FileInfo, err error) error {
 		if skip, err := o.skipPathForReplacement(f, fi, ignore); skip {
 			return err
 		}
-		if strings.Contains(filepath.Base(f), util.PlaceHolderPrefix) {
+		if strings.Contains(filepath.Base(f), PlaceHolderPrefix) {
 			// Prepend so children are renamed before their parents
 			pathsToRename = append([]string{f}, pathsToRename...)
 		}
@@ -1209,7 +1234,7 @@ func replacePlaceholdersInFile(replacer *strings.Replacer, file string) error {
 	}
 
 	lines := string(input)
-	if strings.Contains(lines, util.PlaceHolderPrefix) { // Avoid unnecessarily rewriting files
+	if strings.Contains(lines, PlaceHolderPrefix) { // Avoid unnecessarily rewriting files
 		output := replacer.Replace(lines)
 		err = ioutil.WriteFile(file, []byte(output), 0644)
 		if err != nil {
@@ -1299,7 +1324,7 @@ func (o *ImportOptions) renameChartToMatchAppName() error {
 			return err
 		}
 		if exists && oldChartsDir != newChartsDir {
-			err = util.RenameDir(oldChartsDir, newChartsDir, false)
+			err = files.RenameDir(oldChartsDir, newChartsDir, false)
 			if err != nil {
 				return fmt.Errorf("error renaming %s to %s, %v", oldChartsDir, newChartsDir, err)
 			}
@@ -1407,13 +1432,13 @@ func (o *ImportOptions) fixMaven() error {
 		return err
 	}
 	if exists {
-		err = maven.InstallMavenIfRequired()
+		err = maven.InstallMavenIfRequired(o.CommandRunner)
 		if err != nil {
 			return err
 		}
 
 		// lets ensure the mvn plugins are ok
-		out, err := o.CommandRunner(cmdrunner.NewCommand(dir, "mvn", "io.jenkins.updatebot:updatebot-maven-plugin:RELEASE:plugin", "-Dartifact=maven-deploy-plugin", "-Dversion="+opts.MinimumMavenDeployVersion))
+		out, err := o.CommandRunner(cmdrunner.NewCommand(dir, "mvn", "io.jenkins.updatebot:updatebot-maven-plugin:RELEASE:plugin", "-Dartifact=maven-deploy-plugin", "-Dversion="+MinimumMavenDeployVersion))
 		if err != nil {
 			return fmt.Errorf("Failed to update maven deploy plugin: %s output: %s", err, out)
 		}
@@ -1466,10 +1491,10 @@ func (o *ImportOptions) DefaultValuesFromTeamSettings(settings *v1.TeamSettings)
 	// lets override any deploy o from the team settings if they are not specified
 	/* TODO
 	teamDeployOptions := settings.GetDeployOptions()
-	if !o.FlagChanged(opts.OptionCanary) {
+	if !o.FlagChanged(OptionCanary) {
 		o.DeployOptions.Canary = teamDeployOptions.Canary
 	}
-	if !o.FlagChanged(opts.OptionHPA) {
+	if !o.FlagChanged(OptionHPA) {
 		o.DeployOptions.HPA = teamDeployOptions.HPA
 	}
 	*/
@@ -1494,9 +1519,14 @@ func (o *ImportOptions) DefaultValuesFromTeamSettings(settings *v1.TeamSettings)
 // ConfigureImportOptions updates the import options struct based on values from the create repo struct
 func (options *ImportOptions) ConfigureImportOptions(repoData *CreateRepoData) {
 	// configure the import options based on previous answers
-	options.AppName = repoData.RepoName
-	options.Organisation = repoData.Organisation
-	options.Repository = repoData.RepoName
+	owner := repoData.Organisation
+	repoName := repoData.RepoName
+
+	options.Organisation = owner
+	options.AppName = repoName
+	options.Repository = repoName
+	options.GitRepositoryOptions.Namespace = owner
+	options.GitRepositoryOptions.Name = repoName
 	//options.GitProvider = repoData.GitProvider
 
 	// TODO
@@ -1534,7 +1564,7 @@ func (o *ImportOptions) modifyDeployKind() error {
 	eo.Dir = o.Dir
 
 	// lets parse the CLI arguments so that the flags are marked as specified to force them to be overridden
-	err := cmd.Flags().Parse(edit.ToDeployArguments(opts.OptionKind, deployKind, dopts.Canary, dopts.HPA))
+	err := cmd.Flags().Parse(edit.ToDeployArguments(OptionKind, deployKind, dopts.Canary, dopts.HPA))
 	if err != nil {
 		return err
 	}
@@ -1736,6 +1766,18 @@ func (o *ImportOptions) waitForSourceRepositoryPullRequest(pullRequestInfo *scm.
 func (o *ImportOptions) IsGitHubAppMode() (bool, error) {
 	// TODO
 	return false, nil
+}
+
+func (o *ImportOptions) defaultGitServerURLFromDevEnv() (string, error) {
+	gitURL := o.DevEnv.Spec.Source.URL
+	if gitURL == "" {
+		return "", nil
+	}
+	gitInfo, err := giturl.ParseGitURL(gitURL)
+	if err != nil {
+		return "", errors.Wrapf(err, "failed to parse git URL %s", gitURL)
+	}
+	return gitInfo.HostURL(), nil
 }
 
 func configureDependencyMatrix() {

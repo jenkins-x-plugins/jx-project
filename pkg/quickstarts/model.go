@@ -10,7 +10,6 @@ import (
 	"github.com/jenkins-x/jx-helpers/pkg/stringhelpers"
 	"github.com/jenkins-x/jx-helpers/pkg/versionstream"
 	"github.com/jenkins-x/jx-logging/pkg/log"
-	"github.com/jenkins-x/jx/v2/pkg/gits"
 	"github.com/pkg/errors"
 )
 
@@ -20,7 +19,7 @@ const (
 )
 
 // GitQuickstart returns a github based quickstart
-func GitQuickstart(provider gits.GitProvider, owner string, repo string, version string, downloadURL string, language string, framework string, tags ...string) *Quickstart {
+func GitQuickstart(owner string, repo string, version string, downloadURL string, language string, framework string, tags ...string) *Quickstart {
 	return &Quickstart{
 		ID:             owner + "/" + repo,
 		Owner:          owner,
@@ -30,8 +29,34 @@ func GitQuickstart(provider gits.GitProvider, owner string, repo string, version
 		Framework:      framework,
 		Tags:           tags,
 		DownloadZipURL: downloadURL,
-		GitProvider:    provider,
 	}
+}
+
+// QuickStartVersion creates a quickstart version string
+func QuickStartVersion(sha string) string {
+	return "1.0.0+" + sha
+}
+
+/*
+TODO
+
+func BranchArchiveURL(org string, name string, branch string) string {
+	return stringhelpers.UrlJoin("https://codeload.github.com", org, name, "zip", branch)
+}
+
+// LoadGithubQuickstarts Loads quickstarts from github
+func (model *QuickstartModel) LoadGithubQuickstarts(provider gits.GitProvider, owner string, includes []string, excludes []string) error {
+	repos, err := provider.ListRepositories(owner)
+	if err != nil {
+		return err
+	}
+	for _, repo := range repos {
+		name := repo.Name
+		if stringhelpers.StringMatchesAny(name, includes, excludes) {
+			model.Add(toGitHubQuickstart(provider, owner, repo))
+		}
+	}
+	return nil
 }
 
 func toGitHubQuickstart(provider gits.GitProvider, owner string, repo *gits.GitRepository) *Quickstart {
@@ -55,33 +80,14 @@ func toGitHubQuickstart(provider gits.GitProvider, owner string, repo *gits.GitR
 		commit := gitCommits[0]
 		sha := commit.ShortSha()
 		version = QuickStartVersion(sha)
-		u = provider.BranchArchiveURL(owner, repoName, sha)
+		u = BranchArchiveURL(owner, repoName, sha)
 	}
 	if u == "" {
-		u = provider.BranchArchiveURL(owner, repoName, "master")
+		u = BranchArchiveURL(owner, repoName, "master")
 	}
-	return GitQuickstart(provider, owner, repoName, version, u, language, framework, tags...)
+	return GitQuickstart(owner, repoName, version, u, language, framework, tags...)
 }
-
-// QuickStartVersion creates a quickstart version string
-func QuickStartVersion(sha string) string {
-	return "1.0.0+" + sha
-}
-
-// LoadGithubQuickstarts Loads quickstarts from github
-func (model *QuickstartModel) LoadGithubQuickstarts(provider gits.GitProvider, owner string, includes []string, excludes []string) error {
-	repos, err := provider.ListRepositories(owner)
-	if err != nil {
-		return err
-	}
-	for _, repo := range repos {
-		name := repo.Name
-		if stringhelpers.StringMatchesAny(name, includes, excludes) {
-			model.Add(toGitHubQuickstart(provider, owner, repo))
-		}
-	}
-	return nil
-}
+*/
 
 // NewQuickstartModel creates a new quickstart model
 func NewQuickstartModel() *QuickstartModel {
