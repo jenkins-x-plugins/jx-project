@@ -22,7 +22,7 @@ func TestReplacePlaceholders(t *testing.T) {
 	_, err = os.Stat(testData)
 	assert.NoError(t, err)
 
-	util.CopyDir(testData, f, true)
+	files.CopyDir(testData, f, true)
 
 	assert.NoError(t, err)
 	o := importcmd.ImportOptions{}

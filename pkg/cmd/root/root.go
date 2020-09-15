@@ -4,18 +4,17 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/jenkins-x/jx-helpers/pkg/input"
 	"github.com/jenkins-x/jx-project/pkg/cmd/common"
 	"github.com/jenkins-x/jx-project/pkg/cmd/importcmd"
 	"github.com/jenkins-x/jx-project/pkg/cmd/root/pullrequest"
 	"github.com/jenkins-x/jx/v2/pkg/cmd/clients"
-	"github.com/jenkins-x/jx/v2/pkg/cmd/create/options"
 	"github.com/jenkins-x/jx/v2/pkg/helm"
 
-	"github.com/jenkins-x/jx/v2/pkg/cmd/helper"
+	"github.com/jenkins-x/jx-helpers/pkg/cobras/helper"
 
+	"github.com/jenkins-x/jx-helpers/pkg/cobras/templates"
 	"github.com/jenkins-x/jx/v2/pkg/cmd/opts"
-	"github.com/jenkins-x/jx/v2/pkg/cmd/templates"
-	"github.com/jenkins-x/jx/v2/pkg/util"
 	"github.com/spf13/cobra"
 )
 
@@ -58,7 +57,7 @@ type Options struct {
 
 // WizardOptions the options for the command
 type WizardOptions struct {
-	options.CreateOptions
+	Input input.Interface
 }
 
 // NewCmdMain creates a command object for the command
@@ -71,11 +70,7 @@ func NewCmdMain() (*cobra.Command, *WizardOptions) {
 
 // NewCmdMainWithOptions creates a command object for the command
 func NewCmdMainWithOptions(commonOpts *opts.CommonOptions) (*cobra.Command, *WizardOptions) {
-	options := &WizardOptions{
-		CreateOptions: options.CreateOptions{
-			CommonOptions: commonOpts,
-		},
-	}
+	options := &WizardOptions{}
 	cmd := &cobra.Command{
 		Use:     "project",
 		Short:   "Create a new project by importing code, creating a quickstart or custom wizard for spring",
@@ -83,26 +78,23 @@ func NewCmdMainWithOptions(commonOpts *opts.CommonOptions) (*cobra.Command, *Wiz
 		Example: fmt.Sprintf(createProjectExample, common.BinaryName),
 		Run: func(cmd *cobra.Command, args []string) {
 			setLoggingLevel(cmd)
-			options.Cmd = cmd
-			options.Args = args
 			err := options.Run()
 			helper.CheckErr(err)
 		},
 	}
 
-	cmd.AddCommand(NewCmdCreateQuickstart(commonOpts))
-	cmd.AddCommand(NewCmdCreateSpring(commonOpts))
-	cmd.AddCommand(importcmd.NewCmdImport(commonOpts))
-	cmd.AddCommand(pullrequest.NewCmdCreatePullRequest(commonOpts))
+	cmd.AddCommand(NewCmdCreateQuickstart())
+	cmd.AddCommand(NewCmdCreateSpring())
+	cmd.AddCommand(importcmd.NewCmdImport())
+	cmd.AddCommand(pullrequest.NewCmdCreatePullRequest())
 
 	return cmd, options
 }
 
 // Run implements the command
 func (o *WizardOptions) Run() error {
-	name, err := util.PickName(createProjectNames, "Which kind of project you want to create: ",
-		"there are a number of different wizards for creating or importing new projects.",
-		o.GetIOFileHandles())
+	name, err := o.Input.PickNameWithDefault(createProjectNames, "Which kind of project you want to create: ",
+		"", "there are a number of different wizards for creating or importing new projects.")
 	if err != nil {
 		return err
 	}
@@ -124,13 +116,11 @@ func (o *WizardOptions) Run() error {
 
 func (o *WizardOptions) createQuickstart() error {
 	w := &CreateQuickstartOptions{}
-	w.CommonOptions = o.CommonOptions
 	return w.Run()
 }
 
 func (o *WizardOptions) createSpring() error {
 	w := &CreateSpringOptions{}
-	w.CommonOptions = o.CommonOptions
 	return w.Run()
 }
 
@@ -139,21 +129,20 @@ func (o *WizardOptions) importDir() error {
 	if err != nil {
 		return err
 	}
-	dir, err := util.PickValue("Which directory contains the source code: ", wd, true,
-		"Please specify the directory which contains the source code you want to use for your new project", o.GetIOFileHandles())
+	dir, err := o.Input.PickValue("Which directory contains the source code: ", wd, true,
+		"Please specify the directory which contains the source code you want to use for your new project")
 	if err != nil {
 		return err
 	}
 	w := &importcmd.ImportOptions{
 		Dir: dir,
 	}
-	w.CommonOptions = o.CommonOptions
 	return w.Run()
 }
 
 func (o *WizardOptions) importGit() error {
-	repoUrl, err := util.PickValue("Which git repository URL to import: ", "", true,
-		"Please specify the git URL which contains the source code you want to use for your new project", o.GetIOFileHandles())
+	repoUrl, err := o.Input.PickValue("Which git repository URL to import: ", "", true,
+		"Please specify the git URL which contains the source code you want to use for your new project")
 	if err != nil {
 		return err
 	}
@@ -161,7 +150,6 @@ func (o *WizardOptions) importGit() error {
 	w := &importcmd.ImportOptions{
 		RepoURL: repoUrl,
 	}
-	w.CommonOptions = o.CommonOptions
 	return w.Run()
 }
 
@@ -169,7 +157,6 @@ func (o *WizardOptions) importGithubProject() error {
 	w := &importcmd.ImportOptions{
 		GitHub: true,
 	}
-	w.CommonOptions = o.CommonOptions
 	return w.Run()
 }
 

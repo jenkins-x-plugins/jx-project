@@ -1,11 +1,11 @@
 package importcmd
 
 import (
+	"github.com/jenkins-x/jx-helpers/pkg/termcolor"
 	"github.com/jenkins-x/jx-logging/pkg/log"
-	"github.com/jenkins-x/jx/v2/pkg/util"
 )
 
-var info = util.ColorInfo
+var info = termcolor.ColorInfo
 
 // ImportReporter an interface for reporting updates from the process
 type ImportReporter interface {
@@ -59,7 +59,7 @@ func (r *LogImportReporter) PushedGitRepository(repoURL string) {
 
 // CreatedProject report progress
 func (r *LogImportReporter) CreatedProject(genDir string) {
-	log.Logger().Infof("Created project at %s\n", util.ColorInfo(genDir))
+	log.Logger().Infof("Created project at %s\n", termcolor.ColorInfo(genDir))
 }
 
 // GeneratedQuickStartAt report progress

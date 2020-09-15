@@ -3,11 +3,10 @@
 package importcmd_test
 
 import (
-	"github.com/jenkins-x/jx-project/pkg/cmd/fakejxfactory"
+	"github.com/jenkins-x/jx-helpers/pkg/kube/naming"
 	"github.com/jenkins-x/jx-project/pkg/cmd/importcmd"
 	"github.com/jenkins-x/jx/v2/pkg/cmd/testhelpers"
 	"github.com/jenkins-x/jx/v2/pkg/config"
-	"github.com/jenkins-x/jx/v2/pkg/kube/naming"
 
 	"io/ioutil"
 	"os"
@@ -19,11 +18,11 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 
 	v1 "github.com/jenkins-x/jx-api/pkg/apis/jenkins.io/v1"
+	resources_test "github.com/jenkins-x/jx-helpers/pkg/kube/resources/mocks"
 	fake_clients "github.com/jenkins-x/jx/v2/pkg/cmd/clients/fake"
 	"github.com/jenkins-x/jx/v2/pkg/cmd/opts"
 	"github.com/jenkins-x/jx/v2/pkg/gits"
 	"github.com/jenkins-x/jx/v2/pkg/helm"
-	resources_test "github.com/jenkins-x/jx/v2/pkg/kube/resources/mocks"
 	"github.com/jenkins-x/jx/v2/pkg/tests"
 	"github.com/jenkins-x/jx/v2/pkg/util"
 	"github.com/stretchr/testify/assert"
@@ -58,7 +57,7 @@ func TestImportGoLangProject(t *testing.T) {
 
 	testDir := tempDir
 
-	util.CopyDir(srcDir, testDir, true)
+	files.CopyDir(srcDir, testDir, true)
 	_, dirName := filepath.Split(testDir)
 	dirName = naming.ToValidName(dirName)
 	o := &importcmd.ImportOptions{
@@ -66,8 +65,7 @@ func TestImportGoLangProject(t *testing.T) {
 	}
 
 	o.SetFactory(fake_clients.NewFakeFactory())
-	o.JXFactory = fakejxfactory.NewFakeFactory()
-	o.GitProvider = createFakeGitProvider()
+	o.ScmClient = createFakeScmClient()
 
 	k8sObjects := []runtime.Object{}
 	jxObjects := []runtime.Object{}

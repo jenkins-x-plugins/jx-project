@@ -7,18 +7,20 @@ import (
 	"path/filepath"
 	"sort"
 
+	"github.com/jenkins-x/jx-helpers/pkg/files"
+	"github.com/jenkins-x/jx-helpers/pkg/kube/jxenv"
+	"github.com/jenkins-x/jx-helpers/pkg/termcolor"
+	"github.com/jenkins-x/jx-project/pkg/gitresolver"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	v1 "github.com/jenkins-x/jx-api/pkg/apis/jenkins.io/v1"
 
 	"github.com/pkg/errors"
 
+	"github.com/jenkins-x/jx-logging/pkg/log"
 	"github.com/jenkins-x/jx/v2/pkg/config"
 	jxdraft "github.com/jenkins-x/jx/v2/pkg/draft"
 	"github.com/jenkins-x/jx/v2/pkg/jenkinsfile"
-	"github.com/jenkins-x/jx/v2/pkg/jenkinsfile/gitresolver"
-	"github.com/jenkins-x/jx-logging/pkg/log"
-	"github.com/jenkins-x/jx/v2/pkg/util"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 )
 
@@ -47,13 +49,11 @@ func (o *ImportOptions) InitBuildPacks(i *InvokeDraftPack) (string, *v1.TeamSett
 
 // PickBuildPackLibrary lets you pick a build pack
 func (o *ImportOptions) PickBuildPackLibrary(i *InvokeDraftPack) (*v1.BuildPack, *v1.TeamSettings, error) {
-	settings, err := o.TeamSettings()
+	jxClient := o.JXClient
+	ns := o.Namespace
+	settings, err := jxenv.GetDevEnvTeamSettings(jxClient, ns)
 	if err != nil {
-		return nil, settings, err
-	}
-	jxClient, ns, err := o.JXClientAndDevNamespace()
-	if err != nil {
-		return nil, settings, err
+		return nil, nil, errors.Wrapf(err, "failed to load the team settings")
 	}
 
 	list, err := jxClient.JenkinsV1().BuildPacks(ns).List(metav1.ListOptions{})
@@ -104,8 +104,8 @@ func (o *ImportOptions) PickBuildPackLibrary(i *InvokeDraftPack) (*v1.BuildPack,
 
 	name := defaultName
 	if !o.BatchMode {
-		name, err = util.PickNameWithDefault(names, "Pick the build pack library you would like to use", defaultName,
-			"the build pack library contains the default pipelines and associated files", o.GetIOFileHandles())
+		name, err = o.Input.PickNameWithDefault(names, "Pick the build pack library you would like to use", defaultName,
+			"the build pack library contains the default pipelines and associated files")
 		if err != nil {
 			return nil, settings, errors.Wrap(err, "failed to pick the build pack name")
 		}
@@ -175,7 +175,7 @@ func (o *ImportOptions) InvokeDraftPack(i *InvokeDraftPack) (string, error) {
 	if len(customDraftPack) > 0 {
 		log.Logger().Infof("trying to use draft pack: %s", customDraftPack)
 		lpack = filepath.Join(packsDir, customDraftPack)
-		f, err := util.DirExists(lpack)
+		f, err := files.DirExists(lpack)
 		if err != nil {
 			log.Logger().Error(err.Error())
 			return "", err
@@ -187,29 +187,29 @@ func (o *ImportOptions) InvokeDraftPack(i *InvokeDraftPack) (string, error) {
 	}
 
 	if len(lpack) == 0 {
-		if exists, err := util.FileExists(pomName); err == nil && exists {
-			pack, err := util.PomFlavour(pomName)
+		if exists, err := files.FileExists(pomName); err == nil && exists {
+			pack, err := PomFlavour(pomName)
 			if err != nil {
 				return "", err
 			}
 			lpack = filepath.Join(packsDir, pack)
 
-			exists, _ = util.DirExists(lpack)
+			exists, _ = files.DirExists(lpack)
 			if !exists {
 				log.Logger().Warn("defaulting to maven pack")
 				lpack = filepath.Join(packsDir, "maven")
 			}
-		} else if exists, err := util.FileExists(gradleName); err == nil && exists {
+		} else if exists, err := files.FileExists(gradleName); err == nil && exists {
 			lpack = filepath.Join(packsDir, "gradle")
-		} else if exists, err := util.FileExists(jenkinsPluginsName); err == nil && exists {
+		} else if exists, err := files.FileExists(jenkinsPluginsName); err == nil && exists {
 			lpack = filepath.Join(packsDir, "jenkins")
-		} else if exists, err := util.FileExists(packagerConfigName); err == nil && exists {
+		} else if exists, err := files.FileExists(packagerConfigName); err == nil && exists {
 			lpack = filepath.Join(packsDir, "cwp")
-		} else if exists, err := util.FileExists(envChart); err == nil && exists {
+		} else if exists, err := files.FileExists(envChart); err == nil && exists {
 			lpack = filepath.Join(packsDir, "environment")
 		} else {
 			// pack detection time
-			lpack, err = jxdraft.DoPackDetectionForBuildPack(o.Out, dir, packsDir)
+			lpack, err = jxdraft.DoPackDetectionForBuildPack(os.Stdout, dir, packsDir)
 
 			if err != nil {
 				if lpack == "" {
@@ -221,7 +221,7 @@ func (o *ImportOptions) InvokeDraftPack(i *InvokeDraftPack) (string, error) {
 					hasDocker := false
 					hasHelm := false
 
-					if exists, err2 := util.FileExists(filepath.Join(dir, "Dockerfile")); err2 == nil && exists {
+					if exists, err2 := files.FileExists(filepath.Join(dir, "Dockerfile")); err2 == nil && exists {
 						hasDocker = true
 					}
 
@@ -254,7 +254,7 @@ func (o *ImportOptions) InvokeDraftPack(i *InvokeDraftPack) (string, error) {
 					}
 				}
 				if lpack == "" {
-					exists, err2 := util.FileExists(filepath.Join(dir, jenkinsfile.Name))
+					exists, err2 := files.FileExists(filepath.Join(dir, jenkinsfile.Name))
 					if exists && err2 == nil {
 						lpack = filepath.Join(packsDir, "custom-jenkins")
 						err = nil
@@ -274,7 +274,7 @@ func (o *ImportOptions) InvokeDraftPack(i *InvokeDraftPack) (string, error) {
 	}
 	lpack = filepath.Join(packsDir, pack)
 
-	log.Logger().Infof("selected build pack: %s", util.ColorInfo(pack))
+	log.Logger().Infof("selected build pack: %s", termcolor.ColorInfo(pack))
 	i.CustomDraftPack = pack
 
 	if i.DisableAddFiles {
@@ -282,7 +282,7 @@ func (o *ImportOptions) InvokeDraftPack(i *InvokeDraftPack) (string, error) {
 	}
 
 	chartsDir := filepath.Join(dir, "charts")
-	jenkinsxYamlExists, err := util.FileExists(jenkinsxYaml)
+	jenkinsxYamlExists, err := files.FileExists(jenkinsxYaml)
 	if err != nil {
 		return pack, err
 	}
@@ -293,7 +293,7 @@ func (o *ImportOptions) InvokeDraftPack(i *InvokeDraftPack) (string, error) {
 	}
 
 	// lets delete empty charts dir if a draft pack created one
-	exists, err := util.DirExists(chartsDir)
+	exists, err := files.DirExists(chartsDir)
 	if err == nil && exists {
 		files, err := ioutil.ReadDir(chartsDir)
 		if err != nil {

@@ -1,6 +1,7 @@
 package importcmd
 
 import (
+	"context"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -8,42 +9,40 @@ import (
 	"strings"
 	"time"
 
-	"github.com/cenkalti/backoff"
 	"github.com/denormal/go-gitignore"
-	"github.com/jenkins-x/jx-jenkins/pkg/jenkinsutil"
-	"github.com/jenkins-x/jx-jenkins/pkg/jenkinsutil/factory"
-	gojenkins "github.com/jenkins-x/golang-jenkins"
-	jenkinsio "github.com/jenkins-x/jx-api/pkg/apis/jenkins.io"
+	"github.com/jenkins-x/go-scm/scm"
 	v1 "github.com/jenkins-x/jx-api/pkg/apis/jenkins.io/v1"
-	"github.com/jenkins-x/jx-gitops/pkg/cmd/repository/export"
+	"github.com/jenkins-x/jx-api/pkg/client/clientset/versioned"
+	"github.com/jenkins-x/jx-gitops/pkg/cmd/repository/add"
+	"github.com/jenkins-x/jx-helpers/pkg/cmdrunner"
+	"github.com/jenkins-x/jx-helpers/pkg/cobras/helper"
+	"github.com/jenkins-x/jx-helpers/pkg/cobras/templates"
+	"github.com/jenkins-x/jx-helpers/pkg/files"
+	"github.com/jenkins-x/jx-helpers/pkg/gitclient"
+	"github.com/jenkins-x/jx-helpers/pkg/gitclient/cli"
+	"github.com/jenkins-x/jx-helpers/pkg/gitclient/gitdiscovery"
+	"github.com/jenkins-x/jx-helpers/pkg/gitclient/giturl"
+	"github.com/jenkins-x/jx-helpers/pkg/input"
+	"github.com/jenkins-x/jx-helpers/pkg/input/survey"
+	"github.com/jenkins-x/jx-helpers/pkg/kube"
+	"github.com/jenkins-x/jx-helpers/pkg/kube/jxclient"
+	"github.com/jenkins-x/jx-helpers/pkg/kube/jxenv"
+	"github.com/jenkins-x/jx-helpers/pkg/kube/naming"
+	"github.com/jenkins-x/jx-helpers/pkg/options"
+	"github.com/jenkins-x/jx-helpers/pkg/scmhelpers"
+	"github.com/jenkins-x/jx-helpers/pkg/termcolor"
 	"github.com/jenkins-x/jx-logging/pkg/log"
 	"github.com/jenkins-x/jx-project/pkg/cmd/common"
-	"github.com/jenkins-x/jx/v2/pkg/auth"
-	"github.com/jenkins-x/jx/v2/pkg/cloud/amazon"
-	"github.com/jenkins-x/jx/v2/pkg/cmd/edit"
-	"github.com/jenkins-x/jx/v2/pkg/cmd/helper"
+	"github.com/jenkins-x/jx-promote/pkg/environments"
 	"github.com/jenkins-x/jx/v2/pkg/cmd/opts"
-	"github.com/jenkins-x/jx/v2/pkg/cmd/start"
-	"github.com/jenkins-x/jx/v2/pkg/cmd/step/create/pr"
-	"github.com/jenkins-x/jx/v2/pkg/cmd/templates"
-	"github.com/jenkins-x/jx/v2/pkg/config"
 	"github.com/jenkins-x/jx/v2/pkg/dependencymatrix"
-	"github.com/jenkins-x/jx/v2/pkg/github"
 	"github.com/jenkins-x/jx/v2/pkg/gits"
-	"github.com/jenkins-x/jx/v2/pkg/jenkinsfile"
-	"github.com/jenkins-x/jx/v2/pkg/jxfactory"
-	"github.com/jenkins-x/jx/v2/pkg/kube"
-	"github.com/jenkins-x/jx/v2/pkg/kube/naming"
 	"github.com/jenkins-x/jx/v2/pkg/maven"
 	"github.com/jenkins-x/jx/v2/pkg/prow"
-	"github.com/jenkins-x/jx/v2/pkg/tekton/syntax"
 	"github.com/jenkins-x/jx/v2/pkg/util"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
-	"gopkg.in/AlecAivazis/survey.v1"
-	gitcfg "gopkg.in/src-d/go-git.v4/config"
-	corev1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/client-go/kubernetes"
 	"sigs.k8s.io/yaml"
 )
 
@@ -52,9 +51,9 @@ type CallbackFn func() error
 
 // ImportOptions options struct for jx-project import
 type ImportOptions struct {
-	*opts.CommonOptions
-
+	Args                               []string
 	RepoURL                            string
+	DiscoveredGitURL                   string
 	Dir                                string
 	Organisation                       string
 	Repository                         string
@@ -73,6 +72,7 @@ type ImportOptions struct {
 	PipelineServer                     string
 	ImportMode                         string
 	ServiceAccount                     string
+	Namespace                          string
 	DisableMaven                       bool
 	UseDefaultGit                      bool
 	GithubAppInstalled                 bool
@@ -85,25 +85,40 @@ type ImportOptions struct {
 	InitialisedGit                     bool
 	WaitForSourceRepositoryPullRequest bool
 	NoDevPullRequest                   bool
+	BatchMode                          bool
+	IgnoreExistingRepository           bool
 	PullRequestPollPeriod              time.Duration
 	PullRequestPollTimeout             time.Duration
 	DeployOptions                      v1.DeployOptions
-	GitRepositoryOptions               gits.GitRepositoryOptions
-	GitDetails                         gits.CreateRepoData
-	Jenkins                            gojenkins.JenkinsClient
-	GitServer                          *auth.AuthServer
-	GitUserAuth                        *auth.UserAuth
-	GitProvider                        gits.GitProvider
-	PostDraftPackCallback              CallbackFn
-	JXFactory                          jxfactory.Factory
+	GitRepositoryOptions               scm.RepositoryInput
 
-	Destination          ImportDestination
-	reporter             ImportReporter
-	jenkinsClientFactory *jenkinsutil.ClientFactory
+	KubeClient    kubernetes.Interface
+	JXClient      versioned.Interface
+	Input         input.Interface
+	ScmFactory    scmhelpers.Factory
+	ScmClient     *scm.Client
+	Gitter        gitclient.Interface
+	CommandRunner cmdrunner.CommandRunner
+
+	PostDraftPackCallback CallbackFn
+
+	gitInfo     *giturl.GitRepository
+	Destination ImportDestination
+	reporter    ImportReporter
+
+	/*
+		TODO jenkins support
+		Jenkins                            gojenkins.JenkinsClient
+		jenkinsClientFactory *jenkinsutil.ClientFactory
+
+	*/
 }
 
 const (
-	triggerPipelineBuildPack   = "trigger-jenkins"
+	triggerPipelineBuildPack = "trigger-jenkins"
+
+	jenkinsfileName = "Jenkinsfile"
+
 	jenkinsfileRunnerBuildPack = "jenkinsfilerunner"
 	jenkinsServerEnvVar        = "TRIGGER_JENKINS_SERVER"
 
@@ -151,24 +166,21 @@ var (
 )
 
 // NewCmdImport the cobra command for jx-project import
-func NewCmdImport(commonOpts *opts.CommonOptions) *cobra.Command {
-	cmd, _ := NewCmdImportAndOptions(commonOpts)
+func NewCmdImport() *cobra.Command {
+	cmd, _ := NewCmdImportAndOptions()
 	return cmd
 }
 
 // NewCmdImportAndOptions creates the cobra command for jx-project import and the options
-func NewCmdImportAndOptions(commonOpts *opts.CommonOptions) (*cobra.Command, *ImportOptions) {
-	options := &ImportOptions{
-		CommonOptions: commonOpts,
-	}
+func NewCmdImportAndOptions() (*cobra.Command, *ImportOptions) {
+	options := &ImportOptions{}
+
 	cmd := &cobra.Command{
 		Use:     "import",
 		Short:   "Imports a local project or Git repository into Jenkins",
 		Long:    importLong,
 		Example: fmt.Sprintf(importExample, common.BinaryName, common.BinaryName, common.BinaryName, common.BinaryName, common.BinaryName, common.BinaryName),
 		Run: func(cmd *cobra.Command, args []string) {
-			options.Cmd = cmd
-			options.Args = args
 			err := options.Run()
 			helper.CheckErr(err)
 		},
@@ -179,7 +191,6 @@ func NewCmdImportAndOptions(commonOpts *opts.CommonOptions) (*cobra.Command, *Im
 	cmd.Flags().StringVarP(&options.SelectFilter, "filter", "", "", "If selecting projects to import from a Git provider this filters the list of repositories")
 	options.AddImportFlags(cmd, false)
 	options.Destination.Jenkins.JenkinsSelectorOptions.AddFlags(cmd)
-	options.Cmd = cmd
 	return cmd, options
 }
 
@@ -201,7 +212,8 @@ func (o *ImportOptions) AddImportFlags(cmd *cobra.Command, createProject bool) {
 	cmd.Flags().StringVarP(&o.Pack, "pack", "", "", "The name of the build pack to use. If none is specified it will be chosen based on matching the source code languages")
 	cmd.Flags().StringVarP(&o.SchedulerName, "scheduler", "", "", "The name of the Scheduler configuration to use for ChatOps when using Prow")
 	cmd.Flags().StringVarP(&o.DockerRegistryOrg, "docker-registry-org", "", "", "The name of the docker registry organisation to use. If not specified then the Git provider organisation will be used")
-	cmd.Flags().StringVarP(&o.ExternalJenkinsBaseURL, "external-jenkins-url", "", "", "The jenkins url that an external git provider needs to use")
+	// TODO
+	//cmd.Flags().StringVarP(&o.ExternalJenkinsBaseURL, "external-jenkins-url", "", "", "The jenkins url that an external git provider needs to use")
 	cmd.Flags().BoolVarP(&o.DisableMaven, "disable-updatebot", "", false, "disable updatebot-maven-plugin from attempting to fix/update the maven pom.xml")
 	cmd.Flags().StringVarP(&o.ImportMode, "import-mode", "m", "", fmt.Sprintf("The import mode to use. Should be one of %s", strings.Join(v1.ImportModeStrings, ", ")))
 	cmd.Flags().BoolVarP(&o.UseDefaultGit, "use-default-git", "", false, "use default git account")
@@ -218,99 +230,60 @@ func (o *ImportOptions) AddImportFlags(cmd *cobra.Command, createProject bool) {
 	cmd.Flags().DurationVarP(&o.PullRequestPollPeriod, "pr-poll-period", "", time.Second*20, "the time between polls of the Pull Request on the development environment git repository")
 	cmd.Flags().DurationVarP(&o.PullRequestPollTimeout, "pr-poll-timeout", "", time.Minute*20, "the maximum amount of time we wait for the Pull Request on the development environment git repository")
 
-	opts.AddGitRepoOptionsArguments(cmd, &o.GitRepositoryOptions)
+	o.ScmFactory.AddFlags(cmd)
 }
 
-// Run executes the command
-func (o *ImportOptions) Run() error {
+// Validate validates the command line options
+func (o *ImportOptions) Validate() error {
+	if o.Input == nil {
+		o.Input = survey.NewInput()
+	}
 	var err error
-	jxClient, ns, err := o.JXClientAndDevNamespace()
+	o.KubeClient, o.Namespace, err = kube.LazyCreateKubeClientAndNamespace(o.KubeClient, o.Namespace)
 	if err != nil {
-		return err
+		return errors.Wrapf(err, "failed to create the kube client")
 	}
-
-	err = o.DefaultsFromTeamSettings()
+	o.JXClient, err = jxclient.LazyCreateJXClient(o.JXClient)
 	if err != nil {
-		return err
+		return errors.Wrapf(err, "failed to create the jx client")
 	}
-
-	var userAuth *auth.UserAuth
-	if o.GitProvider == nil {
-		authConfigSvc, err := o.GitLocalAuthConfigService()
+	if o.CommandRunner == nil {
+		o.CommandRunner = cmdrunner.QuietCommandRunner
+	}
+	o.DiscoveredGitURL = o.RepoURL
+	if o.RepoURL == "" {
+		o.DiscoveredGitURL, err = gitdiscovery.FindGitURLFromDir(o.Dir)
 		if err != nil {
-			return err
+			return errors.Wrapf(err, "failed to discover the git URL")
 		}
-		config := authConfigSvc.Config()
-		var server *auth.AuthServer
-		if o.RepoURL != "" {
-			gitInfo, err := gits.ParseGitURL(o.RepoURL)
-			if err != nil {
-				return err
-			}
-			serverURL := gitInfo.HostURLWithoutUser()
-			server = config.GetOrCreateServer(serverURL)
-		} else {
-			server, err = config.PickOrCreateServer(gits.GitHubURL, o.GitRepositoryOptions.ServerURL, "Which Git service do you wish to use", o.BatchMode, o.GetIOFileHandles())
-			if err != nil {
-				return err
-			}
-		}
-		switch o.UseDefaultGit {
-		case true:
-			userAuth = config.CurrentUser(server, o.CommonOptions.InCluster())
-		case false:
-			switch o.GitRepositoryOptions.Username != "" {
-			case true:
-				userAuth = config.GetOrCreateUserAuth(server.URL, o.GitRepositoryOptions.Username)
-				o.GetReporter().UsingGitUserName(o.GitRepositoryOptions.Username)
-			case false:
-				// Get the org in case there is more than one user auth on the server and batchMode is true
-				org := o.getOrganisationOrCurrentUser()
-				userAuth, err = config.PickServerUserAuth(server, "Git user name:", o.BatchMode, org, o.GetIOFileHandles())
-				if err != nil {
-					return err
-				}
-			}
-		}
-		if server.Kind == "" {
-			server.Kind, err = o.GitServerHostURLKind(server.URL)
-			if err != nil {
-				return err
-			}
-		}
-		if userAuth.IsInvalid() {
-			f := func(username string) error {
-				o.Git().PrintCreateRepositoryGenerateAccessToken(server, username, o.Out)
-				return nil
-			}
-			if o.GitRepositoryOptions.ApiToken != "" {
-				userAuth.ApiToken = o.GitRepositoryOptions.ApiToken
-			}
-			err = config.EditUserAuth(server.Label(), userAuth, userAuth.Username, false, o.BatchMode, f, o.GetIOFileHandles())
-			if err != nil {
-				return err
-			}
-
-			// TODO lets verify the auth works?
-			if userAuth.IsInvalid() {
-				return fmt.Errorf("Authentication has failed for user %v. Please check the user's access credentials and try again", userAuth.Username)
-			}
-		}
-		err = authConfigSvc.SaveUserAuth(server.URL, userAuth)
-		if err != nil {
-			return fmt.Errorf("Failed to store git auth configuration %s", err)
-		}
-
-		o.GitServer = server
-		o.GitUserAuth = userAuth
-		o.GitProvider, err = gits.CreateProvider(server, userAuth, o.Git())
+	}
+	if o.DiscoveredGitURL != "" {
+		o.gitInfo, err = giturl.ParseGitURL(o.DiscoveredGitURL)
 		if err != nil {
 			return err
 		}
 	}
 
-	if o.GitHub {
-		return o.ImportProjectsFromGitHub()
+	if o.ScmClient == nil {
+		if o.ScmFactory.GitServerURL == "" && o.gitInfo != nil {
+			o.ScmFactory.GitServerURL = o.gitInfo.HostURL()
+		}
+		if o.ScmFactory.GitServerURL == "" {
+			return options.MissingOption("git-server")
+		}
+
+		if o.ScmFactory.GitKind == "" {
+			o.ScmFactory.GitKind = giturl.SaasGitKind(o.ScmFactory.GitServerURL)
+			if o.ScmFactory.GitKind == "" {
+				log.Logger().Infof("no --git-kind supplied for server %s so assuming kind is github", o.ScmFactory.GitServerURL)
+				o.ScmFactory.GitKind = "github"
+			}
+		}
+
+		o.ScmClient, err = o.ScmFactory.Create()
+		if err != nil {
+			return errors.Wrapf(err, "failed to create ScmClient")
+		}
 	}
 
 	if o.Dir == "" {
@@ -325,18 +298,33 @@ func (o *ImportOptions) Run() error {
 			o.Dir = dir
 		}
 	}
+	return nil
+}
+
+// Run executes the command
+func (o *ImportOptions) Run() error {
+	err := o.Validate()
+	if err != nil {
+		return errors.Wrapf(err, "failed to validate options")
+	}
+
+	err = o.DefaultsFromTeamSettings()
+	if err != nil {
+		return err
+	}
+
+	/* TODO
+	if o.GitHub {
+		return o.ImportProjectsFromGitHub()
+	}
+	*/
 
 	checkForJenkinsfile := o.Jenkinsfile == ""
 	shouldClone := checkForJenkinsfile || !o.DisableBuildPack
 
 	if o.RepoURL != "" {
 		if shouldClone {
-			// Use the git user auth to clone the repo (needed for private repos etc)
-			if o.GitUserAuth == nil {
-				userAuth := o.GitProvider.UserAuth()
-				o.GitUserAuth = &userAuth
-			}
-			o.RepoURL, err = o.Git().CreateAuthenticatedURL(o.RepoURL, o.GitUserAuth)
+			o.RepoURL, err = o.ScmFactory.CreateAuthenticatedURL(o.RepoURL)
 			if err != nil {
 				return err
 			}
@@ -345,30 +333,11 @@ func (o *ImportOptions) Run() error {
 				return err
 			}
 		}
-	} else {
-		err = o.DiscoverGit()
-		if err != nil {
-			return err
-		}
-
-		if o.RepoURL == "" {
-			err = o.DiscoverRemoteGitURL()
-			if err != nil {
-				return err
-			}
-		}
 	}
 
-	if o.AppName == "" {
-		if o.RepoURL != "" {
-			info, err := gits.ParseGitURL(o.RepoURL)
-			if err != nil {
-				log.Logger().Warnf("Failed to parse git URL %s : %s", o.RepoURL, err)
-			} else {
-				o.Organisation = info.Organisation
-				o.AppName = info.Name
-			}
-		}
+	if o.AppName == "" && o.gitInfo != nil {
+		o.Organisation = o.gitInfo.Organisation
+		o.AppName = o.gitInfo.Name
 	}
 	if o.AppName == "" {
 		dir, err := filepath.Abs(o.Dir)
@@ -379,14 +348,15 @@ func (o *ImportOptions) Run() error {
 	}
 	o.AppName = naming.ToValidName(strings.ToLower(o.AppName))
 
-	o.jenkinsClientFactory, err = factory.NewClientFactoryFromFactory(o.GetJXFactory())
-	if err != nil {
-		return errors.Wrapf(err, "failed to create the Jenkins ClientFactory")
-	}
-
 	jenkinsfile, err := o.HasJenkinsfile()
 	if err != nil {
 		return err
+	}
+
+	/*  TODO support immporting into jenkins servers
+	o.jenkinsClientFactory, err = factory.NewClientFactoryFromFactory(o.GetJXFactory())
+	if err != nil {
+		return errors.Wrapf(err, "failed to create the Jenkins ClientFactory")
 	}
 
 	// lets pick the import destination
@@ -401,6 +371,7 @@ func (o *ImportOptions) Run() error {
 			o.DisableBuildPack = true
 		}
 	}
+	*/
 
 	gitOpsRepo, err := IsGitOpsRepositoryWithPipeline(o.Dir)
 	if err != nil {
@@ -427,7 +398,7 @@ func (o *ImportOptions) Run() error {
 		return err
 	}
 
-	if o.RepoURL == "" {
+	if o.DiscoveredGitURL == "" {
 		if !o.DryRun {
 			err = o.CreateNewRemoteRepository()
 			if err != nil {
@@ -439,7 +410,7 @@ func (o *ImportOptions) Run() error {
 		}
 	} else {
 		if shouldClone {
-			err = o.Git().Push(o.Dir, "origin", false, "HEAD")
+			err = gitclient.Push(o.Git(), o.Dir, "origin", false, "HEAD")
 			if err != nil {
 				return err
 			}
@@ -452,22 +423,18 @@ func (o *ImportOptions) Run() error {
 	}
 
 	gitURL := ""
-	if o.RepoURL != "" {
-		gitInfo, err := gits.ParseGitURL(o.RepoURL)
+	if o.DiscoveredGitURL != "" {
+		gitInfo, err := giturl.ParseGitURL(o.DiscoveredGitURL)
 		if err != nil {
 			return err
 		}
 		gitURL = gitInfo.URLWithoutUser()
 	}
 	if gitURL == "" {
-		// TODO do we really need this code now?
-		gitURL = gits.SourceRepositoryProviderURL(o.GitProvider)
-	}
-	_, err = kube.GetOrCreateSourceRepository(jxClient, ns, o.AppName, o.Organisation, gitURL)
-	if err != nil {
-		return errors.Wrapf(err, "creating application resource for %s", util.ColorInfo(o.AppName))
+		return errors.Errorf("no git URL could be found")
 	}
 
+	/* TODO github app support
 	if !o.GithubAppInstalled {
 		githubAppMode, err := o.IsGitHubAppMode()
 		if err != nil {
@@ -486,21 +453,14 @@ func (o *ImportOptions) Run() error {
 			o.GithubAppInstalled = installed
 		}
 	}
-
+	*/
 	return o.doImport()
 }
 
-// GetJXFactory lazily creates a new jx factory
-func (o *ImportOptions) GetJXFactory() jxfactory.Factory {
-	if o.JXFactory == nil {
-		o.JXFactory = jxfactory.NewFactory()
-	}
-	return o.JXFactory
-}
-
 // ImportProjectsFromGitHub import projects from github
+/** TODO
 func (o *ImportOptions) ImportProjectsFromGitHub() error {
-	repos, err := gits.PickRepositories(o.GitProvider, o.Organisation, "Which repositories do you want to import", o.SelectAll, o.SelectFilter, o.GetIOFileHandles())
+	repos, err := gits.PickRepositories(o.ScmClient, o.Organisation, "Which repositories do you want to import", o.SelectAll, o.SelectFilter, o.GetIOFileHandles())
 	if err != nil {
 		return err
 	}
@@ -508,16 +468,16 @@ func (o *ImportOptions) ImportProjectsFromGitHub() error {
 	log.Logger().Info("Selected repositories")
 	for _, r := range repos {
 		o2 := ImportOptions{
-			CommonOptions:    o.CommonOptions,
-			Dir:              o.Dir,
-			RepoURL:          r.CloneURL,
-			Organisation:     o.Organisation,
-			Repository:       r.Name,
-			Jenkins:          o.Jenkins,
-			GitProvider:      o.GitProvider,
+			CommonOptions: o.CommonOptions,
+			Dir:           o.Dir,
+			RepoURL:       r.CloneURL,
+			Organisation:  o.Organisation,
+			Repository:    r.Name,
+			//Jenkins:          o.Jenkins,
+			ScmClient:        o.ScmClient,
 			DisableBuildPack: o.DisableBuildPack,
 		}
-		log.Logger().Infof("Importing repository %s", util.ColorInfo(r.Name))
+		log.Logger().Infof("Importing repository %s", termcolor.ColorInfo(r.Name))
 		err = o2.Run()
 		if err != nil {
 			return err
@@ -525,6 +485,7 @@ func (o *ImportOptions) ImportProjectsFromGitHub() error {
 	}
 	return nil
 }
+*/
 
 // GetReporter returns the reporter interface
 func (o *ImportOptions) GetReporter() ImportReporter {
@@ -544,14 +505,14 @@ func (o *ImportOptions) HasJenkinsfile() (string, error) {
 	dir := o.Dir
 	var err error
 
-	jenkinsfile := jenkinsfile.Name
+	jenkinsfile := jenkinsfileName
 	if o.Jenkinsfile != "" {
 		jenkinsfile = o.Jenkinsfile
 	}
 	if !filepath.IsAbs(jenkinsfile) {
 		jenkinsfile = filepath.Join(dir, jenkinsfile)
 	}
-	exists, err := util.FileExists(jenkinsfile)
+	exists, err := files.FileExists(jenkinsfile)
 	if err != nil {
 		return "", err
 	}
@@ -585,11 +546,13 @@ func (o *ImportOptions) EvaluateBuildPack(jenkinsfile string) error {
 		return err
 	}
 
+	/* TODO
 	err = o.modifyDeployKind()
 	if err != nil {
 		return err
 	}
 
+	*/
 	if o.PostDraftPackCallback != nil {
 		err = o.PostDraftPackCallback()
 		if err != nil {
@@ -597,22 +560,16 @@ func (o *ImportOptions) EvaluateBuildPack(jenkinsfile string) error {
 		}
 	}
 
-	gitServerName, err := gits.GetHost(o.GitProvider)
-	if err != nil {
-		return err
+	if o.gitInfo == nil {
+		return errors.Errorf("no git server name available")
 	}
 
-	if o.GitUserAuth == nil {
-		userAuth := o.GitProvider.UserAuth()
-		o.GitUserAuth = &userAuth
-	}
+	gitServerName := o.gitInfo.Host
 
-	o.Organisation = o.GetOrganisation()
 	if o.Organisation == "" {
-		gitUsername := o.GitUserAuth.Username
-		o.Organisation, err = gits.GetOwner(o.BatchMode, o.GitProvider, gitUsername, o.GetIOFileHandles())
+		o.Organisation, err = o.PickOwner("")
 		if err != nil {
-			return err
+			return errors.Wrapf(err, "failed to pick a git owner")
 		}
 	}
 
@@ -620,7 +577,7 @@ func (o *ImportOptions) EvaluateBuildPack(jenkinsfile string) error {
 		dir := o.Dir
 		_, defaultRepoName := filepath.Split(dir)
 
-		o.AppName, err = gits.GetRepoName(o.BatchMode, false, o.GitProvider, defaultRepoName, o.Organisation, o.GetIOFileHandles())
+		o.AppName, err = o.PickRepoName(o.Organisation, defaultRepoName)
 		if err != nil {
 			return err
 		}
@@ -642,11 +599,7 @@ func (o *ImportOptions) EvaluateBuildPack(jenkinsfile string) error {
 		return err
 	}
 
-	err = o.Git().Add(dir, "*")
-	if err != nil {
-		return err
-	}
-	err = o.Git().CommitIfChanges(dir, "Jenkins X build pack")
+	_, err = gitclient.AddAndCommitFiles(o.Git(), dir, "Jenkins X build pack")
 	if err != nil {
 		return err
 	}
@@ -671,20 +624,21 @@ func (o *ImportOptions) getOrganisationOrCurrentUser() string {
 
 func (o *ImportOptions) getCurrentUser() string {
 	//walk through every file in the given dir and update the placeholders
-	var currentUser string
-	if o.GitServer != nil {
-		currentUser = o.GitServer.CurrentUser
-		if currentUser == "" {
-			if o.GitProvider != nil {
-				currentUser = o.GitProvider.CurrentUsername()
+	if o.ScmFactory.GitUsername == "" {
+		if o.ScmClient != nil {
+			ctx := context.Background()
+			user, _, err := o.ScmClient.Users.Find(ctx)
+			if err != nil {
+				log.Logger().Warnf("failed to find current user in git %s", err.Error())
+			} else {
+				o.ScmFactory.GitUsername = user.Login
 			}
 		}
 	}
-	if currentUser == "" {
+	if o.ScmFactory.GitUsername == "" {
 		log.Logger().Warn("No username defined for the current Git server!")
-		currentUser = o.GitRepositoryOptions.Username
 	}
-	return currentUser
+	return o.ScmFactory.GitUsername
 }
 
 // GetOrganisation gets the organisation from the RepoURL (if in the github format of github.com/org/repo). It will
@@ -692,11 +646,11 @@ func (o *ImportOptions) getCurrentUser() string {
 // then the Organisation specified in the options is used.
 func (o *ImportOptions) GetOrganisation() string {
 	org := ""
-	gitInfo, err := gits.ParseGitURL(o.RepoURL)
+	gitInfo, err := giturl.ParseGitURL(o.DiscoveredGitURL)
 	if err == nil && gitInfo.Organisation != "" {
 		org = gitInfo.Organisation
 		if o.Organisation != "" && org != o.Organisation {
-			log.Logger().Warnf("organisation %s detected from URL %s. '--org %s' will be ignored", org, o.RepoURL, o.Organisation)
+			log.Logger().Warnf("organisation %s detected from URL %s. '--org %s' will be ignored", org, o.DiscoveredGitURL, o.Organisation)
 		}
 	} else {
 		org = o.Organisation
@@ -706,44 +660,49 @@ func (o *ImportOptions) GetOrganisation() string {
 
 // CreateNewRemoteRepository creates a new remote repository
 func (o *ImportOptions) CreateNewRemoteRepository() error {
-	authConfigSvc, err := o.GitLocalAuthConfigService()
-	if err != nil {
-		return err
-	}
-
 	dir := o.Dir
 	_, defaultRepoName := filepath.Split(dir)
 
-	o.GitRepositoryOptions.Owner = o.GetOrganisation()
-	details := &o.GitDetails
-	if details.RepoName == "" {
-		details, err = gits.PickNewGitRepository(o.BatchMode, authConfigSvc, defaultRepoName, &o.GitRepositoryOptions,
-			o.GitServer, o.GitUserAuth, o.Git(), o.GetIOFileHandles())
+	var err error
+	o.GitRepositoryOptions.Namespace = o.GetOrganisation()
+	details := &o.GitRepositoryOptions
+	if o.Organisation == "" {
+		o.Organisation, err = o.PickOwner("")
 		if err != nil {
-			return err
+			return errors.Wrapf(err, "failed to pick owner")
+		}
+
+	}
+	if details.Name == "" {
+		details.Name, err = o.PickRepoName(o.Organisation, defaultRepoName)
+		if err != nil {
+			return errors.Wrapf(err, "failed to pick repository name")
 		}
 	}
+	ctx := context.Background()
+	repo, _, err := o.ScmClient.Repositories.Create(ctx, &o.GitRepositoryOptions)
+	if err != nil {
+		return errors.Wrapf(err, "failed to create git repository %s/%s", o.GitRepositoryOptions.Namespace, o.GitRepositoryOptions.Name)
+	}
 
-	repo, err := details.CreateRepository()
 	if err != nil {
 		return err
 	}
-	o.GitProvider = details.GitProvider
 
-	o.RepoURL = repo.CloneURL
-	pushGitURL, err := o.Git().CreateAuthenticatedURL(repo.CloneURL, details.User)
+	o.DiscoveredGitURL = repo.Clone
+	pushGitURL, err := o.ScmFactory.CreateAuthenticatedURL(repo.Clone)
 	if err != nil {
 		return err
 	}
-	err = o.Git().AddRemote(dir, "origin", pushGitURL)
+	err = gitclient.AddRemote(o.Git(), dir, "origin", pushGitURL)
 	if err != nil {
 		return err
 	}
-	err = o.Git().PushMaster(dir)
+	err = gitclient.Push(o.Git(), dir, "origin", false, "master")
 	if err != nil {
 		return err
 	}
-	repoURL := repo.HTMLURL
+	repoURL := repo.Link
 	o.GetReporter().PushedGitRepository(repoURL)
 
 	githubAppMode, err := o.IsGitHubAppMode()
@@ -752,14 +711,21 @@ func (o *ImportOptions) CreateNewRemoteRepository() error {
 	}
 
 	if !githubAppMode {
+		userName := o.getCurrentUser()
 
 		// If the user creating the repo is not the pipeline user, add the pipeline user as a contributor to the repo
-		if o.PipelineUserName != o.GitUserAuth.Username && o.GitServer != nil && o.GitServer.URL == o.PipelineServer {
+		if o.PipelineUserName != "" && o.PipelineUserName != userName && o.ScmFactory.GitServerURL == o.PipelineServer {
 			// Make the invitation
-			err := o.GitProvider.AddCollaborator(o.PipelineUserName, details.Organisation, details.RepoName)
+			fullRepoName := scm.Join(o.Organisation, details.Name)
+			permission := "admin"
+			_, _, _, err = o.ScmClient.Repositories.AddCollaborator(ctx, fullRepoName, o.PipelineUserName, permission)
 			if err != nil {
-				return err
+				return errors.Wrapf(err, "failed to add %s as a collaborator to %s", o.PipelineUserName, fullRepoName)
 			}
+
+			/**
+			TODO
+			Load the git user / token for the pipeline bot user and approve the invite...
 
 			// If repo is put in an organisation that the pipeline user is not part of an invitation needs to be accepted.
 			// Create a new provider for the pipeline user
@@ -804,10 +770,10 @@ func (o *ImportOptions) CreateNewRemoteRepository() error {
 					return err
 				}
 			}
+			*/
 
 		}
 	}
-
 	return nil
 }
 
@@ -817,7 +783,7 @@ func (o *ImportOptions) CloneRepository() error {
 	if url == "" {
 		return fmt.Errorf("no Git repository URL defined")
 	}
-	gitInfo, err := gits.ParseGitURL(url)
+	gitInfo, err := giturl.ParseGitURL(url)
 	if err != nil {
 		return fmt.Errorf("failed to parse Git URL %s due to: %s", url, err)
 	}
@@ -827,11 +793,12 @@ func (o *ImportOptions) CloneRepository() error {
 		}
 		o.RepoURL = url
 	}
-	cloneDir, err := util.CreateUniqueDirectory(o.Dir, gitInfo.Name, util.MaximumNewDirectoryAttempts)
+
+	cloneDir, err := files.CreateUniqueDirectory(o.Dir, gitInfo.Name, files.MaximumNewDirectoryAttempts)
 	if err != nil {
 		return errors.Wrapf(err, "failed to create unique directory for '%s'", o.Dir)
 	}
-	err = o.Git().Clone(url, cloneDir)
+	cloneDir, err = gitclient.CloneToDir(o.Git(), url, cloneDir)
 	if err != nil {
 		return errors.Wrapf(err, "failed to clone in directory '%s'", cloneDir)
 	}
@@ -840,8 +807,8 @@ func (o *ImportOptions) CloneRepository() error {
 }
 
 // DiscoverGit checks if there is a git clone or prompts the user to import it
+/** TODO
 func (o *ImportOptions) DiscoverGit() error {
-	surveyOpts := survey.WithStdio(o.In, o.Out, o.Err)
 	if !o.DisableDotGitSearch {
 		root, gitConf, err := o.Git().FindGitConfigDir(o.Dir)
 		if err != nil {
@@ -864,7 +831,7 @@ func (o *ImportOptions) DiscoverGit() error {
 
 	// lets prompt the user to initialise the Git repository
 	if !o.BatchMode {
-		o.GetReporter().Trace("The directory %s is not yet using git", util.ColorInfo(dir))
+		o.GetReporter().Trace("The directory %s is not yet using git", termcolor.ColorInfo(dir))
 		flag := false
 		prompt := &survey.Confirm{
 			Message: "Would you like to initialise git now?",
@@ -924,17 +891,18 @@ func (o *ImportOptions) DiscoverGit() error {
 	o.GetReporter().GitRepositoryCreated()
 	return nil
 }
+*/
 
 // DefaultGitIgnore creates a default .gitignore
 func (o *ImportOptions) DefaultGitIgnore() error {
 	name := filepath.Join(o.Dir, ".gitignore")
-	exists, err := util.FileExists(name)
+	exists, err := files.FileExists(name)
 	if err != nil {
 		return err
 	}
 	if !exists {
 		data := []byte(opts.DefaultGitIgnoreFile)
-		err = ioutil.WriteFile(name, data, util.DefaultWritePermissions)
+		err = ioutil.WriteFile(name, data, files.DefaultFileWritePermissions)
 		if err != nil {
 			return fmt.Errorf("failed to write %s due to %s", name, err)
 		}
@@ -942,59 +910,10 @@ func (o *ImportOptions) DefaultGitIgnore() error {
 	return nil
 }
 
-// DiscoverRemoteGitURL finds the git url by looking in the directory
-// and looking for a .git/config file
-func (o *ImportOptions) DiscoverRemoteGitURL() error {
-	gitConf := o.GitConfDir
-	if gitConf == "" {
-		return fmt.Errorf("no GitConfDir defined")
-	}
-	cfg := gitcfg.NewConfig()
-	data, err := ioutil.ReadFile(gitConf)
-	if err != nil {
-		return fmt.Errorf("failed to load %s due to %s", gitConf, err)
-	}
-
-	err = cfg.Unmarshal(data)
-	if err != nil {
-		return fmt.Errorf("failed to unmarshal %s due to %s", gitConf, err)
-	}
-	remotes := cfg.Remotes
-	if len(remotes) == 0 {
-		return nil
-	}
-	url := o.Git().GetRemoteUrl(cfg, "origin")
-	if url == "" {
-		url = o.Git().GetRemoteUrl(cfg, "upstream")
-		if url == "" {
-			url, err = o.PickGitRemoteURL(cfg)
-			if err != nil {
-				return err
-			}
-		}
-	}
-	if url != "" {
-		o.RepoURL = url
-	}
-	return nil
-}
-
 func (o *ImportOptions) doImport() error {
-	gitURL := o.RepoURL
-	gitProvider := o.GitProvider
-	if gitProvider == nil {
-		p, err := o.GitProviderForURL(gitURL, "user name to register webhook")
-		if err != nil {
-			return err
-		}
-		gitProvider = p
-	}
+	gitURL := o.DiscoveredGitURL
 
-	authConfigSvc, err := o.GitLocalAuthConfigService()
-	if err != nil {
-		return err
-	}
-	defaultJenkinsfileName := jenkinsfile.Name
+	defaultJenkinsfileName := jenkinsfileName
 	jenkinsfile := o.Jenkinsfile
 	if jenkinsfile == "" {
 		jenkinsfile = defaultJenkinsfileName
@@ -1006,7 +925,7 @@ func (o *ImportOptions) doImport() error {
 	} else {
 		dockerfileLocation = "Dockerfile"
 	}
-	dockerfileExists, err := util.FileExists(dockerfileLocation)
+	dockerfileExists, err := files.FileExists(dockerfileLocation)
 	if err != nil {
 		return err
 	}
@@ -1018,6 +937,16 @@ func (o *ImportOptions) doImport() error {
 		}
 	}
 
+	// TODO should we prompt the user for the git kind if we can't detect / find it?
+	gitKind := o.ScmFactory.GitKind
+
+	err = o.addSourceConfigPullRequest(gitURL, gitKind)
+	if err != nil {
+		return errors.Wrapf(err, "failed to create Pull Request on the cluster git repository")
+	}
+	return nil
+
+	/* TODO
 	if !o.Destination.JenkinsX.Enabled {
 		flag, err := util.Confirm("do you want to use ChatOps to trigger pipelines instead of jenkins webhooks?", false, "using ChatOps means lighthouse will handle webhooks and trigger jobs directly in Jenkins", o.GetIOFileHandles())
 		if err != nil {
@@ -1061,7 +990,7 @@ func (o *ImportOptions) doImport() error {
 	if o.SchedulerName == "" {
 		o.SchedulerName = "jenkins"
 	}
-	gitInfo, err := gits.ParseGitURL(gitURL)
+	gitInfo, err := giturl.ParseGitURL(gitURL)
 	if err != nil {
 		return err
 	}
@@ -1070,235 +999,98 @@ func (o *ImportOptions) doImport() error {
 		return err
 	}
 
-	log.Logger().Infof("importing the repository into Jenkins: %s", util.ColorInfo(o.Destination.Jenkins.JenkinsName))
+	log.Logger().Infof("importing the repository into Jenkins: %s", termcolor.ColorInfo(o.Destination.Jenkins.JenkinsName))
 	jc, err := o.jenkinsClientFactory.CreateJenkinsClient(o.Destination.Jenkins.JenkinsName)
 	if err != nil {
 		return errors.Wrapf(err, "failed to create jenkins client for %s", o.Destination.Jenkins.JenkinsName)
 	}
 	return o.ImportProjectIntoJenkins(jc, gitURL, o.Dir, jenkinsfile, o.BranchPattern, o.Credentials, false, gitProvider, authConfigSvc, false, o.BatchMode)
+	*/
 }
 
-func (o *ImportOptions) addProwConfig(gitURL string, gitKind string) error {
-	gitInfo, err := gits.ParseGitURL(gitURL)
-	if err != nil {
-		return err
+func (o *ImportOptions) addSourceConfigPullRequest(gitURL string, gitKind string) error {
+	if o.NoDevPullRequest {
+		return nil
 	}
-	repo := gitInfo.Organisation + "/" + gitInfo.Name
-	client, err := o.KubeClient()
+	devEnv, err := jxenv.GetDevEnvironment(o.JXClient, o.Namespace)
 	if err != nil {
-		return err
-	}
-	devEnv, settings, err := o.DevEnvAndTeamSettings()
-	if err != nil {
-		return err
-	}
-	_, currentNamespace, err := o.KubeClientAndNamespace()
-	if err != nil {
-		return err
+		return errors.Wrapf(err, "failed to find the dev Environment")
 	}
 
-	gha, err := o.IsGitHubAppMode()
-	if err != nil {
-		return err
+	devGitURL := devEnv.Spec.Source.URL
+	if devGitURL == "" {
+		return errors.Errorf("no git source URL for Environment %s", devEnv.Name)
 	}
 
-	if settings.IsSchedulerMode() {
-		sr, err := o.getOrCreateSourceRepository(gitInfo, gitKind)
+	configureDependencyMatrix()
+
+	// lets generate a PR
+	base := devEnv.Spec.Source.Ref
+	if base == "" {
+		base = "master"
+	}
+
+	pro := &environments.EnvironmentPullRequestOptions{
+		ScmClientFactory:  o.ScmFactory,
+		Gitter:            o.Git(),
+		CommandRunner:     o.CommandRunner,
+		GitKind:           o.ScmFactory.GitKind,
+		OutDir:            "",
+		ModifyChartFn:     nil,
+		ModifyAppsFn:      nil,
+		ModifyKptFn:       nil,
+		Labels:            nil,
+		BranchName:        "",
+		PullRequestNumber: 0,
+		CommitTitle:       "fix: import repository",
+		CommitMessage:     "",
+		ScmClient:         o.ScmClient,
+		BatchMode:         o.BatchMode,
+		UseGitHubOAuth:    false,
+		Fork:              false,
+	}
+
+	pro.Function = func() error {
+		dir := pro.OutDir
+		_, ao := add.NewCmdAddRepository()
+		ao.Args = []string{gitURL}
+		ao.Dir = dir
+		err := ao.Run()
 		if err != nil {
-			return err
+			return errors.Wrapf(err, "failed to add git URL %s to the source-config.yaml file", gitURL)
 		}
 
-		sourceGitURL, err := kube.GetRepositoryGitURL(sr)
+		err = o.modifyDevEnvironmentSource(o.Dir, dir, o.gitInfo, gitURL, gitKind)
 		if err != nil {
-			return errors.Wrapf(err, "failed to get the git URL for SourceRepository %s", sr.Name)
-		}
-
-		devGitURL := devEnv.Spec.Source.URL
-		if devGitURL != "" && !gha && !o.NoDevPullRequest {
-			configureDependencyMatrix()
-
-			// lets generate a PR
-			base := devEnv.Spec.Source.Ref
-			if base == "" {
-				base = "master"
-			}
-			pro := &pr.StepCreatePrOptions{
-				SrcGitURL:  sourceGitURL,
-				GitURLs:    []string{devGitURL},
-				Base:       base,
-				Fork:       true,
-				BranchName: sr.Name,
-			}
-			pro.CommonOptions = o.CommonOptions
-
-			changeFn := func(dir string, gitInfo *gits.GitRepository) ([]string, error) {
-				err := writeSourceRepoToYaml(dir, sr)
-				if err != nil {
-					return nil, errors.Wrapf(err, "failed to write SourceRepository %s to dir %s", sr.Name, dir)
-				}
-
-				err = o.modifyDevEnvironmentSource(dir, gitInfo, gitURL, gitKind)
-				return nil, err
-			}
-
-			if pro.Username == "" {
-				pro.Username = o.Username
-				if pro.Username == "" && o.GitUserAuth != nil {
-					pro.Username = o.GitUserAuth.Username
-				}
-				log.Logger().Infof("defaulting the user name to %s so we can create a PullRequest", pro.Username)
-			}
-			err := pro.CreatePullRequest("resource", changeFn)
-			if err != nil {
-				return errors.Wrapf(err, "failed to create Pull Request on the development environment git repository %s", devGitURL)
-			}
-			prURL := ""
-			if pro.Results != nil && pro.Results.PullRequest != nil {
-				prURL = pro.Results.PullRequest.URL
-
-				if o.WaitForSourceRepositoryPullRequest {
-					err = o.waitForSourceRepositoryPullRequest(pro.Results, devGitURL)
-					if err != nil {
-						return errors.Wrapf(err, "failed to wait for the Pull Request %s to merge", prURL)
-					}
-				}
-			}
-			o.GetReporter().CreatedDevRepoPullRequest(prURL, devGitURL)
-		}
-
-		err = o.GenerateProwConfig(currentNamespace, devEnv)
-		if err != nil {
-			return err
-		}
-	} else {
-		err = prow.AddApplication(client, []string{repo}, currentNamespace, o.Pack, settings)
-		if err != nil {
-			return err
-		}
-	}
-
-	if !gha {
-		startBuildOptions := start.StartPipelineOptions{
-			CommonOptions: o.CommonOptions,
-		}
-		startBuildOptions.ServiceAccount = o.ServiceAccount
-		startBuildOptions.Args = []string{fmt.Sprintf("%s/%s/%s", gitInfo.Organisation, gitInfo.Name, opts.MasterBranch)}
-		err = startBuildOptions.Run()
-		if err != nil {
-			return fmt.Errorf("failed to start pipeline build: %s", err)
-		}
-	}
-
-	o.LogImportedProject(false, gitInfo)
-
-	return nil
-}
-
-func (o *ImportOptions) getOrCreateSourceRepository(gitInfo *gits.GitRepository, gitKind string) (*v1.SourceRepository, error) {
-	jxClient, currentNamespace, err := o.JXClientAndDevNamespace()
-	if err != nil {
-		return nil, err
-	}
-	callback := func(sr *v1.SourceRepository) {
-		u := gitInfo.CloneURL
-		if strings.HasPrefix(gitInfo.URL, "http") {
-			u = gitInfo.URLWithoutUser()
-		}
-		if u == "" {
-			u = gitInfo.CloneURL
-		}
-		sr.Spec.ProviderKind = gitKind
-		sr.Spec.Provider = gitInfo.HostURLWithoutUser()
-		sr.Spec.URL = u
-		if sr.Spec.URL == "" {
-			sr.Spec.URL = gitInfo.HTMLURL
-		}
-		sr.Spec.HTTPCloneURL = u
-		if sr.Spec.HTTPCloneURL == "" {
-			sr.Spec.HTTPCloneURL = gitInfo.HTMLURL
-		}
-		sr.Spec.SSHCloneURL = gitInfo.SSHURL
-	}
-	sr, err := kube.GetOrCreateSourceRepositoryCallback(jxClient, currentNamespace, gitInfo.Name, gitInfo.Organisation, gitInfo.HostURLWithoutUser(), callback)
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to get or create the source repository callback")
-	}
-	log.Logger().Debugf("have SourceRepository: %s\n", sr.Name)
-
-	// lets update the Scheduler if one is specified and its different to the default
-	schedulerName := o.SchedulerName
-	if schedulerName != "" && schedulerName != sr.Spec.Scheduler.Name {
-		sr.Spec.Scheduler.Name = schedulerName
-		_, err = jxClient.JenkinsV1().SourceRepositories(currentNamespace).Update(sr)
-		if err != nil {
-			log.Logger().Warnf("failed to update the SourceRepository %s to add the Scheduler name %s due to: %s\n", sr.Name, schedulerName, err.Error())
-		}
-	}
-	return sr, nil
-}
-
-// writeSourceRepoToYaml marshals a SourceRepository to the given directory, making sure it can be loaded by boot.
-func writeSourceRepoToYaml(dir string, sr *v1.SourceRepository) error {
-	// lets check if we have a new jx 3 source repository
-	outDir := filepath.Join(dir, "repositories", "templates")
-	fileName := filepath.Join(outDir, sr.Name+"-sr.yaml")
-	exists, err := util.DirExists(outDir)
-	if err != nil {
-		return errors.Wrapf(err, "failed to check if file exists %s", outDir)
-	}
-	if !exists {
-
-		// lets default to the jx 3 location
-		eo := &export.Options{
-			Dir: dir,
-		}
-		srList := []v1.SourceRepository{
-			*sr,
-		}
-		err = eo.PopulateSourceConfig(srList)
-		if err != nil {
-			return errors.Wrapf(err, "failed to populate SourceConfig")
+			return errors.Wrapf(err, "failed to modify remote cluster")
 		}
 		return nil
 	}
-	err = os.MkdirAll(outDir, util.DefaultWritePermissions)
-	if err != nil {
-		return errors.Wrapf(err, "failed to make directories %s", outDir)
-	}
 
-	// lets clear the fields we don't need to save
-	clearSourceRepositoryMetadata(&sr.ObjectMeta)
-	// Ensure it has the type information it needs
-	sr.APIVersion = jenkinsio.GroupAndVersion
-	sr.Kind = "SourceRepository"
-
-	data, err := yaml.Marshal(&sr)
-	if err != nil {
-		return errors.Wrapf(err, "failed to marshal SourceRepository %s to yaml", sr.Name)
+	/** TODO
+	if pro.Username == "" {
+		pro.Username = o.getCurrentUser()
+		log.Logger().Infof("defaulting the user name to %s so we can create a PullRequest", pro.Username)
 	}
+	*/
+	prDetails := &scm.PullRequest{}
 
-	err = ioutil.WriteFile(fileName, data, util.DefaultWritePermissions)
+	pr, err := pro.Create(devGitURL, "", prDetails, true)
 	if err != nil {
-		return errors.Wrapf(err, "failed to save SourceRepository file %s", fileName)
+		return errors.Wrapf(err, "failed to create Pull Request on the development environment git repository %s", devGitURL)
 	}
+	prURL := ""
+	if pr != nil {
+		prURL = pr.Link
+		if o.WaitForSourceRepositoryPullRequest {
+			err = o.waitForSourceRepositoryPullRequest(pr, devGitURL)
+			if err != nil {
+				return errors.Wrapf(err, "failed to wait for the Pull Request %s to merge", prURL)
+			}
+		}
+	}
+	o.GetReporter().CreatedDevRepoPullRequest(prURL, devGitURL)
 	return nil
-}
-
-// clearSourceRepositoryMetadata clears unnecessary data
-func clearSourceRepositoryMetadata(meta *metav1.ObjectMeta) {
-	meta.CreationTimestamp.Time = time.Time{}
-	meta.Namespace = ""
-	meta.OwnerReferences = nil
-	meta.Finalizers = nil
-	meta.Generation = 0
-	meta.GenerateName = ""
-	meta.SelfLink = ""
-	meta.UID = ""
-	meta.ResourceVersion = ""
-
-	for _, k := range removeSourceRepositoryAnnotations {
-		delete(meta.Annotations, k)
-	}
 }
 
 // ensureDockerRepositoryExists for some kinds of container registry we need to pre-initialise its use such as for ECR
@@ -1313,11 +1105,13 @@ func (o *ImportOptions) ensureDockerRepositoryExists() error {
 		log.Logger().Warnf("Missing application name!")
 		return nil
 	}
+
+	/* TODO
 	kubeClient, curNs, err := o.KubeClientAndNamespace()
 	if err != nil {
 		return err
 	}
-	ns, _, err := kube.GetDevNamespace(kubeClient, curNs)
+	ns, _, err := jxenv.GetDevNamespace(kubeClient, curNs)
 	if err != nil {
 		return err
 	}
@@ -1335,6 +1129,8 @@ func (o *ImportOptions) ensureDockerRepositoryExists() error {
 			}
 		}
 	}
+
+	*/
 	return nil
 }
 
@@ -1351,7 +1147,8 @@ func (o *ImportOptions) ReplacePlaceholders(gitServerName, dockerRegistryOrg str
 
 	replacer := strings.NewReplacer(
 		util.PlaceHolderAppName, strings.ToLower(o.AppName),
-		util.PlaceHolderGitProvider, strings.ToLower(gitServerName),
+		// TODO
+		//util.PlaceHolderScmClient, strings.ToLower(gitServerName),
 		util.PlaceHolderOrg, strings.ToLower(o.Organisation),
 		util.PlaceHolderDockerRegistryOrg, strings.ToLower(dockerRegistryOrg))
 
@@ -1440,7 +1237,7 @@ func replacePlaceholdersInPathBase(replacer *strings.Replacer, path string) erro
 func (o *ImportOptions) addAppNameToGeneratedFile(filename, field, value string) error {
 	dir := filepath.Join(o.Dir, "charts", o.AppName)
 	file := filepath.Join(dir, filename)
-	exists, err := util.FileExists(file)
+	exists, err := files.FileExists(file)
 	if err != nil {
 		return err
 	}
@@ -1472,18 +1269,18 @@ func (o *ImportOptions) renameChartToMatchAppName() error {
 	var oldChartsDir string
 	dir := o.Dir
 	chartsDir := filepath.Join(dir, "charts")
-	exists, err := util.DirExists(chartsDir)
+	exists, err := files.DirExists(chartsDir)
 	if err != nil {
 		return errors.Wrapf(err, "failed to check if the charts directory exists %s", chartsDir)
 	}
 	if !exists {
 		return nil
 	}
-	files, err := ioutil.ReadDir(chartsDir)
+	fileSlice, err := ioutil.ReadDir(chartsDir)
 	if err != nil {
 		return fmt.Errorf("error matching a Jenkins X build pack name with chart folder %v", err)
 	}
-	for _, fi := range files {
+	for _, fi := range fileSlice {
 		if fi.IsDir() {
 			name := fi.Name()
 			// TODO we maybe need to try check if the sub dir named after the build pack matches first?
@@ -1497,7 +1294,7 @@ func (o *ImportOptions) renameChartToMatchAppName() error {
 		// chart expects folder name to be the same as app name
 		newChartsDir := filepath.Join(dir, "charts", o.AppName)
 
-		exists, err := util.DirExists(oldChartsDir)
+		exists, err := files.DirExists(oldChartsDir)
 		if err != nil {
 			return err
 		}
@@ -1522,7 +1319,7 @@ func (o *ImportOptions) renameChartToMatchAppName() error {
 
 func (o *ImportOptions) fixDockerIgnoreFile() error {
 	filename := filepath.Join(o.Dir, ".dockerignore")
-	exists, err := util.FileExists(filename)
+	exists, err := files.FileExists(filename)
 	if err == nil && exists {
 		data, err := ioutil.ReadFile(filename)
 		if err != nil {
@@ -1533,11 +1330,11 @@ func (o *ImportOptions) fixDockerIgnoreFile() error {
 			if strings.TrimSpace(line) == "Dockerfile" {
 				lines = append(lines[:i], lines[i+1:]...)
 				text := strings.Join(lines, "\n")
-				err = ioutil.WriteFile(filename, []byte(text), util.DefaultWritePermissions)
+				err = ioutil.WriteFile(filename, []byte(text), files.DefaultFileWritePermissions)
 				if err != nil {
 					return err
 				}
-				o.GetReporter().Trace("Removed old `Dockerfile` entry from %s", util.ColorInfo(filename))
+				o.GetReporter().Trace("Removed old `Dockerfile` entry from %s", termcolor.ColorInfo(filename))
 			}
 		}
 	}
@@ -1547,58 +1344,56 @@ func (o *ImportOptions) fixDockerIgnoreFile() error {
 // CreateProwOwnersFile creates an OWNERS file in the root of the project assigning the current Git user as an approver and a reviewer. If the file already exists, does nothing.
 func (o *ImportOptions) CreateProwOwnersFile() error {
 	filename := filepath.Join(o.Dir, "OWNERS")
-	exists, err := util.FileExists(filename)
+	exists, err := files.FileExists(filename)
 	if err != nil {
 		return err
 	}
 	if exists {
 		return nil
 	}
-	if o.GitUserAuth != nil && o.GitUserAuth.Username != "" {
-		data := prow.Owners{
-			Approvers: []string{o.GitUserAuth.Username},
-			Reviewers: []string{o.GitUserAuth.Username},
-		}
-		yaml, err := yaml.Marshal(&data)
-		if err != nil {
-			return err
-		}
-		err = ioutil.WriteFile(filename, yaml, 0644)
-		if err != nil {
-			return err
-		}
-		return nil
+	userName := o.getCurrentUser()
+	if userName == "" {
+		return errors.Errorf("no git username")
 	}
-	return errors.New("GitUserAuth.Username not set")
+	data := prow.Owners{
+		Approvers: []string{userName},
+		Reviewers: []string{userName},
+	}
+	yaml, err := yaml.Marshal(&data)
+	if err != nil {
+		return err
+	}
+	err = ioutil.WriteFile(filename, yaml, 0644)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 // CreateProwOwnersAliasesFile creates an OWNERS_ALIASES file in the root of the project assigning the current Git user as an approver and a reviewer.
 func (o *ImportOptions) CreateProwOwnersAliasesFile() error {
 	filename := filepath.Join(o.Dir, "OWNERS_ALIASES")
-	exists, err := util.FileExists(filename)
+	exists, err := files.FileExists(filename)
 	if err != nil {
 		return err
 	}
 	if exists {
 		return nil
 	}
-	if o.GitUserAuth == nil {
-		return errors.New("option GitUserAuth not set")
+	gitUser := o.getCurrentUser()
+	if gitUser == "" {
+		return errors.Errorf("no git username")
 	}
-	gitUser := o.GitUserAuth.Username
-	if gitUser != "" {
-		data := prow.OwnersAliases{
-			Aliases:       []string{gitUser},
-			BestApprovers: []string{gitUser},
-			BestReviewers: []string{gitUser},
-		}
-		yaml, err := yaml.Marshal(&data)
-		if err != nil {
-			return err
-		}
-		return ioutil.WriteFile(filename, yaml, 0644)
+	data := prow.OwnersAliases{
+		Aliases:       []string{gitUser},
+		BestApprovers: []string{gitUser},
+		BestReviewers: []string{gitUser},
 	}
-	return errors.New("GitUserAuth.Username not set")
+	yaml, err := yaml.Marshal(&data)
+	if err != nil {
+		return err
+	}
+	return ioutil.WriteFile(filename, yaml, 0644)
 }
 
 func (o *ImportOptions) fixMaven() error {
@@ -1607,7 +1402,7 @@ func (o *ImportOptions) fixMaven() error {
 	}
 	dir := o.Dir
 	pomName := filepath.Join(dir, "pom.xml")
-	exists, err := util.FileExists(pomName)
+	exists, err := files.FileExists(pomName)
 	if err != nil {
 		return err
 	}
@@ -1618,41 +1413,33 @@ func (o *ImportOptions) fixMaven() error {
 		}
 
 		// lets ensure the mvn plugins are ok
-		out, err := o.GetCommandOutput(dir, "mvn", "io.jenkins.updatebot:updatebot-maven-plugin:RELEASE:plugin", "-Dartifact=maven-deploy-plugin", "-Dversion="+opts.MinimumMavenDeployVersion)
+		out, err := o.CommandRunner(cmdrunner.NewCommand(dir, "mvn", "io.jenkins.updatebot:updatebot-maven-plugin:RELEASE:plugin", "-Dartifact=maven-deploy-plugin", "-Dversion="+opts.MinimumMavenDeployVersion))
 		if err != nil {
 			return fmt.Errorf("Failed to update maven deploy plugin: %s output: %s", err, out)
 		}
-		out, err = o.GetCommandOutput(dir, "mvn", "io.jenkins.updatebot:updatebot-maven-plugin:RELEASE:plugin", "-Dartifact=maven-surefire-plugin", "-Dversion=3.0.0-M1")
+		out, err = o.CommandRunner(cmdrunner.NewCommand(dir, "mvn", "io.jenkins.updatebot:updatebot-maven-plugin:RELEASE:plugin", "-Dartifact=maven-surefire-plugin", "-Dversion=3.0.0-M1"))
 		if err != nil {
 			return fmt.Errorf("Failed to update maven surefire plugin: %s output: %s", err, out)
 		}
 		if !o.DryRun {
-			err = o.Git().Add(dir, "pom.xml")
-			if err != nil {
-				return err
-			}
-			err = o.Git().CommitIfChanges(dir, "fix:(plugins) use a better version of maven plugins")
+			_, err = gitclient.AddAndCommitFiles(o.Git(), dir, "fix:(plugins) use a better version of maven plugins")
 			if err != nil {
 				return err
 			}
 		}
 
 		// lets ensure the probe paths are ok
-		out, err = o.GetCommandOutput(dir, "mvn", "io.jenkins.updatebot:updatebot-maven-plugin:RELEASE:chart")
+		out, err = o.CommandRunner(cmdrunner.NewCommand(dir, "mvn", "io.jenkins.updatebot:updatebot-maven-plugin:RELEASE:chart"))
 		if err != nil {
 			return fmt.Errorf("Failed to update chart: %s output: %s", err, out)
 		}
 		if !o.DryRun {
-			exists, err := util.FileExists(filepath.Join(dir, "charts"))
+			exists, err := files.FileExists(filepath.Join(dir, "charts"))
 			if err != nil {
 				return err
 			}
 			if exists {
-				err = o.Git().Add(dir, "charts")
-				if err != nil {
-					return err
-				}
-				err = o.Git().CommitIfChanges(dir, "fix:(chart) fix up the probe path")
+				_, err = gitclient.AddAndCommitFiles(o.Git(), dir, "fix:(chart) fix up the probe path")
 				if err != nil {
 					return err
 				}
@@ -1663,9 +1450,9 @@ func (o *ImportOptions) fixMaven() error {
 }
 
 func (o *ImportOptions) DefaultsFromTeamSettings() error {
-	settings, err := o.TeamSettings()
+	settings, err := jxenv.GetDevEnvTeamSettings(o.JXClient, o.Namespace)
 	if err != nil {
-		return err
+		return errors.Wrapf(err, "failed to load Team Settings")
 	}
 	return o.DefaultValuesFromTeamSettings(settings)
 }
@@ -1677,6 +1464,7 @@ func (o *ImportOptions) DefaultValuesFromTeamSettings(settings *v1.TeamSettings)
 	}
 
 	// lets override any deploy o from the team settings if they are not specified
+	/* TODO
 	teamDeployOptions := settings.GetDeployOptions()
 	if !o.FlagChanged(opts.OptionCanary) {
 		o.DeployOptions.Canary = teamDeployOptions.Canary
@@ -1684,56 +1472,55 @@ func (o *ImportOptions) DefaultValuesFromTeamSettings(settings *v1.TeamSettings)
 	if !o.FlagChanged(opts.OptionHPA) {
 		o.DeployOptions.HPA = teamDeployOptions.HPA
 	}
+	*/
 	if o.Organisation == "" {
 		o.Organisation = settings.Organisation
 	}
-	if o.GitRepositoryOptions.Owner == "" {
-		o.GitRepositoryOptions.Owner = settings.Organisation
+	if o.GitRepositoryOptions.Namespace == "" {
+		o.GitRepositoryOptions.Namespace = settings.Organisation
 	}
 	if o.DockerRegistryOrg == "" {
 		o.DockerRegistryOrg = settings.DockerRegistryOrg
 	}
-	if o.GitRepositoryOptions.ServerURL == "" {
-		o.GitRepositoryOptions.ServerURL = settings.GitServer
+	if o.ScmFactory.GitServerURL == "" {
+		o.ScmFactory.GitServerURL = settings.GitServer
 	}
-	o.GitRepositoryOptions.Public = settings.GitPublic || o.GitRepositoryOptions.Public
+	o.GitRepositoryOptions.Private = !settings.GitPublic
 	o.PipelineServer = settings.GitServer
 	o.PipelineUserName = settings.PipelineUsername
 	return nil
 }
 
 // ConfigureImportOptions updates the import options struct based on values from the create repo struct
-func (o *ImportOptions) ConfigureImportOptions(repoData *gits.CreateRepoData) {
-	// configure the import o based on previous answers
-	o.AppName = repoData.RepoName
-	o.GitProvider = repoData.GitProvider
-	o.Organisation = repoData.Organisation
-	o.Repository = repoData.RepoName
-	o.GitDetails = *repoData
-	o.GitServer = repoData.GitServer
+func (options *ImportOptions) ConfigureImportOptions(repoData *CreateRepoData) {
+	// configure the import options based on previous answers
+	options.AppName = repoData.RepoName
+	options.Organisation = repoData.Organisation
+	options.Repository = repoData.RepoName
+	//options.GitProvider = repoData.GitProvider
+
+	// TODO
+	//options.GitDetails = *repoData
+	//options.GitServer = repoData.GitServer
 }
 
 // GetGitRepositoryDetails determines the git repository details to use during the import command
-func (o *ImportOptions) GetGitRepositoryDetails() (*gits.CreateRepoData, error) {
-	err := o.DefaultsFromTeamSettings()
-	if err != nil {
-		return nil, err
-	}
-	authConfigSvc, err := o.GitLocalAuthConfigService()
+func (options *ImportOptions) GetGitRepositoryDetails() (*CreateRepoData, error) {
+	err := options.DefaultsFromTeamSettings()
 	if err != nil {
 		return nil, err
 	}
 	//config git repositoryoptions parameters: Owner and RepoName
-	o.GitRepositoryOptions.Owner = o.Organisation
-	o.GitRepositoryOptions.RepoName = o.Repository
-	details, err := gits.PickNewOrExistingGitRepository(o.BatchMode, authConfigSvc,
-		"", &o.GitRepositoryOptions, nil, nil, o.Git(), false, o.GetIOFileHandles())
+	options.GitRepositoryOptions.Namespace = options.Organisation
+	options.GitRepositoryOptions.Name = options.Repository
+	details, err := options.PickNewOrExistingGitRepository()
 	if err != nil {
 		return nil, err
 	}
 	return details, nil
 }
 
+/** TODO
 // modifyDeployKind lets modify the deployment kind if the team settings or CLI settings are different
 func (o *ImportOptions) modifyDeployKind() error {
 	deployKind := o.DeployKind
@@ -1758,8 +1545,11 @@ func (o *ImportOptions) modifyDeployKind() error {
 	return nil
 }
 
+*/
+
 // enableTriggerPipelineJenkinsXPipeline lets generate the jenkins-x.yml if one doesn't exist
 // lets use JENKINS_SERVER to point to the jenkins server to use
+/* TODO
 func (o *ImportOptions) enableTriggerPipelineJenkinsXPipeline(destination ImportDestination) error {
 	projectConfig, fileName, err := config.LoadProjectConfig(o.Dir)
 	if err != nil {
@@ -1862,6 +1652,7 @@ func (o *ImportOptions) enableJenkinsfileRunnerPipeline(destination ImportDestin
 	}
 	return nil
 }
+*/
 
 // PickBuildPackName if not in batch mode lets confirm to the user which build pack we are going to use
 func (o *ImportOptions) PickBuildPackName(i *InvokeDraftPack, dir string, chosenPack string) (string, error) {
@@ -1880,12 +1671,20 @@ func (o *ImportOptions) PickBuildPackName(i *InvokeDraftPack, dir string, chosen
 		}
 	}
 
-	name, err := util.PickNameWithDefault(names, "Confirm the build pack name you wish to use on this project", chosenPack,
-		"the build pack name is used to determine the automated pipeline for your source code", o.GetIOFileHandles())
+	name, err := o.Input.PickNameWithDefault(names, "Confirm the build pack name you wish to use on this project", chosenPack,
+		"the build pack name is used to determine the automated pipeline for your source code")
 	return name, err
 }
 
-func (o *ImportOptions) waitForSourceRepositoryPullRequest(pullRequestInfo *gits.PullRequestInfo, devEnvGitURL string) error {
+// Git returns the gitter - lazily creating one if required
+func (o *ImportOptions) Git() gitclient.Interface {
+	if o.Gitter == nil {
+		o.Gitter = cli.NewCLIClient("", o.CommandRunner)
+	}
+	return o.Gitter
+}
+
+func (o *ImportOptions) waitForSourceRepositoryPullRequest(pullRequestInfo *scm.PullRequest, devEnvGitURL string) error {
 	logNoMergeCommitSha := false
 	logHasMergeSha := false
 	start := time.Now()
@@ -1893,51 +1692,50 @@ func (o *ImportOptions) waitForSourceRepositoryPullRequest(pullRequestInfo *gits
 	durationString := o.PullRequestPollTimeout.String()
 
 	if pullRequestInfo != nil {
-		if pullRequestInfo.PullRequest != nil {
-			log.Logger().Infof("Waiting up to %s for the pull request %s to merge....", durationString, util.ColorInfo(pullRequestInfo.PullRequest.URL))
-		} else {
-			log.Logger().Infof("Waiting up to %s for the pull request on repository %s to merge....", durationString, util.ColorInfo(devEnvGitURL))
-		}
+		log.Logger().Infof("Waiting up to %s for the pull request %s to merge....", durationString, termcolor.ColorInfo(pullRequestInfo.Link))
+		ctx := context.Background()
+		fullName := pullRequestInfo.Repository().FullName
+		prNumber := pullRequestInfo.Number
 		for {
-			pr := pullRequestInfo.PullRequest
-			gitProvider, _, err := o.CreateGitProviderForURLWithoutKind(devEnvGitURL)
+			pr, _, err := o.ScmClient.PullRequests.Find(ctx, fullName, prNumber)
 			if err != nil {
-				return errors.Wrapf(err, "creating git provider for %s", devEnvGitURL)
-			}
-			err = gitProvider.UpdatePullRequestStatus(pr)
-			if err != nil {
-				log.Logger().Warnf("Failed to query the Pull Request status for %s %s", pr.URL, err)
+				log.Logger().Warnf("Failed to query the Pull Request status for %s %s", pullRequestInfo.Link, err)
 			} else {
 				elaspedString := time.Now().Sub(start).String()
-				if pr.Merged != nil && *pr.Merged {
-					if pr.MergeCommitSHA == nil {
+				if pr.Merged {
+					if pr.MergeSha == "" {
 						if !logNoMergeCommitSha {
 							logNoMergeCommitSha = true
-							log.Logger().Infof("Pull Request %s is merged but we don't yet have a merge SHA after waiting %s", util.ColorInfo(pr.URL), elaspedString)
+							log.Logger().Infof("Pull Request %s is merged but we don't yet have a merge SHA after waiting %s", termcolor.ColorInfo(pr.Link), elaspedString)
 							return nil
 						}
 					} else {
-						mergeSha := *pr.MergeCommitSHA
+						mergeSha := pr.MergeSha
 						if !logHasMergeSha {
 							logHasMergeSha = true
-							log.Logger().Infof("Pull Request %s is merged at sha %s after waiting %s", util.ColorInfo(pr.URL), util.ColorInfo(mergeSha), elaspedString)
+							log.Logger().Infof("Pull Request %s is merged at sha %s after waiting %s", termcolor.ColorInfo(pr.Link), termcolor.ColorInfo(mergeSha), elaspedString)
 							return nil
 						}
 					}
 				} else {
-					if pr.IsClosed() {
-						log.Logger().Warnf("Pull Request %s is closed after waiting %s", util.ColorInfo(pr.URL), elaspedString)
+					if pr.Closed {
+						log.Logger().Warnf("Pull Request %s is closed after waiting %s", termcolor.ColorInfo(pr.Link), elaspedString)
 						return nil
 					}
 				}
 			}
 			if time.Now().After(end) {
-				return fmt.Errorf("Timed out waiting for pull request %s to merge. Waited %s", pr.URL, durationString)
+				return fmt.Errorf("Timed out waiting for pull request %s to merge. Waited %s", pr.Link, durationString)
 			}
 			time.Sleep(o.PullRequestPollPeriod)
 		}
 	}
 	return nil
+}
+
+func (o *ImportOptions) IsGitHubAppMode() (bool, error) {
+	// TODO
+	return false, nil
 }
 
 func configureDependencyMatrix() {

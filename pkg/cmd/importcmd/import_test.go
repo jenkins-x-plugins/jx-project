@@ -8,15 +8,10 @@ import (
 	"path/filepath"
 	"testing"
 
-	jenkinsio "github.com/jenkins-x/jx-api/pkg/apis/jenkins.io"
-	v1 "github.com/jenkins-x/jx-api/pkg/apis/jenkins.io/v1"
+	"github.com/jenkins-x/jx-helpers/pkg/files"
 	"github.com/jenkins-x/jx/v2/pkg/auth"
-	"github.com/jenkins-x/jx/v2/pkg/gits"
 	"github.com/jenkins-x/jx/v2/pkg/prow"
-	"github.com/jenkins-x/jx/v2/pkg/util"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/yaml"
 )
 
@@ -62,7 +57,7 @@ func TestCreateProwOwnersFileCreateWhenDoesNotExist(t *testing.T) {
 	assert.NoError(t, err, "There should be no error")
 
 	wantFile := filepath.Join(path, "OWNERS")
-	exists, err := util.FileExists(wantFile)
+	exists, err := files.FileExists(wantFile)
 	assert.NoError(t, err, "It should find the OWNERS file without error")
 	assert.True(t, exists, "It should create an OWNERS file")
 
@@ -133,7 +128,7 @@ func TestCreateProwOwnersAliasesFileCreateWhenDoesNotExist(t *testing.T) {
 	assert.NoError(t, err, "There should be no error")
 
 	wantFile := filepath.Join(path, "OWNERS_ALIASES")
-	exists, err := util.FileExists(wantFile)
+	exists, err := files.FileExists(wantFile)
 	assert.NoError(t, err, "It should find the OWNERS_ALIASES file without error")
 	assert.True(t, exists, "It should create an OWNERS_ALIASES file")
 
@@ -210,54 +205,4 @@ func TestImportOptions_GetOrganisation(t *testing.T) {
 			}
 		})
 	}
-}
-
-func TestWriteSourceRepoToYaml(t *testing.T) {
-	t.Parallel()
-	path, err := ioutil.TempDir("", "test-source-repo-to-yaml")
-	if err != nil {
-		panic(err)
-	}
-	defer os.RemoveAll(path)
-
-	outDir := filepath.Join(path, "repositories", "templates")
-
-	err = os.MkdirAll(outDir, util.DefaultWritePermissions)
-	require.NoError(t, err, "failed to create templates dir")
-
-	sr := &v1.SourceRepository{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      "jenkins-x-jx",
-			Namespace: "jx",
-			Labels:    map[string]string{"owner": "jenkins-x", "repository": "jx"},
-		},
-
-		Spec: v1.SourceRepositorySpec{
-			Org:          "jenkins-x",
-			Repo:         "jx",
-			Provider:     gits.GitHubURL,
-			ProviderName: gits.KindGitHub,
-		},
-	}
-
-	err = writeSourceRepoToYaml(path, sr)
-	assert.NoError(t, err)
-
-	srFileName := filepath.Join(outDir, "jenkins-x-jx-sr.yaml")
-	exists, err := util.FileExists(srFileName)
-	assert.NoError(t, err)
-	assert.True(t, exists, "serialized SR %s does not exist", srFileName)
-
-	data, err := ioutil.ReadFile(srFileName)
-	assert.NoError(t, err)
-
-	newSr := &v1.SourceRepository{}
-
-	err = yaml.Unmarshal(data, newSr)
-	assert.NoError(t, err)
-
-	assert.Equal(t, jenkinsio.GroupAndVersion, newSr.APIVersion)
-	assert.Equal(t, "SourceRepository", newSr.Kind)
-	assert.Equal(t, "jenkins-x-jx", newSr.Name)
-	assert.Equal(t, "", newSr.Namespace)
 }

@@ -10,14 +10,14 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/jenkins-x/jx-project/pkg/cmd/importcmd"
 	v1 "github.com/jenkins-x/jx-api/pkg/apis/jenkins.io/v1"
+	"github.com/jenkins-x/jx-helpers/pkg/kube/naming"
+	"github.com/jenkins-x/jx-project/pkg/cmd/importcmd"
 	"github.com/jenkins-x/jx/v2/pkg/cmd/clients/fake"
 	"github.com/jenkins-x/jx/v2/pkg/cmd/edit"
 	"github.com/jenkins-x/jx/v2/pkg/cmd/opts"
 	"github.com/jenkins-x/jx/v2/pkg/cmd/testhelpers"
 	"github.com/jenkins-x/jx/v2/pkg/helm"
-	"github.com/jenkins-x/jx/v2/pkg/kube/naming"
 	"github.com/jenkins-x/jx/v2/pkg/tests"
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/require"
@@ -121,7 +121,7 @@ func TestImportProjectNextGenPipelineWithDeploy(t *testing.T) {
 		}
 		dir := filepath.Join(tmpDir, name)
 
-		err = util.CopyDir(srcDir, dir, true)
+		err = files.CopyDir(srcDir, dir, true)
 		require.NoError(t, err, "failed to copy source to %s", dir)
 
 		_, io := importcmd.NewCmdImportAndOptions(&commonOpts)
@@ -186,7 +186,7 @@ func assertImportHasDeploy(t *testing.T, o *importcmd.ImportOptions, testDir str
 	_, testName := filepath.Split(testDir)
 	testName = naming.ToValidName(testName)
 
-	o.GitProvider = createFakeGitProvider()
+	o.ScmClient = createFakeScmClient()
 	if o.Out == nil {
 		o.Out = tests.Output()
 	}
