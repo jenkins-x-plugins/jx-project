@@ -24,6 +24,7 @@ import (
 	"github.com/jenkins-x/jx-helpers/pkg/gitclient/gitdiscovery"
 	"github.com/jenkins-x/jx-helpers/pkg/gitclient/giturl"
 	"github.com/jenkins-x/jx-helpers/pkg/input"
+	"github.com/jenkins-x/jx-helpers/pkg/input/batch"
 	"github.com/jenkins-x/jx-helpers/pkg/input/survey"
 	"github.com/jenkins-x/jx-helpers/pkg/kube"
 	"github.com/jenkins-x/jx-helpers/pkg/kube/jxclient"
@@ -51,6 +52,7 @@ type CallbackFn func() error
 type ImportOptions struct {
 	Args                               []string
 	RepoURL                            string
+	GitProviderURL                     string
 	DiscoveredGitURL                   string
 	Dir                                string
 	Organisation                       string
@@ -197,6 +199,7 @@ func (o *ImportOptions) AddImportFlags(cmd *cobra.Command, createProject bool) {
 		}
 		return text
 	}
+	cmd.Flags().StringVarP(&o.GitProviderURL, "git-provider-url", "", "", "Deprecated: please use --git-server")
 	cmd.Flags().StringVarP(&o.Organisation, "org", "", "", "Specify the Git provider organisation to import the project into (if it is not already in one)")
 	cmd.Flags().StringVarP(&o.Repository, "name", "", notCreateProject("n"), "Specify the Git repository name to import the project into (if it is not already in one)")
 	cmd.Flags().StringVarP(&o.Credentials, "credentials", notCreateProject("c"), "", "The Jenkins credentials name used by the job")
@@ -232,7 +235,11 @@ func (o *ImportOptions) AddImportFlags(cmd *cobra.Command, createProject bool) {
 // Validate validates the command line options
 func (o *ImportOptions) Validate() error {
 	if o.Input == nil {
-		o.Input = survey.NewInput()
+		if o.BatchMode {
+			o.Input = batch.NewBatchInput()
+		} else {
+			o.Input = survey.NewInput()
+		}
 	}
 	var err error
 	o.KubeClient, o.Namespace, err = kube.LazyCreateKubeClientAndNamespace(o.KubeClient, o.Namespace)
@@ -254,6 +261,9 @@ func (o *ImportOptions) Validate() error {
 		}
 	}
 
+	if o.ScmFactory.GitServerURL == "" && o.GitProviderURL != "" {
+		o.ScmFactory.GitServerURL = o.GitProviderURL
+	}
 	if o.ScmFactory.GitServerURL == "" && o.gitInfo != nil {
 		o.ScmFactory.GitServerURL = o.gitInfo.HostURL()
 	}
