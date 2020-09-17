@@ -37,26 +37,8 @@ const (
 )
 
 func TestImportProjectsToJenkins(t *testing.T) {
-	// TODO
+	// TODO jenkins import current disabled
 	t.SkipNow()
-
-	/*
-		TODO
-
-		originalJxHome, tempJxHome, err := testhelpers.CreateTestJxHomeDir()
-		assert.NoError(t, err)
-		defer func() {
-			err := testhelpers.CleanupTestJxHomeDir(originalJxHome, tempJxHome)
-			assert.NoError(t, err)
-		}()
-		originalKubeCfg, tempKubeCfg, err := testhelpers.CreateTestKubeConfigDir()
-		assert.NoError(t, err)
-		defer func() {
-			err := testhelpers.CleanupTestKubeConfigDir(originalKubeCfg, tempKubeCfg)
-			assert.NoError(t, err)
-		}()
-
-	*/
 
 	tempDir, err := ioutil.TempDir("", "test-import-projects")
 	assert.NoError(t, err)
@@ -78,24 +60,6 @@ func TestImportProjectsToJenkins(t *testing.T) {
 }
 
 func TestImportProjectToJenkinsX(t *testing.T) {
-	/*
-		TODO
-
-		originalJxHome, tempJxHome, err := testhelpers.CreateTestJxHomeDir()
-		assert.NoError(t, err)
-		defer func() {
-			err := testhelpers.CleanupTestJxHomeDir(originalJxHome, tempJxHome)
-			assert.NoError(t, err)
-		}()
-		originalKubeCfg, tempKubeCfg, err := testhelpers.CreateTestKubeConfigDir()
-		assert.NoError(t, err)
-		defer func() {
-			err := testhelpers.CleanupTestKubeConfigDir(originalKubeCfg, tempKubeCfg)
-			assert.NoError(t, err)
-		}()
-
-	*/
-
 	tempDir, err := ioutil.TempDir("", "test-import-ng-projects")
 	assert.NoError(t, err)
 
@@ -146,7 +110,6 @@ func assertImport(t *testing.T, testDir string, testcase string, importToJenkins
 
 	testimports.SetFakeClients(o)
 	o.Dir = testDir
-	o.DryRun = true
 	o.DisableMaven = true
 	o.UseDefaultGit = true
 

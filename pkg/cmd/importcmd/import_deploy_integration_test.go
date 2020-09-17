@@ -9,12 +9,12 @@ import (
 	"path/filepath"
 	"testing"
 
-	fakescm "github.com/jenkins-x/go-scm/scm/driver/fake"
 	v1 "github.com/jenkins-x/jx-api/pkg/apis/jenkins.io/v1"
 	"github.com/jenkins-x/jx-helpers/pkg/files"
 	"github.com/jenkins-x/jx-helpers/pkg/kube/jxenv"
 	"github.com/jenkins-x/jx-helpers/pkg/kube/naming"
 	"github.com/jenkins-x/jx-project/pkg/cmd/importcmd"
+	"github.com/jenkins-x/jx-project/pkg/cmd/testimports"
 	"github.com/jenkins-x/jx-project/pkg/constants"
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/require"
@@ -27,22 +27,6 @@ func TestImportProjectNextGenPipelineWithDeploy(t *testing.T) {
 	t.SkipNow()
 
 	t.Parallel()
-	/*
-		TODO
-		originalJxHome, tempJxHome, err := testhelpers.CreateTestJxHomeDir()
-		assert.NoError(t, err)
-		defer func() {
-			err := testhelpers.CleanupTestJxHomeDir(originalJxHome, tempJxHome)
-			assert.NoError(t, err)
-		}()
-		originalKubeCfg, tempKubeCfg, err := testhelpers.CreateTestKubeConfigDir()
-		assert.NoError(t, err)
-		defer func() {
-			err := testhelpers.CleanupTestKubeConfigDir(originalKubeCfg, tempKubeCfg)
-			assert.NoError(t, err)
-		}()
-
-	*/
 	tmpDir, err := ioutil.TempDir("", "test-import-deploy-projects-")
 	assert.NoError(t, err)
 	require.DirExists(t, tmpDir, "could not create temp dir for running tests")
@@ -181,9 +165,7 @@ func assertImportHasDeploy(t *testing.T, o *importcmd.ImportOptions, testDir str
 	_, testName := filepath.Split(testDir)
 	testName = naming.ToValidName(testName)
 
-	scmClient, _ := fakescm.NewDefault()
-	o.ScmClient = scmClient
-	o.DryRun = true
+	testimports.SetFakeClients(o)
 	o.UseDefaultGit = true
 
 	err := o.Run()

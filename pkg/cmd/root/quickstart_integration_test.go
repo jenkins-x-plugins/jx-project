@@ -15,37 +15,19 @@ import (
 )
 
 func TestCreateQuickstartProjects(t *testing.T) {
-	// TODO lets skip this test for now as it often fails with rate limits
-	t.SkipNow()
-
-	/**
-	TODO
-	originalJxHome, tempJxHome, err := testhelpers.CreateTestJxHomeDir()
-	assert.NoError(t, err)
-	defer func() {
-		err := testhelpers.CleanupTestJxHomeDir(originalJxHome, tempJxHome)
-		assert.NoError(t, err)
-	}()
-	originalKubeCfg, tempKubeCfg, err := testhelpers.CreateTestKubeConfigDir()
-	assert.NoError(t, err)
-	defer func() {
-		err := testhelpers.CleanupTestKubeConfigDir(originalKubeCfg, tempKubeCfg)
-		assert.NoError(t, err)
-	}()
-	*/
-
 	testDir, err := ioutil.TempDir("", "test-create-quickstart")
 	assert.NoError(t, err)
 
-	appName := "myvets"
+	appName := "mynode"
 
 	o := &root.CreateQuickstartOptions{
 		Options: root.Options{
 			ImportOptions: importcmd.ImportOptions{},
 		},
-		GitHubOrganisations: []string{"petclinic-gcp"},
+		// TODO
+		//GitHubOrganisations: []string{"petclinic-gcp"},
 		Filter: quickstarts.QuickstartFilter{
-			Text:        "petclinic-gcp/spring-petclinic-vets-service",
+			Text:        "node-http",
 			ProjectName: appName,
 		},
 	}
@@ -53,7 +35,6 @@ func TestCreateQuickstartProjects(t *testing.T) {
 
 	o.Dir = testDir
 	o.OutDir = testDir
-	o.DryRun = true
 	o.DisableMaven = true
 	o.IgnoreTeam = true
 	o.Repository = appName
@@ -62,11 +43,9 @@ func TestCreateQuickstartProjects(t *testing.T) {
 	assert.NoError(t, err)
 	if err == nil {
 		appDir := filepath.Join(testDir, appName)
-		jenkinsfile := filepath.Join(appDir, "Jenkinsfile")
-		assert.FileExists(t, jenkinsfile)
+		pipelineFile := filepath.Join(appDir, "jenkins-x.yml")
 		assert.FileExists(t, filepath.Join(appDir, "Dockerfile"))
 		assert.FileExists(t, filepath.Join(appDir, "charts", appName, "Chart.yaml"))
-		assert.FileExists(t, filepath.Join(appDir, "charts", appName, "Makefile"))
-		assert.NoFileExists(t, filepath.Join(appDir, "charts", "spring-petclinic-vets-service", "Chart.yaml"))
+		assert.FileExists(t, pipelineFile)
 	}
 }

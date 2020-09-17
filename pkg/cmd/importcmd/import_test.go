@@ -1,6 +1,6 @@
 // +build unit
 
-package importcmd
+package importcmd_test
 
 import (
 	"io/ioutil"
@@ -8,8 +8,11 @@ import (
 	"path/filepath"
 	"testing"
 
+	"github.com/jenkins-x/go-scm/scm"
 	"github.com/jenkins-x/jx-helpers/pkg/files"
 	"github.com/jenkins-x/jx-helpers/pkg/scmhelpers"
+	"github.com/jenkins-x/jx-project/pkg/cmd/importcmd"
+	"github.com/jenkins-x/jx-project/pkg/cmd/testimports"
 	"github.com/jenkins-x/jx-project/pkg/prow"
 	"github.com/stretchr/testify/assert"
 	"sigs.k8s.io/yaml"
@@ -30,7 +33,7 @@ func TestCreateProwOwnersFileExistsDoNothing(t *testing.T) {
 		panic(err)
 	}
 
-	cmd := ImportOptions{
+	cmd := &importcmd.ImportOptions{
 		Dir: path,
 	}
 
@@ -46,7 +49,7 @@ func TestCreateProwOwnersFileCreateWhenDoesNotExist(t *testing.T) {
 	}
 	defer os.RemoveAll(path)
 
-	cmd := ImportOptions{
+	cmd := &importcmd.ImportOptions{
 		Dir: path,
 		ScmFactory: scmhelpers.Factory{
 			GitUsername: testUsername,
@@ -81,7 +84,7 @@ func TestCreateProwOwnersFileCreateWhenDoesNotExistAndNoGitUserSet(t *testing.T)
 	}
 	defer os.RemoveAll(path)
 
-	cmd := ImportOptions{
+	cmd := &importcmd.ImportOptions{
 		Dir: path,
 	}
 
@@ -102,7 +105,7 @@ func TestCreateProwOwnersAliasesFileExistsDoNothing(t *testing.T) {
 		panic(err)
 	}
 
-	cmd := ImportOptions{
+	cmd := &importcmd.ImportOptions{
 		Dir: path,
 	}
 
@@ -117,7 +120,7 @@ func TestCreateProwOwnersAliasesFileCreateWhenDoesNotExist(t *testing.T) {
 		panic(err)
 	}
 	defer os.RemoveAll(path)
-	cmd := ImportOptions{
+	cmd := &importcmd.ImportOptions{
 		Dir: path,
 		ScmFactory: scmhelpers.Factory{
 			GitUsername: testUsername,
@@ -153,9 +156,12 @@ func TestCreateProwOwnersAliasesFileCreateWhenDoesNotExistAndNoGitUserSet(t *tes
 	}
 	defer os.RemoveAll(path)
 
-	cmd := ImportOptions{
+	cmd := &importcmd.ImportOptions{
 		Dir: path,
 	}
+
+	fakeScmData := testimports.SetFakeClients(cmd)
+	fakeScmData.CurrentUser = scm.User{}
 
 	err = cmd.CreateProwOwnersAliasesFile()
 	assert.Error(t, err, "There should an error")
@@ -164,12 +170,12 @@ func TestCreateProwOwnersAliasesFileCreateWhenDoesNotExistAndNoGitUserSet(t *tes
 func TestImportOptions_GetOrganisation(t *testing.T) {
 	tests := []struct {
 		name    string
-		options ImportOptions
+		options importcmd.ImportOptions
 		want    string
 	}{
 		{
 			name: "Get org from github URL (ignore user-specified org)",
-			options: ImportOptions{
+			options: importcmd.ImportOptions{
 				RepoURL:      "https://github.com/orga/myrepo",
 				Organisation: "orgb",
 			},
@@ -177,14 +183,14 @@ func TestImportOptions_GetOrganisation(t *testing.T) {
 		},
 		{
 			name: "Get org from github URL (no user-specified org)",
-			options: ImportOptions{
+			options: importcmd.ImportOptions{
 				RepoURL: "https://github.com/orga/myrepo",
 			},
 			want: "orga",
 		},
 		{
 			name: "Get org from user flag",
-			options: ImportOptions{
+			options: importcmd.ImportOptions{
 				RepoURL:      "https://myrepo.com/myrepo", // No org here
 				Organisation: "orgb",
 			},
@@ -192,7 +198,7 @@ func TestImportOptions_GetOrganisation(t *testing.T) {
 		},
 		{
 			name: "No org specified",
-			options: ImportOptions{
+			options: importcmd.ImportOptions{
 				RepoURL: "https://myrepo.com/myrepo", // No org here
 			},
 			want: "",

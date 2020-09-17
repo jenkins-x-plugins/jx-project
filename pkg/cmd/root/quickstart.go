@@ -112,7 +112,7 @@ func (o *CreateQuickstartOptions) Run() error {
 		Namespace:   o.Namespace,
 		CurrentUser: "",
 		JXClient:    o.JXClient,
-		ScmClient:   o.ScmClient,
+		ScmClient:   o.ScmFactory.ScmClient,
 	}
 	model, err := qo.LoadQuickStartsModel(o.GitHubOrganisations, o.IgnoreTeam)
 	if err != nil {
@@ -246,7 +246,7 @@ func (o *CreateQuickstartOptions) CreateQuickStart(q *quickstarts.QuickstartForm
 	}
 	o.GetReporter().CreatedProject(genDir)
 
-	o.Options.ImportOptions.ScmClient = o.ScmClient
+	o.Options.ImportOptions.ScmFactory.ScmClient = o.ScmFactory.ScmClient
 
 	if details != nil {
 		o.ConfigureImportOptions(details)

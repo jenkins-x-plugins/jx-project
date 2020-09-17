@@ -93,7 +93,6 @@ type ImportOptions struct {
 	JXClient                           versioned.Interface
 	Input                              input.Interface
 	ScmFactory                         scmhelpers.Factory
-	ScmClient                          *scm.Client
 	Gitter                             gitclient.Interface
 	CommandRunner                      cmdrunner.CommandRunner
 	DevEnv                             *v1.Environment
@@ -277,8 +276,8 @@ func (o *ImportOptions) Validate() error {
 		}
 	}
 
-	if o.ScmClient == nil {
-		o.ScmClient, err = o.ScmFactory.Create()
+	if o.ScmFactory.ScmClient == nil {
+		o.ScmFactory.ScmClient, err = o.ScmFactory.Create()
 		if err != nil {
 			return errors.Wrapf(err, "failed to create ScmClient")
 		}
@@ -655,9 +654,9 @@ func (o *ImportOptions) getOrganisationOrCurrentUser() string {
 func (o *ImportOptions) getCurrentUser() string {
 	//walk through every file in the given dir and update the placeholders
 	if o.ScmFactory.GitUsername == "" {
-		if o.ScmClient != nil {
+		if o.ScmFactory.ScmClient != nil {
 			ctx := context.Background()
-			user, _, err := o.ScmClient.Users.Find(ctx)
+			user, _, err := o.ScmFactory.ScmClient.Users.Find(ctx)
 			if err != nil {
 				log.Logger().Warnf("failed to find current user in git %s", err.Error())
 			} else {
@@ -719,7 +718,7 @@ func (o *ImportOptions) CreateNewRemoteRepository() error {
 	if o.getCurrentUser() == createRepo.Namespace {
 		createRepo.Namespace = ""
 	}
-	repo, _, err := o.ScmClient.Repositories.Create(ctx, &createRepo)
+	repo, _, err := o.ScmFactory.ScmClient.Repositories.Create(ctx, &createRepo)
 	if err != nil {
 		return errors.Wrapf(err, "failed to create git repository %s/%s", o.GitRepositoryOptions.Namespace, o.GitRepositoryOptions.Name)
 	}
@@ -728,6 +727,10 @@ func (o *ImportOptions) CreateNewRemoteRepository() error {
 		return err
 	}
 
+	// mostly to default a value in test cases if its missing
+	if repo.Clone == "" {
+		repo.Clone = repo.Link
+	}
 	o.DiscoveredGitURL = repo.Clone
 	pushGitURL, err := o.ScmFactory.CreateAuthenticatedURL(repo.Clone)
 	if err != nil {
@@ -757,7 +760,7 @@ func (o *ImportOptions) CreateNewRemoteRepository() error {
 			// Make the invitation
 			fullRepoName := scm.Join(o.Organisation, details.Name)
 			permission := "admin"
-			_, _, _, err = o.ScmClient.Repositories.AddCollaborator(ctx, fullRepoName, o.PipelineUserName, permission)
+			_, _, _, err = o.ScmFactory.ScmClient.Repositories.AddCollaborator(ctx, fullRepoName, o.PipelineUserName, permission)
 			if err != nil {
 				return errors.Wrapf(err, "failed to add %s as a collaborator to %s", o.PipelineUserName, fullRepoName)
 			}
@@ -1067,7 +1070,7 @@ func (o *ImportOptions) addSourceConfigPullRequest(gitURL string, gitKind string
 		PullRequestNumber: 0,
 		CommitTitle:       "fix: import repository",
 		CommitMessage:     "",
-		ScmClient:         o.ScmClient,
+		ScmClient:         o.ScmFactory.ScmClient,
 		BatchMode:         o.BatchMode,
 		UseGitHubOAuth:    false,
 		Fork:              false,
@@ -1724,7 +1727,7 @@ func (o *ImportOptions) waitForSourceRepositoryPullRequest(pullRequestInfo *scm.
 		fullName := pullRequestInfo.Repository().FullName
 		prNumber := pullRequestInfo.Number
 		for {
-			pr, _, err := o.ScmClient.PullRequests.Find(ctx, fullName, prNumber)
+			pr, _, err := o.ScmFactory.ScmClient.PullRequests.Find(ctx, fullName, prNumber)
 			if err != nil {
 				log.Logger().Warnf("Failed to query the Pull Request status for %s %s", pullRequestInfo.Link, err)
 			} else {

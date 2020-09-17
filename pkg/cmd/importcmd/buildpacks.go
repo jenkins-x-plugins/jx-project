@@ -146,16 +146,18 @@ func createDefaultBuildBacks() []v1.BuildPack {
 
 // InvokeDraftPack invokes a draft pack copying in a Jenkinsfile if required
 func (o *ImportOptions) InvokeDraftPack(i *InvokeDraftPack) (string, error) {
-	packsDir, settings, err := o.InitBuildPacks(i)
+	packsDir, _, err := o.InitBuildPacks(i)
 	if err != nil {
 		return "", err
 	}
 
+	// lets assume Jenkins X import mode
+	//
+	// was:
 	// lets configure the draft pack mode based on the team settings
-	if settings.GetImportMode() == v1.ImportModeTypeYAML {
-		i.UseNextGenPipeline = true
-		i.CreateJenkinsxYamlIfMissing = true
-	}
+	// if settings.GetImportMode() != v1.ImportModeTypeJenkinsfile {
+	i.UseNextGenPipeline = true
+	i.CreateJenkinsxYamlIfMissing = true
 
 	dir := i.Dir
 	customDraftPack := i.CustomDraftPack

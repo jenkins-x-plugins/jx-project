@@ -22,22 +22,8 @@ import (
 )
 
 func TestImportGitHubActionProject(t *testing.T) {
+	// TODO github action support currently disabled
 	t.SkipNow()
-
-	/* TODO
-	originalJxHome, tempJxHome, err := testhelpers.CreateTestJxHomeDir()
-	assert.NoError(t, err)
-	defer func() {
-		err := testhelpers.CleanupTestJxHomeDir(originalJxHome, tempJxHome)
-		assert.NoError(t, err)
-	}()
-	originalKubeCfg, tempKubeCfg, err := testhelpers.CreateTestKubeConfigDir()
-	assert.NoError(t, err)
-	defer func() {
-		err := testhelpers.CleanupTestKubeConfigDir(originalKubeCfg, tempKubeCfg)
-		assert.NoError(t, err)
-	}()
-	*/
 
 	tempDir, err := ioutil.TempDir("", "test-import-jx-gha-")
 	assert.NoError(t, err)
@@ -61,7 +47,6 @@ func TestImportGitHubActionProject(t *testing.T) {
 
 	testimports.SetFakeClients(o)
 	o.Dir = testDir
-	o.DryRun = true
 	o.DisableMaven = true
 	o.UseDefaultGit = true
 
