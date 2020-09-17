@@ -161,6 +161,9 @@ func (o *CreateQuickstartOptions) CreateQuickStart(q *quickstarts.QuickstartForm
 			q.Name = repoName
 		}
 		if q.Name == "" {
+			q.Name = o.Filter.Text
+		}
+		if q.Name == "" {
 			return options.MissingOption("project-name")
 		}
 
