@@ -9,8 +9,8 @@ import (
 	"testing"
 
 	"github.com/jenkins-x/jx-helpers/pkg/files"
-	"github.com/jenkins-x/jx/v2/pkg/auth"
-	"github.com/jenkins-x/jx/v2/pkg/prow"
+	"github.com/jenkins-x/jx-helpers/pkg/scmhelpers"
+	"github.com/jenkins-x/jx-project/pkg/prow"
 	"github.com/stretchr/testify/assert"
 	"sigs.k8s.io/yaml"
 )
@@ -48,8 +48,8 @@ func TestCreateProwOwnersFileCreateWhenDoesNotExist(t *testing.T) {
 
 	cmd := ImportOptions{
 		Dir: path,
-		GitUserAuth: &auth.UserAuth{
-			Username: testUsername,
+		ScmFactory: scmhelpers.Factory{
+			GitUsername: testUsername,
 		},
 	}
 
@@ -119,8 +119,8 @@ func TestCreateProwOwnersAliasesFileCreateWhenDoesNotExist(t *testing.T) {
 	defer os.RemoveAll(path)
 	cmd := ImportOptions{
 		Dir: path,
-		GitUserAuth: &auth.UserAuth{
-			Username: testUsername,
+		ScmFactory: scmhelpers.Factory{
+			GitUsername: testUsername,
 		},
 	}
 

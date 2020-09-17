@@ -11,6 +11,7 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/jenkins-x/jx-helpers/pkg/files"
 	"github.com/jenkins-x/jx-helpers/pkg/options"
 	"github.com/jenkins-x/jx-helpers/pkg/stringhelpers"
 	"github.com/jenkins-x/jx-helpers/pkg/termcolor"
@@ -18,8 +19,7 @@ import (
 	"github.com/jenkins-x/jx-project/pkg/cache"
 	"github.com/pkg/errors"
 
-	"github.com/jenkins-x/jx/v2/pkg/util"
-	"github.com/jenkins-x/jx/v2/pkg/version"
+	"github.com/jenkins-x/jx-project/pkg/cmd/root/version"
 	survey "gopkg.in/AlecAivazis/survey.v1"
 )
 
@@ -377,11 +377,11 @@ func (data *SpringBootForm) CreateProject(workDir string) (string, error) {
 
 	dir := filepath.Join(workDir, dirName)
 	zipFile := dir + ".zip"
-	err = ioutil.WriteFile(zipFile, body, util.DefaultWritePermissions)
+	err = ioutil.WriteFile(zipFile, body, files.DefaultFileWritePermissions)
 	if err != nil {
 		return answer, fmt.Errorf("Failed to download file %s due to %s", zipFile, err)
 	}
-	err = util.Unzip(zipFile, dir)
+	err = files.Unzip(zipFile, dir)
 	if err != nil {
 		return answer, fmt.Errorf("Failed to unzip new project file %s due to %s", zipFile, err)
 	}

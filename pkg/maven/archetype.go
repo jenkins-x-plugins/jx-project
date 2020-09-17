@@ -6,9 +6,10 @@ import (
 	"fmt"
 	"sort"
 
+	"github.com/jenkins-x/jx-helpers/pkg/input"
+	"github.com/jenkins-x/jx-helpers/pkg/options"
 	"github.com/jenkins-x/jx-helpers/pkg/stringhelpers"
-	"github.com/jenkins-x/jx/v2/pkg/util"
-	"gopkg.in/AlecAivazis/survey.v1"
+	"github.com/pkg/errors"
 )
 
 const (
@@ -143,23 +144,19 @@ func (m *ArchetypeModel) AddArtifact(a *ArtifactData) *ArtifactVersions {
 	return artifact
 }
 
-func (model *ArchetypeModel) CreateSurvey(data *ArchetypeFilter, pickVersion bool, form *ArchetypeForm, handles util.IOFileHandles) error {
-	surveyOpts := survey.WithStdio(handles.In, handles.Out, handles.Err)
+func (model *ArchetypeModel) CreateSurvey(data *ArchetypeFilter, pickVersion bool, form *ArchetypeForm, i input.Interface) error {
 	groupIds := data.GroupIds
+	var err error
 	if len(data.GroupIds) == 0 {
 		filteredGroups := model.GroupIDs(data.GroupIdFilter)
 		if len(filteredGroups) == 0 {
-			return util.InvalidOption("group-filter", data.GroupIdFilter, model.GroupIDs(""))
+			return options.InvalidOption("group-filter", data.GroupIdFilter, model.GroupIDs(""))
 		}
 
 		// lets pick from all groups
-		prompt := &survey.Select{
-			Message: "Group ID:",
-			Options: filteredGroups,
-		}
-		err := survey.AskOne(prompt, &form.ArchetypeGroupId, survey.Required, surveyOpts)
+		form.ArchetypeGroupId, err = i.PickNameWithDefault(filteredGroups, "Group ID:", form.ArchetypeGroupId, "please pick the maven Group ID")
 		if err != nil {
-			return err
+			return errors.Wrapf(err, "failed to pick Group ID")
 		}
 		artifactsWithoutFilter := model.ArtifactIDs(form.ArchetypeGroupId, "")
 		if len(artifactsWithoutFilter) == 0 {
@@ -171,7 +168,7 @@ func (model *ArchetypeModel) CreateSurvey(data *ArchetypeFilter, pickVersion boo
 
 		artifactsWithoutFilter := model.ArtifactIDs(form.ArchetypeGroupId, "")
 		if len(artifactsWithoutFilter) == 0 {
-			return util.InvalidOption("group", form.ArchetypeGroupId, model.GroupIDs(""))
+			return options.InvalidOption("group", form.ArchetypeGroupId, model.GroupIDs(""))
 		}
 	}
 	if form.ArchetypeGroupId == "" {
@@ -181,19 +178,15 @@ func (model *ArchetypeModel) CreateSurvey(data *ArchetypeFilter, pickVersion boo
 	artifactIds := model.ArtifactIDs(form.ArchetypeGroupId, data.ArtifactIdFilter)
 	if len(artifactIds) == 0 {
 		artifactsWithoutFilter := model.ArtifactIDs(form.ArchetypeGroupId, "")
-		return util.InvalidOption("artifact", data.ArtifactIdFilter, artifactsWithoutFilter)
+		return options.InvalidOption("artifact", data.ArtifactIdFilter, artifactsWithoutFilter)
 	}
 
 	if len(artifactIds) == 1 {
 		form.ArchetypeArtifactId = artifactIds[0]
 	} else {
-		prompt := &survey.Select{
-			Message: "Artifact ID:",
-			Options: artifactIds,
-		}
-		err := survey.AskOne(prompt, &form.ArchetypeArtifactId, survey.Required, surveyOpts)
+		form.ArchetypeArtifactId, err = i.PickNameWithDefault(artifactIds, "Artifact ID:", form.ArchetypeArtifactId, "please pick the maven Artifact ID")
 		if err != nil {
-			return err
+			return errors.Wrapf(err, "failed to pick Artifact ID")
 		}
 	}
 	if form.ArchetypeArtifactId == "" {
@@ -203,19 +196,15 @@ func (model *ArchetypeModel) CreateSurvey(data *ArchetypeFilter, pickVersion boo
 	version := data.Version
 	versions := model.Versions(form.ArchetypeGroupId, form.ArchetypeArtifactId, version)
 	if len(versions) == 0 {
-		return util.InvalidOption("version", version, model.Versions(form.ArchetypeGroupId, form.ArchetypeArtifactId, ""))
+		return options.InvalidOption("version", version, model.Versions(form.ArchetypeGroupId, form.ArchetypeArtifactId, ""))
 	}
 
 	if len(versions) == 1 || !pickVersion {
 		form.ArchetypeVersion = versions[0]
 	} else {
-		prompt := &survey.Select{
-			Message: "Version:",
-			Options: versions,
-		}
-		err := survey.AskOne(prompt, &form.ArchetypeVersion, survey.Required, surveyOpts)
+		form.ArchetypeVersion, err = i.PickNameWithDefault(versions, "Version:", form.ArchetypeVersion, "please pick the maven version")
 		if err != nil {
-			return err
+			return errors.Wrapf(err, "failed to pick version")
 		}
 	}
 	if form.ArchetypeVersion == "" {
@@ -223,33 +212,21 @@ func (model *ArchetypeModel) CreateSurvey(data *ArchetypeFilter, pickVersion boo
 	}
 
 	if form.GroupId == "" {
-		q := &survey.Input{
-			Message: "Project Group ID:",
-			Default: "com.acme",
-		}
-		err := survey.AskOne(q, &form.GroupId, survey.Required, surveyOpts)
+		form.GroupId, err = i.PickValue("Project Group ID:", "com.acme", true, "The maven Group ID used to default in the pom")
 		if err != nil {
-			return err
+			return errors.Wrapf(err, "failed to pick Project Group ID")
 		}
 	}
 	if form.ArtifactId == "" {
-		q := &survey.Input{
-			Message: "Project Artifact ID:",
-			Default: "",
-		}
-		err := survey.AskOne(q, &form.ArtifactId, survey.Required, surveyOpts)
+		form.ArtifactId, err = i.PickValue("Project Artifact ID:", "", true, "The maven Artifact ID used to default in the pom")
 		if err != nil {
-			return err
+			return errors.Wrapf(err, "failed to pick Project Artifact ID")
 		}
 	}
 	if form.Version == "" {
-		q := &survey.Input{
-			Message: "Project Version:",
-			Default: "1.0.0-SNAPSHOT",
-		}
-		err := survey.AskOne(q, &form.Version, survey.Required, surveyOpts)
+		form.Version, err = i.PickValue("Project Version:", "1.0.0-SNAPSHOT", true, "The maven Version used to default in the pom")
 		if err != nil {
-			return err
+			return errors.Wrapf(err, "failed to pick Project Version")
 		}
 	}
 	return nil

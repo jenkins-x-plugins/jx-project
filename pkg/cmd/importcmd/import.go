@@ -34,10 +34,10 @@ import (
 	"github.com/jenkins-x/jx-helpers/pkg/termcolor"
 	"github.com/jenkins-x/jx-logging/pkg/log"
 	"github.com/jenkins-x/jx-project/pkg/cmd/common"
+	"github.com/jenkins-x/jx-project/pkg/constants"
 	"github.com/jenkins-x/jx-project/pkg/maven"
 	"github.com/jenkins-x/jx-project/pkg/prow"
 	"github.com/jenkins-x/jx-promote/pkg/environments"
-	"github.com/jenkins-x/jx/v2/pkg/dependencymatrix"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"k8s.io/client-go/kubernetes"
@@ -157,7 +157,7 @@ var (
 		%s import --github --org myname --all --filter foo 
 		`)
 
-	deployKinds = []string{DeployKindKnative, DeployKindDefault}
+	deployKinds = []string{constants.DeployKindKnative, constants.DeployKindDefault}
 
 	removeSourceRepositoryAnnotations = []string{"kubectl.kubernetes.io/last-applied-configuration", "jenkins.io/chart"}
 )
@@ -215,8 +215,8 @@ func (o *ImportOptions) AddImportFlags(cmd *cobra.Command, createProject bool) {
 	cmd.Flags().StringVarP(&o.ImportMode, "import-mode", "m", "", fmt.Sprintf("The import mode to use. Should be one of %s", strings.Join(v1.ImportModeStrings, ", ")))
 	cmd.Flags().BoolVarP(&o.UseDefaultGit, "use-default-git", "", false, "use default git account")
 	cmd.Flags().StringVarP(&o.DeployKind, "deploy-kind", "", "", fmt.Sprintf("The kind of deployment to use for the project. Should be one of %s", strings.Join(deployKinds, ", ")))
-	cmd.Flags().BoolVarP(&o.DeployOptions.Canary, OptionCanary, "", false, "should we use canary rollouts (progressive delivery) by default for this application. e.g. using a Canary deployment via flagger. Requires the installation of flagger and istio/gloo in your cluster")
-	cmd.Flags().BoolVarP(&o.DeployOptions.HPA, OptionHPA, "", false, "should we enable the Horizontal Pod Autoscaler for this application.")
+	cmd.Flags().BoolVarP(&o.DeployOptions.Canary, constants.OptionCanary, "", false, "should we use canary rollouts (progressive delivery) by default for this application. e.g. using a Canary deployment via flagger. Requires the installation of flagger and istio/gloo in your cluster")
+	cmd.Flags().BoolVarP(&o.DeployOptions.HPA, constants.OptionHPA, "", false, "should we enable the Horizontal Pod Autoscaler for this application.")
 	cmd.Flags().BoolVarP(&o.Destination.JenkinsX.Enabled, "jx", "", false, "if you want to default to importing this project into Jenkins X instead of a Jenkins server if you have a mixed Jenkins X and Jenkins cluster")
 	cmd.Flags().StringVarP(&o.Destination.JenkinsfileRunner.Image, "jenkinsfilerunner", "", "", "if you want to import into Jenkins X with Jenkinsfilerunner this argument lets you specify the container image to use")
 	cmd.Flags().StringVar(&o.ServiceAccount, "service-account", "tekton-bot", "The Kubernetes ServiceAccount to use to run the initial pipeline")
@@ -255,29 +255,29 @@ func (o *ImportOptions) Validate() error {
 		}
 	}
 
-	if o.ScmClient == nil {
-		if o.ScmFactory.GitServerURL == "" && o.gitInfo != nil {
-			o.ScmFactory.GitServerURL = o.gitInfo.HostURL()
-		}
+	if o.ScmFactory.GitServerURL == "" && o.gitInfo != nil {
+		o.ScmFactory.GitServerURL = o.gitInfo.HostURL()
+	}
 
-		if o.ScmFactory.GitServerURL == "" {
-			o.ScmFactory.GitServerURL, err = o.defaultGitServerURLFromDevEnv()
-			if err != nil {
-				return errors.Wrapf(err, "failed to default the git server URL from the dev Environment")
-			}
+	if o.ScmFactory.GitServerURL == "" {
+		o.ScmFactory.GitServerURL, err = o.defaultGitServerURLFromDevEnv()
+		if err != nil {
+			return errors.Wrapf(err, "failed to default the git server URL from the dev Environment")
 		}
-		if o.ScmFactory.GitServerURL == "" {
-			return options.MissingOption("git-server")
-		}
+	}
+	if o.ScmFactory.GitServerURL == "" {
+		return options.MissingOption("git-server")
+	}
 
+	if o.ScmFactory.GitKind == "" {
+		o.ScmFactory.GitKind = giturl.SaasGitKind(o.ScmFactory.GitServerURL)
 		if o.ScmFactory.GitKind == "" {
-			o.ScmFactory.GitKind = giturl.SaasGitKind(o.ScmFactory.GitServerURL)
-			if o.ScmFactory.GitKind == "" {
-				log.Logger().Infof("no --git-kind supplied for server %s so assuming kind is github", o.ScmFactory.GitServerURL)
-				o.ScmFactory.GitKind = "github"
-			}
+			log.Logger().Infof("no --git-kind supplied for server %s so assuming kind is github", o.ScmFactory.GitServerURL)
+			o.ScmFactory.GitKind = "github"
 		}
+	}
 
+	if o.ScmClient == nil {
 		o.ScmClient, err = o.ScmFactory.Create()
 		if err != nil {
 			return errors.Wrapf(err, "failed to create ScmClient")
@@ -676,6 +676,9 @@ func (o *ImportOptions) getCurrentUser() string {
 // then the Organisation specified in the options is used.
 func (o *ImportOptions) GetOrganisation() string {
 	org := ""
+	if o.DiscoveredGitURL == "" {
+		o.DiscoveredGitURL = o.RepoURL
+	}
 	gitInfo, err := giturl.ParseGitURL(o.DiscoveredGitURL)
 	if err == nil && gitInfo.Organisation != "" {
 		org = gitInfo.Organisation
@@ -927,7 +930,7 @@ func (o *ImportOptions) DefaultGitIgnore() error {
 		return err
 	}
 	if !exists {
-		data := []byte(DefaultGitIgnoreFile)
+		data := []byte(constants.DefaultGitIgnoreFile)
 		err = ioutil.WriteFile(name, data, files.DefaultFileWritePermissions)
 		if err != nil {
 			return fmt.Errorf("failed to write %s due to %s", name, err)
@@ -1048,8 +1051,6 @@ func (o *ImportOptions) addSourceConfigPullRequest(gitURL string, gitKind string
 		return errors.Errorf("no git source URL for Environment %s", devEnv.Name)
 	}
 
-	configureDependencyMatrix()
-
 	// lets generate a PR
 	base := devEnv.Spec.Source.Ref
 	if base == "" {
@@ -1062,10 +1063,6 @@ func (o *ImportOptions) addSourceConfigPullRequest(gitURL string, gitKind string
 		CommandRunner:     o.CommandRunner,
 		GitKind:           o.ScmFactory.GitKind,
 		OutDir:            "",
-		ModifyChartFn:     nil,
-		ModifyAppsFn:      nil,
-		ModifyKptFn:       nil,
-		Labels:            nil,
 		BranchName:        "",
 		PullRequestNumber: 0,
 		CommitTitle:       "fix: import repository",
@@ -1172,17 +1169,17 @@ func (o *ImportOptions) ReplacePlaceholders(gitServerName, dockerRegistryOrg str
 	}
 
 	replacer := strings.NewReplacer(
-		PlaceHolderAppName, strings.ToLower(o.AppName),
-		PlaceHolderGitProvider, strings.ToLower(gitServerName),
-		PlaceHolderOrg, strings.ToLower(o.Organisation),
-		PlaceHolderDockerRegistryOrg, strings.ToLower(dockerRegistryOrg))
+		constants.PlaceHolderAppName, strings.ToLower(o.AppName),
+		constants.PlaceHolderGitProvider, strings.ToLower(gitServerName),
+		constants.PlaceHolderOrg, strings.ToLower(o.Organisation),
+		constants.PlaceHolderDockerRegistryOrg, strings.ToLower(dockerRegistryOrg))
 
 	pathsToRename := []string{} // Renaming must be done post-Walk
 	if err := filepath.Walk(o.Dir, func(f string, fi os.FileInfo, err error) error {
 		if skip, err := o.skipPathForReplacement(f, fi, ignore); skip {
 			return err
 		}
-		if strings.Contains(filepath.Base(f), PlaceHolderPrefix) {
+		if strings.Contains(filepath.Base(f), constants.PlaceHolderPrefix) {
 			// Prepend so children are renamed before their parents
 			pathsToRename = append([]string{f}, pathsToRename...)
 		}
@@ -1234,7 +1231,7 @@ func replacePlaceholdersInFile(replacer *strings.Replacer, file string) error {
 	}
 
 	lines := string(input)
-	if strings.Contains(lines, PlaceHolderPrefix) { // Avoid unnecessarily rewriting files
+	if strings.Contains(lines, constants.PlaceHolderPrefix) { // Avoid unnecessarily rewriting files
 		output := replacer.Replace(lines)
 		err = ioutil.WriteFile(file, []byte(output), 0644)
 		if err != nil {
@@ -1438,7 +1435,7 @@ func (o *ImportOptions) fixMaven() error {
 		}
 
 		// lets ensure the mvn plugins are ok
-		out, err := o.CommandRunner(cmdrunner.NewCommand(dir, "mvn", "io.jenkins.updatebot:updatebot-maven-plugin:RELEASE:plugin", "-Dartifact=maven-deploy-plugin", "-Dversion="+MinimumMavenDeployVersion))
+		out, err := o.CommandRunner(cmdrunner.NewCommand(dir, "mvn", "io.jenkins.updatebot:updatebot-maven-plugin:RELEASE:plugin", "-Dartifact=maven-deploy-plugin", "-Dversion="+constants.MinimumMavenDeployVersion))
 		if err != nil {
 			return fmt.Errorf("Failed to update maven deploy plugin: %s output: %s", err, out)
 		}
@@ -1769,18 +1766,17 @@ func (o *ImportOptions) IsGitHubAppMode() (bool, error) {
 }
 
 func (o *ImportOptions) defaultGitServerURLFromDevEnv() (string, error) {
-	gitURL := o.DevEnv.Spec.Source.URL
+	gitURL := ""
+	if o.DevEnv != nil {
+		gitURL = o.DevEnv.Spec.Source.URL
+	}
 	if gitURL == "" {
-		return "", nil
+		// lets default to github
+		return giturl.GitHubURL, nil
 	}
 	gitInfo, err := giturl.ParseGitURL(gitURL)
 	if err != nil {
 		return "", errors.Wrapf(err, "failed to parse git URL %s", gitURL)
 	}
 	return gitInfo.HostURL(), nil
-}
-
-func configureDependencyMatrix() {
-	// lets configure the dependency matrix path
-	dependencymatrix.DependencyMatrixDirName = filepath.Join(".jx", "dependencies")
 }

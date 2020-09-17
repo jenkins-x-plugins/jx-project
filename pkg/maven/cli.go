@@ -9,11 +9,11 @@ import (
 
 	"github.com/alexflint/go-filemutex"
 	"github.com/jenkins-x/jx-helpers/pkg/cmdrunner"
+	"github.com/jenkins-x/jx-helpers/pkg/downloads"
 	"github.com/jenkins-x/jx-helpers/pkg/files"
 	"github.com/jenkins-x/jx-helpers/pkg/homedir"
 	"github.com/jenkins-x/jx-helpers/pkg/termcolor"
 	"github.com/jenkins-x/jx-logging/pkg/log"
-	"github.com/jenkins-x/jx/v2/pkg/packages"
 )
 
 // InstallMavenIfRequired installs maven if not available
@@ -62,7 +62,7 @@ func InstallMavenIfRequired(runner cmdrunner.CommandRunner) error {
 	}
 
 	log.Logger().Info("\ndownloadFile")
-	err = packages.DownloadFile(clientURL, zipFile)
+	err = downloads.DownloadFile(clientURL, zipFile, true)
 	if err != nil {
 		err = m.Unlock()
 		if err != nil {

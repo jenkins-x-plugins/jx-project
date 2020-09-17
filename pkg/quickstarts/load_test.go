@@ -7,49 +7,25 @@ import (
 	"path/filepath"
 	"testing"
 
-	resources_test "github.com/jenkins-x/jx-helpers/pkg/kube/resources/mocks"
-	"github.com/jenkins-x/jx-helpers/pkg/versionstream"
-	"github.com/jenkins-x/jx/v2/pkg/cmd/clients/fake"
-	"github.com/jenkins-x/jx/v2/pkg/cmd/testhelpers"
-	"github.com/jenkins-x/jx/v2/pkg/gits"
-	helm_test "github.com/jenkins-x/jx/v2/pkg/helm/mocks"
-	"github.com/jenkins-x/jx/v2/pkg/quickstarts"
+	fakejx "github.com/jenkins-x/jx-api/pkg/client/clientset/versioned/fake"
+	"github.com/jenkins-x/jx-project/pkg/quickstarts"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"k8s.io/apimachinery/pkg/runtime"
-
-	"github.com/jenkins-x/jx/v2/pkg/cmd/opts"
 )
 
 func TestLoadQuickStarts(t *testing.T) {
-
-	mockFactory := fake.NewFakeFactory()
-	commonOpts := opts.NewCommonOptionsWithFactory(mockFactory)
-	mockHelmer := helm_test.NewMockHelmer()
-	installerMock := resources_test.NewMockInstaller()
-	testhelpers.ConfigureTestOptionsWithResources(&commonOpts,
-		[]runtime.Object{},
-		[]runtime.Object{},
-		gits.NewGitFake(),
-		gits.NewFakeProvider(&gits.FakeRepository{
-			Owner: "pmuir",
-			GitRepo: &gits.GitRepository{
-				Name: "brie",
-			},
-		}),
-		mockHelmer,
-		installerMock,
-	)
-
 	versionsDir := filepath.Join("test_data", "quickstarts", "version_stream")
 	assert.DirExists(t, versionsDir, "no version stream source directory exists")
 
-	resolver := &versionstream.VersionResolver{
+	ns := "jx"
+	o := &quickstarts.Options{
 		VersionsDir: versionsDir,
+		Namespace:   ns,
+		CurrentUser: "",
 	}
-	commonOpts.SetVersionResolver(resolver)
+	o.JXClient = fakejx.NewSimpleClientset()
 
-	model, err := commonOpts.LoadQuickStartsModel(nil, false)
+	model, err := o.LoadQuickStartsModel(nil, false)
 	require.NoError(t, err, "LoadQuickStartsModel")
 
 	assert.True(t, len(model.Quickstarts) > 0, "quickstart model should not be empty")
@@ -58,7 +34,7 @@ func TestLoadQuickStarts(t *testing.T) {
 	assertQuickStart(t, model, "golang-http", "Go")
 }
 
-func assertQuickStart(t *testing.T, model *QuickstartModel, name string, language string) {
+func assertQuickStart(t *testing.T, model *quickstarts.QuickstartModel, name string, language string) {
 	owner := "jenkins-x-quickstarts"
 	id := fmt.Sprintf("%s/%s", owner, name)
 

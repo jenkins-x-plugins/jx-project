@@ -1,6 +1,8 @@
 package jenkinsfile
 
-import "github.com/jenkins-x/jx/v2/pkg/util"
+import (
+	"github.com/jenkins-x/jx-helpers/pkg/options"
+)
 
 const (
 	// ModuleFileName the name of the module imports file name
@@ -31,7 +33,7 @@ type Module struct {
 // Validate returns an error if any data is missing
 func (m *Module) Validate() error {
 	if m.GitURL == "" {
-		return util.MissingOption("GitURL")
+		return options.MissingOption("GitURL")
 	}
 	return nil
 }

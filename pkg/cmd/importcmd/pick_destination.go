@@ -4,8 +4,9 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/jenkins-x/jx-jenkins/pkg/jenkinsutil"
 	"github.com/pkg/errors"
+
+	"github.com/jenkins-x/jx-project/pkg/jenkinsutil"
 )
 
 // Destination where do we want to import the project to

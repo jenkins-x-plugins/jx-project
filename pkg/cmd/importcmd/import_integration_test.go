@@ -3,12 +3,6 @@
 package importcmd_test
 
 import (
-	"github.com/jenkins-x/jx-helpers/pkg/files"
-	"github.com/jenkins-x/jx-helpers/pkg/kube/naming"
-	"github.com/jenkins-x/jx-project/pkg/cmd/importcmd"
-	"github.com/jenkins-x/jx/v2/pkg/cmd/testhelpers"
-	"github.com/jenkins-x/jx/v2/pkg/config"
-
 	"io/ioutil"
 	"os"
 	"path"
@@ -16,21 +10,20 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/stretchr/testify/require"
-	"k8s.io/apimachinery/pkg/runtime"
+	"github.com/jenkins-x/jx-helpers/pkg/files"
+	"github.com/jenkins-x/jx-helpers/pkg/kube/jxenv"
+	"github.com/jenkins-x/jx-helpers/pkg/kube/naming"
+	"github.com/jenkins-x/jx-helpers/pkg/testhelpers"
+	"github.com/jenkins-x/jx-project/pkg/cmd/importcmd"
+	"github.com/jenkins-x/jx-project/pkg/cmd/testimports"
+	"github.com/jenkins-x/jx-project/pkg/config"
+	"github.com/jenkins-x/jx-project/pkg/constants"
 
 	v1 "github.com/jenkins-x/jx-api/pkg/apis/jenkins.io/v1"
-	resources_test "github.com/jenkins-x/jx-helpers/pkg/kube/resources/mocks"
 	"github.com/jenkins-x/jx-logging/pkg/log"
-	fake_clients "github.com/jenkins-x/jx/v2/pkg/cmd/clients/fake"
-	"github.com/jenkins-x/jx/v2/pkg/jenkinsfile"
+	"github.com/jenkins-x/jx-project/pkg/jenkinsfile"
+	"github.com/stretchr/testify/require"
 
-	"github.com/jenkins-x/jx/v2/pkg/auth"
-	"github.com/jenkins-x/jx/v2/pkg/cmd/opts"
-	"github.com/jenkins-x/jx/v2/pkg/gits"
-	"github.com/jenkins-x/jx/v2/pkg/helm"
-	"github.com/jenkins-x/jx/v2/pkg/tests"
-	"github.com/jenkins-x/jx/v2/pkg/util"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -47,18 +40,23 @@ func TestImportProjectsToJenkins(t *testing.T) {
 	// TODO
 	t.SkipNow()
 
-	originalJxHome, tempJxHome, err := testhelpers.CreateTestJxHomeDir()
-	assert.NoError(t, err)
-	defer func() {
-		err := testhelpers.CleanupTestJxHomeDir(originalJxHome, tempJxHome)
+	/*
+		TODO
+
+		originalJxHome, tempJxHome, err := testhelpers.CreateTestJxHomeDir()
 		assert.NoError(t, err)
-	}()
-	originalKubeCfg, tempKubeCfg, err := testhelpers.CreateTestKubeConfigDir()
-	assert.NoError(t, err)
-	defer func() {
-		err := testhelpers.CleanupTestKubeConfigDir(originalKubeCfg, tempKubeCfg)
+		defer func() {
+			err := testhelpers.CleanupTestJxHomeDir(originalJxHome, tempJxHome)
+			assert.NoError(t, err)
+		}()
+		originalKubeCfg, tempKubeCfg, err := testhelpers.CreateTestKubeConfigDir()
 		assert.NoError(t, err)
-	}()
+		defer func() {
+			err := testhelpers.CleanupTestKubeConfigDir(originalKubeCfg, tempKubeCfg)
+			assert.NoError(t, err)
+		}()
+
+	*/
 
 	tempDir, err := ioutil.TempDir("", "test-import-projects")
 	assert.NoError(t, err)
@@ -80,18 +78,23 @@ func TestImportProjectsToJenkins(t *testing.T) {
 }
 
 func TestImportProjectToJenkinsX(t *testing.T) {
-	originalJxHome, tempJxHome, err := testhelpers.CreateTestJxHomeDir()
-	assert.NoError(t, err)
-	defer func() {
-		err := testhelpers.CleanupTestJxHomeDir(originalJxHome, tempJxHome)
+	/*
+		TODO
+
+		originalJxHome, tempJxHome, err := testhelpers.CreateTestJxHomeDir()
 		assert.NoError(t, err)
-	}()
-	originalKubeCfg, tempKubeCfg, err := testhelpers.CreateTestKubeConfigDir()
-	assert.NoError(t, err)
-	defer func() {
-		err := testhelpers.CleanupTestKubeConfigDir(originalKubeCfg, tempKubeCfg)
+		defer func() {
+			err := testhelpers.CleanupTestJxHomeDir(originalJxHome, tempJxHome)
+			assert.NoError(t, err)
+		}()
+		originalKubeCfg, tempKubeCfg, err := testhelpers.CreateTestKubeConfigDir()
 		assert.NoError(t, err)
-	}()
+		defer func() {
+			err := testhelpers.CleanupTestKubeConfigDir(originalKubeCfg, tempKubeCfg)
+			assert.NoError(t, err)
+		}()
+
+	*/
 
 	tempDir, err := ioutil.TempDir("", "test-import-ng-projects")
 	assert.NoError(t, err)
@@ -129,69 +132,26 @@ func testImportProject(t *testing.T, tempDir string, testcase string, srcDir str
 			log.Logger().Warnf("Git source directory %s does not exist: %s", gitDir, gitErr)
 		} else if dotGitExists {
 			dotGitDir := filepath.Join(testDir, ".git")
-			util.RenameDir(gitDir, dotGitDir, true)
+			files.RenameDir(gitDir, dotGitDir, true)
 		}
 	}
 	err := assertImport(t, testDir, testcase, importToJenkinsX, "")
 	assert.NoError(t, err, "Importing dir %s from source %s", testDir, srcDir)
 }
 
-func createFakeScmClient() *gits.FakeProvider {
-	testOrgName := "jstrachan"
-	testRepoName := "myrepo"
-	stagingRepoName := "environment-staging"
-	prodRepoName := "environment-production"
-
-	fakeRepo, _ := gits.NewFakeRepository(testOrgName, testRepoName, nil, nil)
-	stagingRepo, _ := gits.NewFakeRepository(testOrgName, stagingRepoName, nil, nil)
-	prodRepo, _ := gits.NewFakeRepository(testOrgName, prodRepoName, nil, nil)
-
-	fakeScmClient := gits.NewFakeProvider(fakeRepo, stagingRepo, prodRepo)
-	userAuth := auth.UserAuth{
-		Username:    "jx-testing-user",
-		ApiToken:    "someapitoken",
-		BearerToken: "somebearertoken",
-		Password:    "password",
-	}
-	authServer := auth.AuthServer{
-		Users:       []*auth.UserAuth{&userAuth},
-		CurrentUser: userAuth.Username,
-		URL:         "https://github.com",
-		Kind:        gits.KindGitHub,
-		Name:        "jx-testing-server",
-	}
-	fakeScmClient.Server = authServer
-	return fakeScmClient
-}
-
 func assertImport(t *testing.T, testDir string, testcase string, importToJenkinsX bool, buildPackURL string) error {
 	_, dirName := filepath.Split(testDir)
 	dirName = naming.ToValidName(dirName)
-	o := &importcmd.ImportOptions{
-		CommonOptions: &opts.CommonOptions{},
-	}
-	o.CommonOptions.SetHelm(helm.NewHelmCLI("helm", helm.V3, "", false))
+	o := &importcmd.ImportOptions{}
 
-	o.SetFactory(fake_clients.NewFakeFactory())
-	o.ScmClient = createFakeScmClient()
-
-	k8sObjects := []runtime.Object{}
-	jxObjects := []runtime.Object{}
-	helmer := helm.NewHelmCLI("helm", helm.V2, dirName, true)
-	testhelpers.ConfigureTestOptionsWithResources(o.CommonOptions, k8sObjects, jxObjects, gits.NewGitCLI(), nil, helmer, resources_test.NewMockInstaller())
-	if o.Out == nil {
-		o.Out = tests.Output()
-	}
-	if o.Out == nil {
-		o.Out = os.Stdout
-	}
+	testimports.SetFakeClients(o)
 	o.Dir = testDir
 	o.DryRun = true
 	o.DisableMaven = true
 	o.UseDefaultGit = true
 
 	if dirName == "maven-camel" {
-		o.DeployKind = opts.DeployKindKnative
+		o.DeployKind = constants.DeployKindKnative
 	}
 	if importToJenkinsX {
 		o.Destination.JenkinsX.Enabled = true
@@ -202,7 +162,7 @@ func assertImport(t *testing.T, testDir string, testcase string, importToJenkins
 			}
 			return nil
 		}
-		err := o.ModifyDevEnvironment(callback)
+		err := jxenv.ModifyDevEnvironment(o.KubeClient, o.JXClient, o.Namespace, callback)
 		require.NoError(t, err, "failed to modify Dev Environment")
 	} else {
 		o.Destination.Jenkins.Enabled = true
@@ -214,13 +174,13 @@ func assertImport(t *testing.T, testDir string, testcase string, importToJenkins
 		exists, err := files.FileExists(jenkinsfile)
 		require.NoError(t, err, "could not check for file %s", jenkinsfile)
 		if !exists {
-			err = ioutil.WriteFile(jenkinsfile, []byte("node {}"), util.DefaultFileWritePermissions)
+			err = ioutil.WriteFile(jenkinsfile, []byte("node {}"), files.DefaultFileWritePermissions)
 			require.NoError(t, err, "failed to write dummy Jenkinsfile to %s", jenkinsfile)
 		}
 	}
 
 	if testcase == mavenCamel || dirName == mavenSpringBoot {
-		o.DisableMaven = tests.TestShouldDisableMaven()
+		o.DisableMaven = testhelpers.TestShouldDisableMaven()
 	}
 
 	err := o.Run()
@@ -234,65 +194,65 @@ func assertImport(t *testing.T, testDir string, testcase string, importToJenkins
 			jfname = filepath.Join(testDir, o.Jenkinsfile)
 		}
 		if dirName == "custom-jenkins" {
-			tests.AssertFileExists(t, filepath.Join(testDir, jenkinsfile.Name))
-			tests.AssertFileDoesNotExist(t, filepath.Join(testDir, jenkinsfile.Name+".backup"))
-			tests.AssertFileDoesNotExist(t, filepath.Join(testDir, jenkinsfile.Name+"-Renamed"))
+			assert.FileExists(t, filepath.Join(testDir, jenkinsfile.Name))
+			assert.NoFileExists(t, filepath.Join(testDir, jenkinsfile.Name+".backup"))
+			assert.NoFileExists(t, filepath.Join(testDir, jenkinsfile.Name+"-Renamed"))
 			if importToJenkinsX {
-				tests.AssertFileExists(t, filepath.Join(testDir, config.ProjectConfigFileName))
+				assert.FileExists(t, filepath.Join(testDir, config.ProjectConfigFileName))
 			} else {
-				tests.AssertFileDoesNotExist(t, filepath.Join(testDir, config.ProjectConfigFileName))
+				assert.NoFileExists(t, filepath.Join(testDir, config.ProjectConfigFileName))
 			}
 		} else if importToJenkinsX {
-			tests.AssertFileDoesNotExist(t, jfname)
+			assert.NoFileExists(t, jfname)
 		} else {
-			tests.AssertFileExists(t, jfname)
+			assert.FileExists(t, jfname)
 		}
 
 		if (dirName == "docker" || dirName == "docker-helm") && importToJenkinsX {
-			tests.AssertFileExists(t, filepath.Join(testDir, "skaffold.yaml"))
+			assert.FileExists(t, filepath.Join(testDir, "skaffold.yaml"))
 		} else if dirName == "helm" || dirName == "custom-jenkins" || !importToJenkinsX {
-			tests.AssertFileDoesNotExist(t, filepath.Join(testDir, "skaffold.yaml"))
+			assert.NoFileExists(t, filepath.Join(testDir, "skaffold.yaml"))
 		}
 		if importToJenkinsX {
 			if dirName == "helm" || dirName == "custom-jenkins" {
-				tests.AssertFileDoesNotExist(t, filepath.Join(testDir, "Dockerfile"))
+				assert.NoFileExists(t, filepath.Join(testDir, "Dockerfile"))
 			} else {
-				tests.AssertFileExists(t, filepath.Join(testDir, "Dockerfile"))
+				assert.FileExists(t, filepath.Join(testDir, "Dockerfile"))
 			}
 		} else {
 			if dirName == "docker" || dirName == "docker-helm" {
-				tests.AssertFileExists(t, filepath.Join(testDir, "Dockerfile"))
+				assert.FileExists(t, filepath.Join(testDir, "Dockerfile"))
 			} else {
-				tests.AssertFileDoesNotExist(t, filepath.Join(testDir, "Dockerfile"))
+				assert.NoFileExists(t, filepath.Join(testDir, "Dockerfile"))
 			}
 		}
 		if importToJenkinsX {
 			if dirName == "docker" || dirName == "custom-jenkins" {
-				tests.AssertFileDoesNotExist(t, filepath.Join(testDir, "charts", dirName, "Chart.yaml"))
-				tests.AssertFileDoesNotExist(t, filepath.Join(testDir, "charts"))
+				assert.NoFileExists(t, filepath.Join(testDir, "charts", dirName, "Chart.yaml"))
+				assert.NoFileExists(t, filepath.Join(testDir, "charts"))
 				if !importToJenkinsX && dirName != "custom-jenkins" {
-					tests.AssertFileDoesNotContain(t, jfname, "helm")
+					testhelpers.AssertFileDoesNotContain(t, jfname, "helm")
 				}
 			} else {
-				tests.AssertFileExists(t, filepath.Join(testDir, "charts", dirName, "Chart.yaml"))
+				assert.FileExists(t, filepath.Join(testDir, "charts", dirName, "Chart.yaml"))
 			}
 		} else {
 			if dirName != "helm" && dirName != "docker-helm" {
-				tests.AssertFileDoesNotExist(t, filepath.Join(testDir, "charts", dirName, "Chart.yaml"))
-				tests.AssertFileDoesNotExist(t, filepath.Join(testDir, "charts"))
+				assert.NoFileExists(t, filepath.Join(testDir, "charts", dirName, "Chart.yaml"))
+				assert.NoFileExists(t, filepath.Join(testDir, "charts"))
 			}
 		}
 
 		// lets test we modified the deployment kind
 		if dirName == "maven-camel" {
-			tests.AssertFileContains(t, filepath.Join(testDir, "charts", "maven-camel", "values.yaml"), "knativeDeploy: true")
+			testhelpers.AssertFileContains(t, filepath.Join(testDir, "charts", "maven-camel", "values.yaml"), "knativeDeploy: true")
 		}
 		if !importToJenkinsX {
 			if strings.HasPrefix(testcase, mavenKeepOldJenkinsfile) {
-				tests.AssertFileContains(t, jfname, "THIS IS OLD!")
-				tests.AssertFileDoesNotExist(t, jfname+defaultJenkinsfileBackupSuffix)
+				testhelpers.AssertFileContains(t, jfname, "THIS IS OLD!")
+				assert.NoFileExists(t, jfname+defaultJenkinsfileBackupSuffix)
 			} else if strings.HasPrefix(testcase, mavenOldJenkinsfile) {
-				tests.AssertFileExists(t, jfname)
+				assert.FileExists(t, jfname)
 			}
 		}
 
@@ -311,7 +271,7 @@ func assertImport(t *testing.T, testDir string, testcase string, importToJenkins
 }
 
 func assertProbePathEquals(t *testing.T, fileName string, expectedProbe string) {
-	if tests.AssertFileExists(t, fileName) {
+	if assert.FileExists(t, fileName) {
 		data, err := ioutil.ReadFile(fileName)
 		assert.NoError(t, err, "Failed to read file %s", fileName)
 		if err == nil {

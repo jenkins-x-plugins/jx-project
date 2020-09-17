@@ -10,10 +10,12 @@ import (
 	"strings"
 	"text/template"
 
+	"github.com/jenkins-x/jx-helpers/pkg/files"
+	"github.com/jenkins-x/jx-helpers/pkg/kube/naming"
+	"github.com/jenkins-x/jx-helpers/pkg/yamls/validate"
 	"github.com/jenkins-x/jx-logging/pkg/log"
-	"github.com/jenkins-x/jx/v2/pkg/kube/naming"
-	"github.com/jenkins-x/jx/v2/pkg/tekton/syntax"
-	"github.com/jenkins-x/jx/v2/pkg/util"
+	"github.com/jenkins-x/jx-project/pkg/statement"
+	"github.com/jenkins-x/jx-project/pkg/tekton/syntax"
 	"github.com/pkg/errors"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/equality"
@@ -247,14 +249,14 @@ func (a *PipelineLifecycles) GetLifecycle(name string, lazyCreate bool) (*Pipeli
 
 // Groovy returns the groovy string for the lifecycles
 func (s PipelineLifecycleArray) Groovy() string {
-	statements := []*util.Statement{}
+	statements := []*statement.Statement{}
 	for _, n := range s {
 		l := n.Lifecycle
 		if l != nil {
 			statements = append(statements, l.ToJenkinsfileStatements()...)
 		}
 	}
-	text := util.WriteJenkinsfileStatements(4, statements)
+	text := statement.WriteJenkinsfileStatements(4, statements)
 	// lets remove the very last newline so its easier to compose in templates
 	text = strings.TrimSuffix(text, "\n")
 	return text
@@ -282,8 +284,8 @@ func (l *PipelineLifecycle) Groovy() string {
 }
 
 // ToJenkinsfileStatements converts the lifecycle to one or more jenkinsfile statements
-func (l *PipelineLifecycle) ToJenkinsfileStatements() []*util.Statement {
-	statements := []*util.Statement{}
+func (l *PipelineLifecycle) ToJenkinsfileStatements() []*statement.Statement {
+	statements := []*statement.Statement{}
 	for _, step := range l.Steps {
 		statements = append(statements, step.ToJenkinsfileStatements()...)
 	}
@@ -483,7 +485,7 @@ func LoadPipelineConfig(fileName string, resolver ImportFileResolver, isTekton b
 // LoadPipelineConfigAndMaybeValidate returns the pipeline configuration, optionally after validating the YAML.
 func LoadPipelineConfigAndMaybeValidate(fileName string, resolver ImportFileResolver, isTekton bool, clearContainer bool, skipYamlValidation bool) (*PipelineConfig, error) {
 	config := PipelineConfig{}
-	exists, err := util.FileExists(fileName)
+	exists, err := files.FileExists(fileName)
 	if err != nil || !exists {
 		return &config, err
 	}
@@ -492,7 +494,7 @@ func LoadPipelineConfigAndMaybeValidate(fileName string, resolver ImportFileReso
 		return &config, errors.Wrapf(err, "Failed to load file %s", fileName)
 	}
 	if !skipYamlValidation {
-		validationErrors, err := util.ValidateYaml(&config, data)
+		validationErrors, err := validate.ValidateYaml(&config, data)
 		if err != nil {
 			return &config, fmt.Errorf("failed to validate YAML file %s due to %s", fileName, err)
 		}
@@ -529,7 +531,7 @@ func LoadPipelineConfigAndMaybeValidate(fileName string, resolver ImportFileReso
 			file = filepath.Join(dir, file)
 		}
 	}
-	exists, err = util.FileExists(file)
+	exists, err = files.FileExists(file)
 	if err != nil {
 		return &config, errors.Wrapf(err, "base pipeline file does not exist %s", file)
 	}
@@ -592,7 +594,7 @@ func (c *PipelineConfig) SaveConfig(fileName string) error {
 	if err != nil {
 		return err
 	}
-	return ioutil.WriteFile(fileName, data, util.DefaultWritePermissions)
+	return ioutil.WriteFile(fileName, data, files.DefaultFileWritePermissions)
 }
 
 // ExtendPipeline inherits this pipeline from the given base pipeline
@@ -780,7 +782,7 @@ func (a *CreateJenkinsfileArguments) GenerateJenkinsfile(resolver ImportFileReso
 	outFile := a.OutputFile
 	outDir, _ := filepath.Split(outFile)
 	if outDir != "" {
-		err = os.MkdirAll(outDir, util.DefaultWritePermissions)
+		err = os.MkdirAll(outDir, files.DefaultDirWritePermissions)
 		if err != nil {
 			return errors.Wrapf(err, "failed to make directory %s when creating Jenkinsfile %s", outDir, outFile)
 		}

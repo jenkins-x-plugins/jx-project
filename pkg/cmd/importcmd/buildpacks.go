@@ -18,9 +18,9 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/jenkins-x/jx-logging/pkg/log"
+	"github.com/jenkins-x/jx-project/pkg/config"
 	jxdraft "github.com/jenkins-x/jx-project/pkg/draft"
-	"github.com/jenkins-x/jx/v2/pkg/config"
-	"github.com/jenkins-x/jx/v2/pkg/jenkinsfile"
+	"github.com/jenkins-x/jx-project/pkg/jenkinsfile"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 )
 
@@ -89,6 +89,9 @@ func (o *ImportOptions) PickBuildPackLibrary(i *InvokeDraftPack) (*v1.BuildPack,
 			names = append(names, n)
 		}
 	}
+	if buildPackURL == "" {
+		buildPackURL = "https://github.com/jenkins-x/jxr-packs-kubernetes"
+	}
 	if !found {
 		defaultName = "Team Build Pack"
 		bp := &v1.BuildPack{}
@@ -116,6 +119,7 @@ func (o *ImportOptions) PickBuildPackLibrary(i *InvokeDraftPack) (*v1.BuildPack,
 // createDefaultBuildBacks creates the default build packs if there are no BuildPack CRDs registered in a cluster
 func createDefaultBuildBacks() []v1.BuildPack {
 	return []v1.BuildPack{
+		/* TODO
 		{
 			ObjectMeta: metav1.ObjectMeta{
 				Name: "kubernetes-workloads",
@@ -136,6 +140,7 @@ func createDefaultBuildBacks() []v1.BuildPack {
 				GitRef: v1.ClassicWorkloadBuildPackRef,
 			},
 		},
+		*/
 	}
 }
 

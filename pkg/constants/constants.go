@@ -1,4 +1,4 @@
-package importcmd
+package constants
 
 const (
 	// PlaceHolderPrefix is prefix for placeholders
