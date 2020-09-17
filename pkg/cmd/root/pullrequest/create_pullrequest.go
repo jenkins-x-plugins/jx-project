@@ -1,12 +1,21 @@
 package pullrequest
 
 import (
+	"context"
 	"os"
 	"strings"
 
-	"github.com/jenkins-x/jx/v2/pkg/cmd/create/options"
+	"github.com/jenkins-x/go-scm/scm"
+	"github.com/jenkins-x/jx-helpers/pkg/gitclient"
+	"github.com/jenkins-x/jx-helpers/pkg/gitclient/gitdiscovery"
+	"github.com/jenkins-x/jx-helpers/pkg/input"
+	"github.com/jenkins-x/jx-helpers/pkg/input/survey"
+	"github.com/jenkins-x/jx-helpers/pkg/options"
+	"github.com/jenkins-x/jx-helpers/pkg/scmhelpers"
+	"github.com/jenkins-x/jx-promote/pkg/envctx"
+	"github.com/jenkins-x/jx-promote/pkg/environments"
 
-	"github.com/jenkins-x/jx/v2/pkg/cmd/helper"
+	"github.com/jenkins-x/jx-helpers/pkg/cobras/helper"
 
 	"github.com/pkg/errors"
 
@@ -14,11 +23,8 @@ import (
 
 	"fmt"
 
+	"github.com/jenkins-x/jx-helpers/pkg/cobras/templates"
 	"github.com/jenkins-x/jx-logging/pkg/log"
-	"github.com/jenkins-x/jx/v2/pkg/cmd/opts"
-	"github.com/jenkins-x/jx/v2/pkg/cmd/templates"
-	"github.com/jenkins-x/jx/v2/pkg/gits"
-	"github.com/jenkins-x/jx/v2/pkg/util"
 )
 
 const (
@@ -48,28 +54,25 @@ var (
 	`)
 )
 
-// CreatePullRequestOptions the options for the create spring command
+// CreatePullRequestOptions the options for thecommand
 type CreatePullRequestOptions struct {
-	options.CreateOptions
+	scmhelpers.Options
 
-	Dir    string
-	Title  string
-	Body   string
-	Labels []string
-	Base   string
-	Push   bool
-	Fork   bool
+	BatchMode bool
+	Title     string
+	Body      string
+	Labels    []string
+	Base      string
+	Push      bool
+	Fork      bool
 
-	Results *gits.PullRequestInfo
+	Input   input.Interface
+	Results *scm.PullRequest
 }
 
 // NewCmdCreatePullRequest creates a command object for the "create" command
-func NewCmdCreatePullRequest(commonOpts *opts.CommonOptions) *cobra.Command {
-	options := &CreatePullRequestOptions{
-		CreateOptions: options.CreateOptions{
-			CommonOptions: commonOpts,
-		},
-	}
+func NewCmdCreatePullRequest() *cobra.Command {
+	options := &CreatePullRequestOptions{}
 
 	cmd := &cobra.Command{
 		Use:     "pullrequest",
@@ -78,14 +81,12 @@ func NewCmdCreatePullRequest(commonOpts *opts.CommonOptions) *cobra.Command {
 		Long:    createPullRequestLong,
 		Example: createPullRequestExample,
 		Run: func(cmd *cobra.Command, args []string) {
-			options.Cmd = cmd
-			options.Args = args
 			err := options.Run()
 			helper.CheckErr(err)
 		},
 	}
 
-	cmd.Flags().StringVarP(&options.Dir, "dir", "", "", "The source directory used to detect the Git repository. Defaults to the current directory")
+	//cmd.Flags().StringVarP(&options.Dir, "dir", "", "", "The source directory used to detect the Git repository. Defaults to the current directory")
 	cmd.Flags().StringVarP(&options.Title, optionTitle, "t", "", "The title of the pullrequest to create")
 	cmd.Flags().StringVarP(&options.Body, "body", "", "", "The body of the pullrequest")
 	cmd.Flags().StringVarP(&options.Base, "base", "", "master", "The base branch to create the pull request into")
@@ -94,11 +95,29 @@ func NewCmdCreatePullRequest(commonOpts *opts.CommonOptions) *cobra.Command {
 	cmd.Flags().BoolVarP(&options.Fork, "fork", "", false, "If true, and the username configured to push the repo is different from the org name a PR is being created against, assume that this is a fork")
 
 	cmd.Flags().BoolVarP(&options.BatchMode, "batch-mode", "b", false, "Enables batch mode which avoids prompting for user input")
+
+	options.Options.AddFlags(cmd)
 	return cmd
+}
+
+func (o *CreatePullRequestOptions) Validate() error {
+	err := o.Options.Validate()
+	if err != nil {
+		return errors.Wrapf(err, "failed to validate options")
+	}
+	if o.Input == nil {
+		o.Input = survey.NewInput()
+	}
+	return nil
 }
 
 // Run implements the command
 func (o *CreatePullRequestOptions) Run() error {
+	err := o.Validate()
+	if err != nil {
+		return errors.Wrapf(err, "failed to validate options")
+	}
+
 	// lets discover the git dir
 	if o.Dir == "" {
 		dir, err := os.Getwd()
@@ -107,82 +126,104 @@ func (o *CreatePullRequestOptions) Run() error {
 		}
 		o.Dir = dir
 	}
-	gitInfo, provider, _, err := o.CreateGitProvider(o.Dir)
+	scmClient := o.ScmClient
+	gitInfo := o.GitURL
+
+	ctx := context.Background()
+	fullName := o.FullRepositoryName
+	_, _, err = scmClient.Repositories.Find(ctx, fullName)
 	if err != nil {
-		return errors.Wrapf(err, "creating git provider for directory %s", o.Dir)
+		return errors.Wrapf(err, "failed to find repository %s", fullName)
 	}
+
+	user, _, err := scmClient.Users.Find(ctx)
+	if err != nil {
+		return errors.Wrapf(err, "failed to find the current user")
+	}
+
 	// Rebuild the gitInfo so that we get all the info we need
-	gitInfo, err = provider.GetRepository(gitInfo.Organisation, gitInfo.Name)
-	if err != nil {
-		return errors.Wrapf(err, "getting repository for %s/%s", gitInfo.Organisation, gitInfo.Name)
-	}
-	var forkInfo *gits.GitRepository
-	if o.Fork && provider.CurrentUsername() != gitInfo.Organisation {
-		forkInfo, err = provider.GetRepository(provider.CurrentUsername(), gitInfo.Name)
+	currentUser := user.Login
+	if o.Fork && currentUser != gitInfo.Organisation {
+		forkName := scm.Join(currentUser, gitInfo.Name)
+		_, _, err = scmClient.Repositories.Find(ctx, forkName)
 		if err != nil {
-			return errors.Wrapf(err, "unable to get %s/%s, does the fork exist? Try running without --fork", provider.CurrentUsername(), gitInfo.Name)
+			return errors.Wrapf(err, "failed to find repository %s, does the fork exist? Try running without --fork", forkName)
 		}
 	}
 
-	details, err := o.createPullRequestDetails(gitInfo)
-	if err != nil {
-		return errors.WithStack(err)
+	po := &environments.EnvironmentPullRequestOptions{
+		DevEnvContext: envctx.EnvironmentContext{},
+		ScmClientFactory: scmhelpers.Factory{
+			GitKind:      o.GitKind,
+			GitServerURL: o.GitServerURL,
+			Owner:        o.Owner,
+			GitToken:     o.GitToken,
+			ScmClient:    o.ScmClient,
+		},
+		Gitter:        o.GitClient,
+		CommandRunner: o.CommandRunner,
+		GitKind:       o.GitKind,
+		OutDir:        "",
+		Function:      nil,
+		Labels:        o.Labels,
+		BranchName:    "",
+		ScmClient:     o.ScmClient,
+		BatchMode:     o.BatchMode,
+		Fork:          o.Fork,
 	}
 
-	o.Results, err = gits.PushRepoAndCreatePullRequest(o.Dir, gitInfo, forkInfo, o.Base, details, nil, o.Push, details.Message, o.Push, false, o.Git(), provider)
+	err = o.createPullRequestDetails(po)
 	if err != nil {
-		return errors.Wrapf(err, "failed to create PR for base %s and head branch %s", o.Base, details.BranchName)
+		return errors.Wrapf(err, "failed to create the PR details")
+	}
+
+	o.Results, err = po.CreatePullRequest(scmClient, o.SourceURL, fullName, o.Dir, false)
+	if err != nil {
+		return errors.Wrapf(err, "failed to create PR")
 	}
 	return nil
 }
 
-func (o *CreatePullRequestOptions) createPullRequestDetails(gitInfo *gits.GitRepository) (*gits.PullRequestDetails, error) {
+func (o *CreatePullRequestOptions) createPullRequestDetails(po *environments.EnvironmentPullRequestOptions) error {
 	title := o.Title
 	if title == "" {
 		if o.BatchMode {
-			return nil, util.MissingOption(optionTitle)
+			return options.MissingOption(optionTitle)
 		}
 		defaultValue, body, err := o.findLastCommitTitle()
 		if err != nil {
 			log.Logger().Warnf("Failed to find last git commit title: %s", err)
 		}
-		if o.Body == "" {
-			o.Body = body
+		if po.CommitMessage == "" {
+			po.CommitMessage = body
 		}
-		title, err = util.PickValue("PullRequest title:", defaultValue, true, "", o.GetIOFileHandles())
+		po.CommitTitle, err = o.Input.PickValue("PullRequest title:", defaultValue, true, "")
 		if err != nil {
-			return nil, err
+			return err
 		}
 	}
 	if title == "" {
-		return nil, fmt.Errorf("no title specified")
+		return fmt.Errorf("no title specified")
 	}
-	branchName, err := o.Git().Branch(o.Dir)
-	if err != nil {
-		return nil, err
+	if po.BranchName == "" {
+		var err error
+		po.BranchName, err = gitclient.Branch(o.GitClient, o.Dir)
+		if err != nil {
+			return err
+		}
 	}
-	return &gits.PullRequestDetails{
-		Title:      title,
-		Message:    o.Body,
-		BranchName: branchName,
-		Labels:     o.Labels,
-	}, nil
-
+	return nil
 }
 
 func (o *CreatePullRequestOptions) findLastCommitTitle() (string, string, error) {
 	title := ""
 	body := ""
 	dir := o.Dir
-	gitDir, gitConfDir, err := o.Git().FindGitConfigDir(dir)
+	_, err := gitdiscovery.FindGitURLFromDir(dir)
 	if err != nil {
-		return title, body, err
+		return title, body, errors.Wrapf(err, "Failed to find git config in dir %s", dir)
 	}
-	if gitDir == "" || gitConfDir == "" {
-		log.Logger().Warnf("No git directory could be found from dir %s", dir)
-		return title, body, err
-	}
-	message, err := o.Git().GetLatestCommitMessage(dir)
+	message, err := gitclient.GetLatestCommitMessage(o.GitClient, dir)
 	if err != nil {
 		return title, body, err
 	}

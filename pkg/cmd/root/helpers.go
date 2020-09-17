@@ -4,14 +4,13 @@ import (
 	"os"
 	"strconv"
 
-	"github.com/jenkins-x/jx/v2/pkg/cmd/opts"
 	"github.com/jenkins-x/jx-logging/pkg/log"
 	"github.com/spf13/cobra"
 )
 
 func setLoggingLevel(cmd *cobra.Command) {
 	verbose := false
-	flag := cmd.Flag(opts.OptionVerbose)
+	flag := cmd.Flag("verbose")
 	if flag != nil {
 		var err error
 		verbose, err = strconv.ParseBool(flag.Value.String())

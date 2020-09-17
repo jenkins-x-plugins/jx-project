@@ -4,20 +4,19 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/jenkins-x/jx-helpers/pkg/cobras/helper"
+	"github.com/jenkins-x/jx-helpers/pkg/homedir"
+	"github.com/jenkins-x/jx-helpers/pkg/stringhelpers"
+	"github.com/jenkins-x/jx-helpers/pkg/termcolor"
 	"github.com/jenkins-x/jx-project/pkg/cmd/common"
 	"github.com/jenkins-x/jx-project/pkg/cmd/importcmd"
-
-	"github.com/jenkins-x/jx/v2/pkg/cmd/helper"
-
-	"github.com/jenkins-x/jx/v2/pkg/gits"
+	"github.com/pkg/errors"
 
 	"github.com/spf13/cobra"
 
-	"github.com/jenkins-x/jx/v2/pkg/cmd/opts"
-	"github.com/jenkins-x/jx/v2/pkg/cmd/templates"
+	"github.com/jenkins-x/jx-helpers/pkg/cobras/templates"
 	"github.com/jenkins-x/jx-logging/pkg/log"
-	"github.com/jenkins-x/jx/v2/pkg/spring"
-	"github.com/jenkins-x/jx/v2/pkg/util"
+	"github.com/jenkins-x/jx-project/pkg/spring"
 )
 
 var (
@@ -54,14 +53,8 @@ type CreateSpringOptions struct {
 }
 
 // NewCmdCreateSpring creates a command object for the "create" command
-func NewCmdCreateSpring(commonOpts *opts.CommonOptions) *cobra.Command {
-	options := &CreateSpringOptions{
-		Options: Options{
-			ImportOptions: importcmd.ImportOptions{
-				CommonOptions: commonOpts,
-			},
-		},
-	}
+func NewCmdCreateSpring() *cobra.Command {
+	options := &CreateSpringOptions{}
 
 	cmd := &cobra.Command{
 		Use:     "spring",
@@ -69,7 +62,6 @@ func NewCmdCreateSpring(commonOpts *opts.CommonOptions) *cobra.Command {
 		Long:    createSpringLong,
 		Example: fmt.Sprintf(createSpringExample, common.BinaryName, common.BinaryName, common.BinaryName, common.BinaryName),
 		Run: func(cmd *cobra.Command, args []string) {
-			options.Cmd = cmd
 			options.Args = args
 			err := options.Run()
 			helper.CheckErr(err)
@@ -94,14 +86,19 @@ func NewCmdCreateSpring(commonOpts *opts.CommonOptions) *cobra.Command {
 
 // Run implements the command
 func (o *CreateSpringOptions) Run() error {
-	cacheDir, err := util.CacheDir()
+	err := o.Validate()
+	if err != nil {
+		return errors.Wrapf(err, "failed to validate options")
+	}
+
+	cacheDir, err := homedir.CacheDir(os.Getenv("JX3_HOME"), ".jx3")
 	if err != nil {
 		return err
 	}
 
 	data := &o.SpringForm
 
-	var details *gits.CreateRepoData
+	var details *importcmd.CreateRepoData
 
 	if !o.BatchMode {
 		details, err = o.GetGitRepositoryDetails()
@@ -122,11 +119,11 @@ func (o *CreateSpringOptions) Run() error {
 	}
 
 	// always add in actuator as its required for health checking
-	if !util.Contains(o.SpringForm.Dependencies, "actuator") {
+	if stringhelpers.StringArrayIndex(o.SpringForm.Dependencies, "actuator") < 0 {
 		o.SpringForm.Dependencies = append(o.SpringForm.Dependencies, "actuator")
 	}
 	// always add web as the JVM tends to terminate if its not added
-	if !util.Contains(o.SpringForm.Dependencies, "web") {
+	if stringhelpers.StringArrayIndex(o.SpringForm.Dependencies, "web") < 0 {
 		o.SpringForm.Dependencies = append(o.SpringForm.Dependencies, "web")
 	}
 
@@ -142,7 +139,7 @@ func (o *CreateSpringOptions) Run() error {
 	if err != nil {
 		return err
 	}
-	log.Logger().Infof("Created Spring Boot project at %s", util.ColorInfo(outDir))
+	log.Logger().Infof("Created Spring Boot project at %s", termcolor.ColorInfo(outDir))
 
 	if details != nil {
 		o.ConfigureImportOptions(details)

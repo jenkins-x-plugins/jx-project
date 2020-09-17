@@ -4,10 +4,10 @@ import (
 	"path/filepath"
 
 	"github.com/jenkins-x/jx-api/pkg/config"
-	"github.com/jenkins-x/jx-api/pkg/util"
+	"github.com/jenkins-x/jx-helpers/pkg/files"
+	"github.com/jenkins-x/jx-helpers/pkg/gitclient/giturl"
+	"github.com/jenkins-x/jx-helpers/pkg/kube/naming"
 	"github.com/jenkins-x/jx-logging/pkg/log"
-	"github.com/jenkins-x/jx/v2/pkg/gits"
-	"github.com/jenkins-x/jx/v2/pkg/kube/naming"
 	"github.com/pkg/errors"
 )
 
@@ -15,11 +15,11 @@ import (
 func IsGitOpsRepositoryWithPipeline(dir string) (bool, error) {
 	fileNames := []string{
 		filepath.Join(dir, "jenkins-x.yml"),
-		filepath.Join(dir, ".jx", "git-operator", "job.yaml"),
+		filepath.Join(dir, "versionStream", "git-operator", "job.yaml"),
 	}
 
 	for _, f := range fileNames {
-		exists, err := util.FileExists(f)
+		exists, err := files.FileExists(f)
 		if err != nil {
 			return false, errors.Wrapf(err, "failed to check if file exists %s", f)
 		}
@@ -32,10 +32,10 @@ func IsGitOpsRepositoryWithPipeline(dir string) (bool, error) {
 
 // allows any extra changes to be proposed to the dev environment pull request if needed
 // e.g. if a new environment git repository is imported we should ensure we have an Environment created for the new environment
-func (o *ImportOptions) modifyDevEnvironmentSource(dir string, gitInfo *gits.GitRepository, gitURL string, gitKind string) error {
+func (o *ImportOptions) modifyDevEnvironmentSource(importDir, promoteDir string, gitInfo *giturl.GitRepository, gitURL string, gitKind string) error {
 	log.Logger().Infof("checking if the new repository is an Environment: %s", gitURL)
 
-	gitops, err := IsGitOpsRepositoryWithPipeline(dir)
+	gitops, err := IsGitOpsRepositoryWithPipeline(importDir)
 	if err != nil {
 		return errors.Wrapf(err, "failed to detect gitops repository for repo %s", gitURL)
 	}
@@ -43,7 +43,7 @@ func (o *ImportOptions) modifyDevEnvironmentSource(dir string, gitInfo *gits.Git
 		return nil
 	}
 
-	requirements, requirementsFileName, err := config.LoadRequirementsConfig(dir, false)
+	requirements, requirementsFileName, err := config.LoadRequirementsConfig(promoteDir, false)
 	if err != nil {
 		return errors.Wrapf(err, "failed to load requirements file in repository %s", gitURL)
 	}
@@ -64,7 +64,7 @@ func (o *ImportOptions) modifyDevEnvironmentSource(dir string, gitInfo *gits.Git
 			Key:               key,
 			Owner:             repoOwner,
 			Repository:        repoName,
-			GitServer:         gitInfo.ProviderURL(),
+			GitServer:         gitInfo.HostURL(),
 			GitKind:           gitKind,
 			RemoteCluster:     true,
 			PromotionStrategy: "Auto",

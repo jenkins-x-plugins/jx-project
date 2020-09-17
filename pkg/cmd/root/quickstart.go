@@ -8,21 +8,19 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/jenkins-x/jx-helpers/pkg/cobras/helper"
+	"github.com/jenkins-x/jx-helpers/pkg/files"
+	"github.com/jenkins-x/jx-helpers/pkg/gitclient"
+	"github.com/jenkins-x/jx-helpers/pkg/options"
 	"github.com/jenkins-x/jx-project/pkg/cmd/common"
 	"github.com/jenkins-x/jx-project/pkg/cmd/importcmd"
+	"github.com/jenkins-x/jx-project/pkg/quickstarts"
+	"github.com/pkg/errors"
 
-	"github.com/jenkins-x/jx/v2/pkg/cmd/helper"
-
-	"github.com/jenkins-x/jx/v2/pkg/quickstarts"
-
-	"github.com/jenkins-x/jx/v2/pkg/github"
-	"github.com/jenkins-x/jx/v2/pkg/gits"
 	"github.com/jenkins-x/jx-logging/pkg/log"
 	"github.com/spf13/cobra"
 
-	"github.com/jenkins-x/jx/v2/pkg/cmd/opts"
-	"github.com/jenkins-x/jx/v2/pkg/cmd/templates"
-	"github.com/jenkins-x/jx/v2/pkg/util"
+	"github.com/jenkins-x/jx-helpers/pkg/cobras/templates"
 )
 
 var (
@@ -50,20 +48,13 @@ type CreateQuickstartOptions struct {
 
 	GitHubOrganisations []string
 	Filter              quickstarts.QuickstartFilter
-	GitProvider         gits.GitProvider
 	GitHost             string
 	IgnoreTeam          bool
 }
 
 // NewCmdCreateQuickstart creates a command object for the "create" command
-func NewCmdCreateQuickstart(commonOpts *opts.CommonOptions) *cobra.Command {
-	options := &CreateQuickstartOptions{
-		Options: Options{
-			ImportOptions: importcmd.ImportOptions{
-				CommonOptions: commonOpts,
-			},
-		},
-	}
+func NewCmdCreateQuickstart() *cobra.Command {
+	options := &CreateQuickstartOptions{}
 
 	cmd := &cobra.Command{
 		Use:     "quickstart",
@@ -72,7 +63,6 @@ func NewCmdCreateQuickstart(commonOpts *opts.CommonOptions) *cobra.Command {
 		Example: fmt.Sprintf(createQuickstartExample, common.BinaryName, common.BinaryName),
 		Aliases: []string{"arch"},
 		Run: func(cmd *cobra.Command, args []string) {
-			options.Cmd = cmd
 			options.Args = args
 			err := options.Run()
 			helper.CheckErr(err)
@@ -94,7 +84,37 @@ func NewCmdCreateQuickstart(commonOpts *opts.CommonOptions) *cobra.Command {
 
 // Run implements the generic Create command
 func (o *CreateQuickstartOptions) Run() error {
-	model, err := o.LoadQuickStartsModel(o.GitHubOrganisations, o.IgnoreTeam)
+	err := o.Validate()
+	if err != nil {
+		return errors.Wrapf(err, "failed to validate options")
+	}
+
+	devEnvGitURL := o.DevEnv.Spec.Source.URL
+	if devEnvGitURL == "" {
+		return errors.Errorf("no spec.source.url for dev environment so cannot clone the version stream")
+	}
+	devEnvCloneDir, err := gitclient.CloneToDir(o.Git(), devEnvGitURL, "")
+	if err != nil {
+		return errors.Wrapf(err, "failed to clone dev environment git repository %s", devEnvGitURL)
+	}
+
+	versionStreamDir := filepath.Join(devEnvCloneDir, "versionStream")
+	exists, err := files.DirExists(versionStreamDir)
+	if err != nil {
+		return errors.Wrapf(err, "failed to check if dir exists %s", versionStreamDir)
+	}
+	if !exists {
+		return errors.Errorf("the dev Environment git repository %s does not include a versionStream directory", devEnvGitURL)
+	}
+
+	qo := &quickstarts.Options{
+		VersionsDir: versionStreamDir,
+		Namespace:   o.Namespace,
+		CurrentUser: "",
+		JXClient:    o.JXClient,
+		ScmClient:   o.ScmFactory.ScmClient,
+	}
+	model, err := qo.LoadQuickStartsModel(o.GitHubOrganisations, o.IgnoreTeam)
 	if err != nil {
 		return fmt.Errorf("failed to load quickstarts: %s", err)
 	}
@@ -104,7 +124,7 @@ func (o *CreateQuickstartOptions) Run() error {
 		return err
 	}
 
-	q, err := model.CreateSurvey(&o.Filter, o.BatchMode, o.GetIOFileHandles())
+	q, err := model.CreateSurvey(&o.Filter, o.BatchMode, o.Input)
 	if err != nil {
 		return err
 	}
@@ -117,10 +137,10 @@ func (o *CreateQuickstartOptions) CreateQuickStart(q *quickstarts.QuickstartForm
 		return fmt.Errorf("no quickstart chosen")
 	}
 
-	var details *gits.CreateRepoData
-	o.GitRepositoryOptions.Owner = o.ImportOptions.Organisation
-	o.GitRepositoryOptions.RepoName = o.ImportOptions.Repository
-	repoName := o.GitRepositoryOptions.RepoName
+	var details *importcmd.CreateRepoData
+	o.GitRepositoryOptions.Namespace = o.ImportOptions.Organisation
+	o.GitRepositoryOptions.Name = o.ImportOptions.Repository
+	repoName := o.GitRepositoryOptions.Name
 	if !o.BatchMode {
 		var err error
 		details, err = o.GetGitRepositoryDetails()
@@ -141,11 +161,12 @@ func (o *CreateQuickstartOptions) CreateQuickStart(q *quickstarts.QuickstartForm
 			q.Name = repoName
 		}
 		if q.Name == "" {
-			return util.MissingOption("project-name")
+			return options.MissingOption("project-name")
 		}
 
 	}
 
+	/* TODO
 	githubAppMode, err := o.IsGitHubAppMode()
 	if err != nil {
 		return err
@@ -168,9 +189,16 @@ func (o *CreateQuickstartOptions) CreateQuickStart(q *quickstarts.QuickstartForm
 		}
 		o.GithubAppInstalled = installed
 	}
+	*/
+
+	currentUser, err := o.ScmFactory.GetUsername()
+	if err != nil {
+		return errors.Wrapf(err, "failed to get the current git user")
+	}
 
 	// Prevent accidental attempts to use ML Project Sets in create quickstart
-	if isMLProjectSet(q.Quickstart) {
+	gitToken := o.ScmFactory.GitToken
+	if isMLProjectSet(q.Quickstart, currentUser, gitToken) {
 		return fmt.Errorf("you have tried to select a machine-learning quickstart projectset please try again using jx create mlquickstart instead")
 	}
 	dir := o.OutDir
@@ -180,7 +208,7 @@ func (o *CreateQuickstartOptions) CreateQuickStart(q *quickstarts.QuickstartForm
 			return err
 		}
 	}
-	genDir, err := o.createQuickstart(q, dir)
+	genDir, err := o.createQuickstart(q, dir, currentUser, gitToken)
 	if err != nil {
 		return err
 	}
@@ -196,7 +224,7 @@ func (o *CreateQuickstartOptions) CreateQuickStart(q *quickstarts.QuickstartForm
 	}
 	if folder != "" {
 		chartsDir := filepath.Join(genDir, "charts", folder)
-		exists, err := util.FileExists(chartsDir)
+		exists, err := files.FileExists(chartsDir)
 		if err != nil {
 			return err
 		}
@@ -204,7 +232,7 @@ func (o *CreateQuickstartOptions) CreateQuickStart(q *quickstarts.QuickstartForm
 			o.PostDraftPackCallback = func() error {
 				_, appName := filepath.Split(genDir)
 				appChartDir := filepath.Join(genDir, "charts", appName)
-				err := util.CopyDirOverwrite(chartsDir, appChartDir)
+				err := files.CopyDirOverwrite(chartsDir, appChartDir)
 				if err != nil {
 					return err
 				}
@@ -212,13 +240,13 @@ func (o *CreateQuickstartOptions) CreateQuickStart(q *quickstarts.QuickstartForm
 				if err != nil {
 					return err
 				}
-				return o.Git().Remove(genDir, filepath.Join("charts", folder))
+				return gitclient.Remove(o.Git(), genDir, filepath.Join("charts", folder))
 			}
 		}
 	}
 	o.GetReporter().CreatedProject(genDir)
 
-	o.Options.ImportOptions.GitProvider = o.GitProvider
+	o.Options.ImportOptions.ScmFactory.ScmClient = o.ScmFactory.ScmClient
 
 	if details != nil {
 		o.ConfigureImportOptions(details)
@@ -227,7 +255,7 @@ func (o *CreateQuickstartOptions) CreateQuickStart(q *quickstarts.QuickstartForm
 	return o.ImportCreatedProject(genDir)
 }
 
-func (o *CreateQuickstartOptions) createQuickstart(f *quickstarts.QuickstartForm, dir string) (string, error) {
+func (o *CreateQuickstartOptions) createQuickstart(f *quickstarts.QuickstartForm, dir, username, token string) (string, error) {
 	q := f.Quickstart
 	answer := filepath.Join(dir, f.Name)
 	u := q.DownloadZipURL
@@ -240,15 +268,10 @@ func (o *CreateQuickstartOptions) createQuickstart(f *quickstarts.QuickstartForm
 	if err != nil {
 		return answer, err
 	}
-	gitProvider := q.GitProvider
-	if gitProvider != nil {
-		userAuth := gitProvider.UserAuth()
-		token := userAuth.ApiToken
-		username := userAuth.Username
-		if token != "" && username != "" {
-			log.Logger().Debugf("Downloading Quickstart source zip from %s with basic auth for user: %s", u, username)
-			req.SetBasicAuth(username, token)
-		}
+
+	if token != "" && username != "" {
+		log.Logger().Debugf("Downloading Quickstart source zip from %s with basic auth for user: %s", u, username)
+		req.SetBasicAuth(username, token)
 	}
 	res, err := client.Do(req)
 	if err != nil {
@@ -260,7 +283,7 @@ func (o *CreateQuickstartOptions) createQuickstart(f *quickstarts.QuickstartForm
 	}
 
 	zipFile := filepath.Join(dir, "source.zip")
-	err = ioutil.WriteFile(zipFile, body, util.DefaultWritePermissions)
+	err = ioutil.WriteFile(zipFile, body, files.DefaultFileWritePermissions)
 	if err != nil {
 		return answer, fmt.Errorf("failed to download file %s due to %s", zipFile, err)
 	}
@@ -268,7 +291,7 @@ func (o *CreateQuickstartOptions) createQuickstart(f *quickstarts.QuickstartForm
 	if err != nil {
 		return answer, fmt.Errorf("failed to create temporary directory: %s", err)
 	}
-	err = util.Unzip(zipFile, tmpDir)
+	err = files.Unzip(zipFile, tmpDir)
 	if err != nil {
 		return answer, fmt.Errorf("failed to unzip new project file %s due to %s", zipFile, err)
 	}
@@ -280,7 +303,7 @@ func (o *CreateQuickstartOptions) createQuickstart(f *quickstarts.QuickstartForm
 	if err != nil {
 		return answer, fmt.Errorf("failed to find a directory inside the source download: %s", err)
 	}
-	err = util.RenameDir(tmpDir, answer, false)
+	err = files.RenameDir(tmpDir, answer, false)
 	if err != nil {
 		return answer, fmt.Errorf("failed to rename temp dir %s to %s: %s", tmpDir, answer, err)
 	}
@@ -301,8 +324,8 @@ func findFirstDirectory(dir string) (string, error) {
 	return "", fmt.Errorf("no child directory found in %s", dir)
 }
 
-func isMLProjectSet(q *quickstarts.Quickstart) bool {
-	if !util.StartsWith(q.Name, "ML-") {
+func isMLProjectSet(q *quickstarts.Quickstart, username, token string) bool {
+	if !strings.HasPrefix(q.Name, "ML-") {
 		return false
 	}
 
@@ -315,9 +338,6 @@ func isMLProjectSet(q *quickstarts.Quickstart) bool {
 	if err != nil {
 		log.Logger().Warnf("Problem creating request %s: %s ", u, err)
 	}
-	userAuth := q.GitProvider.UserAuth()
-	token := userAuth.ApiToken
-	username := userAuth.Username
 	if token != "" && username != "" {
 		log.Logger().Debugf("Trying to pull projectset file from %s with basic auth for user: %s", u, username)
 		req.SetBasicAuth(username, token)

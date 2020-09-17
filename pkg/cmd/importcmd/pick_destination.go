@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/jenkins-x/jx-jenkins/pkg/jenkinsutil"
-	"github.com/jenkins-x/jx/v2/pkg/util"
 	"github.com/pkg/errors"
+
+	"github.com/jenkins-x/jx-project/pkg/jenkinsutil"
 )
 
 // Destination where do we want to import the project to
@@ -54,8 +54,6 @@ func (o *ImportOptions) PickImportDestination(cf *jenkinsutil.ClientFactory, jen
 		return o.Destination, nil
 	}
 
-	handles := o.CommonOptions.GetIOFileHandles()
-
 	names := o.Destination.Jenkins.JenkinsServiceNames
 	if len(names) == 0 {
 		var err error
@@ -96,8 +94,8 @@ func (o *ImportOptions) PickImportDestination(cf *jenkinsutil.ClientFactory, jen
 		actions[text] = ImportDestination{JenkinsX: JenkinsXDestination{Enabled: true}, JenkinsfileRunner: JenkinsfileRunnerDestination{Enabled: true}}
 	}
 
-	name, err := util.PickName(actionChoices, "Where would you like to import this project to?",
-		"you can import into Jenkins X and use cloud native pipelines with Tekton or import in a Jenkins server", handles)
+	name, err := o.Input.PickNameWithDefault(actionChoices, "Where would you like to import this project to?",
+		"", "you can import into Jenkins X and use cloud native pipelines with Tekton or import in a Jenkins server")
 	if err != nil {
 		return o.Destination, err
 	}

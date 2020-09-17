@@ -1,0 +1,142 @@
+package quickstarts
+
+import (
+	"fmt"
+
+	"github.com/jenkins-x/go-scm/scm"
+	v1 "github.com/jenkins-x/jx-api/pkg/apis/jenkins.io/v1"
+	"github.com/jenkins-x/jx-api/pkg/client/clientset/versioned"
+	"github.com/jenkins-x/jx-helpers/pkg/gitclient/giturl"
+	"github.com/jenkins-x/jx-helpers/pkg/kube/jxclient"
+	"github.com/jenkins-x/jx-helpers/pkg/versionstream"
+	"github.com/pkg/errors"
+)
+
+type Options struct {
+	VersionsDir string
+	Namespace   string
+	CurrentUser string
+	JXClient    versioned.Interface
+	ScmClient   *scm.Client
+}
+
+func (o *Options) Validate() error {
+	var err error
+	o.JXClient, o.Namespace, err = jxclient.LazyCreateJXClientAndNamespace(o.JXClient, o.Namespace)
+	if err != nil {
+		return errors.Wrapf(err, "failed to create the jx client")
+	}
+	return nil
+}
+
+// LoadQuickStartsModel Load all quickstarts
+func (o *Options) LoadQuickStartsModel(gitHubOrganisations []string, ignoreTeam bool) (*QuickstartModel, error) {
+	err := o.Validate()
+	if err != nil {
+		return nil, errors.Wrapf(err, "failed to validate options")
+	}
+
+	locations, err := o.loadQuickStartLocations(gitHubOrganisations, ignoreTeam)
+	if err != nil {
+		return nil, err
+	}
+
+	model, err := o.LoadQuickStartsFromLocations(locations)
+	if err != nil {
+		return nil, fmt.Errorf("failed to load qs: %s", err)
+	}
+	qs, err := versionstream.GetQuickStarts(o.VersionsDir)
+	if err != nil {
+		return nil, errors.Wrapf(err, "loading qs from version stream in dir %s", o.VersionsDir)
+	}
+	qs.DefaultMissingValues()
+	err = model.LoadQuickStarts(qs)
+	if err != nil {
+		return nil, errors.Wrapf(err, "loading qs: %v", qs)
+	}
+	return model, nil
+}
+
+// LoadQuickStartsFromLocations Load all quickstarts from the given locatiotns
+func (o *Options) LoadQuickStartsFromLocations(locations []v1.QuickStartLocation) (*QuickstartModel, error) {
+	err := o.Validate()
+	if err != nil {
+		return nil, errors.Wrapf(err, "failed to validate options")
+	}
+	gitMap := map[string]map[string]v1.QuickStartLocation{}
+	for _, loc := range locations {
+		m := gitMap[loc.GitURL]
+		if m == nil {
+			m = map[string]v1.QuickStartLocation{}
+			gitMap[loc.GitURL] = m
+		}
+		m[loc.Owner] = loc
+	}
+	model := NewQuickstartModel()
+
+	/* TODO
+
+	for gitURL, m := range gitMap {
+		for _, location := range m {
+			kind := location.GitKind
+			if kind == "" {
+				kind = gits.KindGitHub
+			}
+
+			// If this is a default quickstart location but there's no github.com credentials, skip and rely on the version stream alone.
+			if kube.IsDefaultQuickstartLocation(location) && o.ScmClient == nil) {
+				continue
+			}
+			gitProvider, err := o.GitProviderForGitServerURL(gitURL, kind, "")
+			if err != nil {
+				return model, err
+			}
+			log.Logger().Debugf("Searching for repositories in Git server %s owner %s includes %s excludes %s as user %s ", gitProvider.ServerURL(), location.Owner, strings.Join(location.Includes, ", "), strings.Join(location.Excludes, ", "), o.CurrentUsername)
+			err = model.LoadGithubQuickstarts(gitProvider, location.Owner, location.Includes, location.Excludes)
+			if err != nil {
+				log.Logger().Debugf("Quickstart load error: %s", err.Error())
+			}
+
+		}
+	}
+	*/
+	return model, nil
+}
+
+// loadQuickStartLocations loads the quickstarts
+func (o *Options) loadQuickStartLocations(gitHubOrganisations []string, ignoreTeam bool) ([]v1.QuickStartLocation, error) {
+	var locations []v1.QuickStartLocation
+
+	/* TODO
+	if !ignoreTeam {
+		jxClient := o.JXClient
+		ns := o.Namespace
+
+		var err error
+		locations, err = kube.GetQuickstartLocations(jxClient, ns)
+		if err != nil {
+			return nil, err
+		}
+	}
+	*/
+	// lets add any extra github organisations if they are not already configured
+	for _, org := range gitHubOrganisations {
+		found := false
+		for _, loc := range locations {
+			if loc.GitURL == giturl.GitHubURL && loc.Owner == org {
+				found = true
+				break
+			}
+		}
+		if !found {
+			locations = append(locations, v1.QuickStartLocation{
+				GitURL:   giturl.GitHubURL,
+				GitKind:  giturl.KindGitHub,
+				Owner:    org,
+				Includes: []string{"*"},
+				Excludes: []string{"WIP-*"},
+			})
+		}
+	}
+	return locations, nil
+}

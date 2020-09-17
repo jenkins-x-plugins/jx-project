@@ -9,7 +9,7 @@ import (
 	"strings"
 
 	"github.com/Azure/draft/pkg/osutil"
-	"github.com/jenkins-x/jx/v2/pkg/util"
+	"github.com/jenkins-x/jx-helpers/pkg/files"
 	"github.com/pkg/errors"
 	"k8s.io/helm/pkg/chartutil"
 	kchart "k8s.io/helm/pkg/proto/hapi/chart"
@@ -57,7 +57,7 @@ func (p *Pack) SaveDir(dest string, packName string) error {
 				dir := filepath.Dir(fullPath)
 
 				// lets ensure the dir exists
-				err = os.MkdirAll(dir, util.DefaultWritePermissions)
+				err = os.MkdirAll(dir, files.DefaultDirWritePermissions)
 				if err != nil {
 					return errors.Wrapf(err, "failed to create dir %s", dir)
 				}
@@ -79,7 +79,7 @@ func (p *Pack) SaveDir(dest string, packName string) error {
 		if !exists {
 			// lets make sure the parent dir exists
 			parent := filepath.Dir(path)
-			err = os.MkdirAll(parent, util.DefaultWritePermissions)
+			err = os.MkdirAll(parent, files.DefaultDirWritePermissions)
 			if err != nil {
 				return errors.Wrapf(err, "failed to make directory %s", parent)
 			}
@@ -172,11 +172,11 @@ func FromDir(dir string) (*Pack, error) {
 }
 
 func loadDirectory(pack *Pack, dir string, relPath string) error {
-	files, err := ioutil.ReadDir(dir)
+	fileSlice, err := ioutil.ReadDir(dir)
 	if err != nil {
 		return fmt.Errorf("error reading %s: %s", dir, err)
 	}
-	for _, fInfo := range files {
+	for _, fInfo := range fileSlice {
 		name := fInfo.Name()
 		if fInfo.IsDir() {
 			// assume root folders not starting with dot are chart folders
@@ -190,7 +190,7 @@ func loadDirectory(pack *Pack, dir string, relPath string) error {
 
 				// lets see if there's a nested resources folder
 				resourceDir := filepath.Join(dir, name, "resources")
-				exists, err := util.DirExists(resourceDir)
+				exists, err := files.DirExists(resourceDir)
 				if err != nil {
 					return errors.Wrapf(err, "checking if resources dir exists %s", resourceDir)
 				}
