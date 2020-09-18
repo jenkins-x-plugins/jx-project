@@ -181,7 +181,7 @@ func (o *CreatePullRequestOptions) Run() error {
 		return errors.Wrapf(err, "failed to create the PR details")
 	}
 
-	o.Results, err = po.CreatePullRequest(scmClient, o.SourceURL, fullName, o.Dir, false)
+	o.Results, err = po.CreatePullRequest(scmClient, o.SourceURL, fullName, o.Dir, true)
 	if err != nil {
 		return errors.Wrapf(err, "failed to create PR")
 	}
