@@ -996,7 +996,7 @@ func (o *ImportOptions) doImport() error {
 	repoFullName := scm.Join(o.Organisation, o.AppName)
 	c := &cmdrunner.Command{
 		Name: "jx",
-		Args: []string{"pipeline", "start", "-f", repoFullName},
+		Args: []string{"pipeline", "start", "-f", repoFullName, "--wait"},
 	}
 	_, err = o.CommandRunner(c)
 	if err != nil {
