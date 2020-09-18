@@ -1,6 +1,8 @@
 package testimports
 
 import (
+	"testing"
+
 	fakescm "github.com/jenkins-x/go-scm/scm/driver/fake"
 	fakejx "github.com/jenkins-x/jx-api/pkg/client/clientset/versioned/fake"
 	"github.com/jenkins-x/jx-helpers/pkg/cmdrunner"
@@ -12,7 +14,7 @@ import (
 )
 
 // SetFakeClients sets the fake clients on the options
-func SetFakeClients(o *importcmd.ImportOptions) *fakescm.Data {
+func SetFakeClients(t *testing.T, o *importcmd.ImportOptions) *fakescm.Data {
 	fakeInput := &fakeinput.FakeInput{
 		Values: map[string]string{},
 	}
@@ -32,17 +34,24 @@ func SetFakeClients(o *importcmd.ImportOptions) *fakescm.Data {
 	o.JXClient = fakejx.NewSimpleClientset(devEnv)
 	o.Namespace = ns
 
-	runner := NewFakeRunnerWithoutGitPush()
+	runner := NewFakeRunnerWithoutGitPush(t)
 	o.CommandRunner = runner.Run
 	return fakeScmData
 }
 
 // NewFakeRunnerWithoutGitPush create a fake command runner that fakes out git push
-func NewFakeRunnerWithoutGitPush() *fakerunner.FakeRunner {
+func NewFakeRunnerWithoutGitPush(t *testing.T) *fakerunner.FakeRunner {
 	runner := &fakerunner.FakeRunner{}
 	runner.CommandRunner = func(c *cmdrunner.Command) (string, error) {
 		if c.Name == "git" && len(c.Args) > 0 && c.Args[0] == "push" {
 			// lets fake out git push
+			t.Logf("faking command: %s\n", c.CLI())
+			return "", nil
+		}
+
+		if c.Name == "jx" && len(c.Args) > 0 && c.Args[0] == "pipeline" {
+			// lets fake out starting pipelines
+			t.Logf("faking command: %s\n", c.CLI())
 			return "", nil
 		}
 

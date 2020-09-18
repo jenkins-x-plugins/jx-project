@@ -31,7 +31,7 @@ func TestCreateQuickstartProjects(t *testing.T) {
 			ProjectName: appName,
 		},
 	}
-	testimports.SetFakeClients(&o.Options.ImportOptions)
+	testimports.SetFakeClients(t, &o.Options.ImportOptions)
 
 	o.Dir = testDir
 	o.OutDir = testDir

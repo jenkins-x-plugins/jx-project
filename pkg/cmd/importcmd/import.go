@@ -82,6 +82,7 @@ type ImportOptions struct {
 	DisableBuildPack                   bool
 	DisableWebhooks                    bool
 	DisableDotGitSearch                bool
+	DisableStartPipeline               bool
 	InitialisedGit                     bool
 	WaitForSourceRepositoryPullRequest bool
 	NoDevPullRequest                   bool
@@ -226,6 +227,7 @@ func (o *ImportOptions) AddImportFlags(cmd *cobra.Command, createProject bool) {
 
 	cmd.Flags().BoolVarP(&o.WaitForSourceRepositoryPullRequest, "wait-for-pr", "", true, "waits for the Pull Request generated on the development envirionment git repository to merge")
 	cmd.Flags().BoolVarP(&o.NoDevPullRequest, "no-dev-pr", "", false, "disables generating a Pull Request on the development git repository")
+	cmd.Flags().BoolVarP(&o.DisableStartPipeline, "no-start", "", false, "disables starting a release pipeline when imprting/creating a new project")
 	cmd.Flags().DurationVarP(&o.PullRequestPollPeriod, "pr-poll-period", "", time.Second*20, "the time between polls of the Pull Request on the development environment git repository")
 	cmd.Flags().DurationVarP(&o.PullRequestPollTimeout, "pr-poll-timeout", "", time.Minute*20, "the maximum amount of time we wait for the Pull Request on the development environment git repository")
 
@@ -986,68 +988,32 @@ func (o *ImportOptions) doImport() error {
 	if err != nil {
 		return errors.Wrapf(err, "failed to create Pull Request on the cluster git repository")
 	}
+
+	if o.DisableStartPipeline {
+		return nil
+	}
+
+	repoFullName := scm.Join(o.Organisation, o.AppName)
+	c := &cmdrunner.Command{
+		Name: "jx",
+		Args: []string{"pipeline", "start", "-f", repoFullName},
+	}
+	_, err = o.CommandRunner(c)
+	if err != nil {
+		return errors.Wrapf(err, "failed to start pipeline for %s", repoFullName)
+	}
+
+	log.Logger().Infof("Started pipeline: %s", info(repoFullName))
+	log.Logger().Info("")
+	log.Logger().Infof("Watch pipeline activity via:    %s", info(fmt.Sprintf("jx get activity -f %s -w", repoFullName)))
+	log.Logger().Infof("Browse the pipeline log via:    %s", info(fmt.Sprintf("jx get build logs %s", repoFullName)))
+	log.Logger().Infof("You can list the pipelines via: %s", info("jx get pipelines"))
+	log.Logger().Infof("When the pipeline is complete:  %s", info("jx get applications"))
+	log.Logger().Info("")
+	log.Logger().Infof("For more help on available commands see: %s", info("https://jenkins-x.io/developing/browsing/"))
+	log.Logger().Info("")
+
 	return nil
-
-	/* TODO
-	if !o.Destination.JenkinsX.Enabled {
-		flag, err := util.Confirm("do you want to use ChatOps to trigger pipelines instead of jenkins webhooks?", false, "using ChatOps means lighthouse will handle webhooks and trigger jobs directly in Jenkins", o.GetIOFileHandles())
-		if err != nil {
-			return err
-		}
-		if flag {
-			o.Destination.JenkinsX.Enabled = true
-
-			err := o.enableTriggerPipelineJenkinsXPipeline(o.Destination)
-			if err != nil {
-				return err
-			}
-		}
-	}
-
-	if o.Destination.JenkinsX.Enabled {
-		if o.Destination.JenkinsfileRunner.Enabled {
-			err := o.enableJenkinsfileRunnerPipeline(o.Destination)
-			if err != nil {
-				return err
-			}
-		}
-
-		log.Logger().Infof("importing the repository into Jenkins X")
-		githubAppMode, err := o.IsGitHubAppMode()
-		if err != nil {
-			return err
-		}
-
-		if !o.DisableWebhooks && !githubAppMode {
-			// register the webhook
-			err = o.CreateWebhookProw(gitURL, gitProvider)
-			if err != nil {
-				return err
-			}
-		}
-		return o.addProwConfig(gitURL, gitProvider.Kind())
-	}
-
-	// lets create the SourceRepository so we can trigger additional Jenkins X Pipelines against the Jenkins managed source repository
-	if o.SchedulerName == "" {
-		o.SchedulerName = "jenkins"
-	}
-	gitInfo, err := giturl.ParseGitURL(gitURL)
-	if err != nil {
-		return err
-	}
-	_, err = o.getOrCreateSourceRepository(gitInfo, gitProvider.Kind())
-	if err != nil {
-		return err
-	}
-
-	log.Logger().Infof("importing the repository into Jenkins: %s", termcolor.ColorInfo(o.Destination.Jenkins.JenkinsName))
-	jc, err := o.jenkinsClientFactory.CreateJenkinsClient(o.Destination.Jenkins.JenkinsName)
-	if err != nil {
-		return errors.Wrapf(err, "failed to create jenkins client for %s", o.Destination.Jenkins.JenkinsName)
-	}
-	return o.ImportProjectIntoJenkins(jc, gitURL, o.Dir, jenkinsfile, o.BranchPattern, o.Credentials, false, gitProvider, authConfigSvc, false, o.BatchMode)
-	*/
 }
 
 func (o *ImportOptions) addSourceConfigPullRequest(gitURL string, gitKind string) error {

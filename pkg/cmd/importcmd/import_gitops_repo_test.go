@@ -35,7 +35,7 @@ func TestImportGitOpsRepository(t *testing.T) {
 	dirName = naming.ToValidName(dirName)
 	o := &importcmd.ImportOptions{}
 
-	testimports.SetFakeClients(o)
+	testimports.SetFakeClients(t, o)
 	o.Dir = testDir
 	o.DisableMaven = true
 	o.UseDefaultGit = true
