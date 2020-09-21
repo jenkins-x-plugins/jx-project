@@ -3,6 +3,7 @@ package pullrequest
 import (
 	"context"
 	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/jenkins-x/go-scm/scm"
@@ -183,7 +184,12 @@ func (o *CreatePullRequestOptions) Run() error {
 		return errors.Wrapf(err, "failed to create the PR details")
 	}
 
-	log.Logger().Infof("creating pull request on %s in dir %s", o.SourceURL, o.Dir)
+	dir, err := filepath.Abs(o.Dir)
+	if err != nil {
+		return errors.Wrapf(err, "failed to find absolute dir of %s", o.Dir)
+	}
+
+	log.Logger().Infof("creating pull request on %s in dir %s", o.SourceURL, dir)
 	o.Results, err = po.CreatePullRequest(scmClient, o.SourceURL, fullName, o.Dir, true)
 	if err != nil {
 		return errors.Wrapf(err, "failed to create PR")
