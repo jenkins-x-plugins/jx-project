@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/jenkins-x/go-scm/scm"
+	"github.com/jenkins-x/jx-helpers/pkg/cmdrunner"
 	"github.com/jenkins-x/jx-helpers/pkg/gitclient"
 	"github.com/jenkins-x/jx-helpers/pkg/gitclient/cli"
 	"github.com/jenkins-x/jx-helpers/pkg/gitclient/gitdiscovery"
@@ -103,6 +104,9 @@ func NewCmdCreatePullRequest() *cobra.Command {
 }
 
 func (o *CreatePullRequestOptions) Validate() error {
+	if o.CommandRunner == nil {
+		o.CommandRunner = cmdrunner.QuietCommandRunner
+	}
 	err := o.Options.Validate()
 	if err != nil {
 		return errors.Wrapf(err, "failed to validate options")
@@ -189,7 +193,7 @@ func (o *CreatePullRequestOptions) Run() error {
 		return errors.Wrapf(err, "failed to find absolute dir of %s", o.Dir)
 	}
 
-	log.Logger().Infof("creating pull request on %s in dir %s", o.SourceURL, dir)
+	log.Logger().Debugf("creating pull request on %s in dir %s", o.SourceURL, dir)
 	o.Results, err = po.CreatePullRequest(scmClient, o.SourceURL, fullName, o.Dir, true)
 	if err != nil {
 		return errors.Wrapf(err, "failed to create PR")
