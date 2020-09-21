@@ -174,6 +174,8 @@ func (o *CreatePullRequestOptions) Run() error {
 		ScmClient:     o.ScmClient,
 		BatchMode:     o.BatchMode,
 		Fork:          o.Fork,
+		CommitTitle:   o.Title,
+		CommitMessage: o.Body,
 	}
 
 	err = o.createPullRequestDetails(po)
@@ -181,6 +183,7 @@ func (o *CreatePullRequestOptions) Run() error {
 		return errors.Wrapf(err, "failed to create the PR details")
 	}
 
+	log.Logger().Infof("creating pull request on %s in dir %s", o.SourceURL, o.Dir)
 	o.Results, err = po.CreatePullRequest(scmClient, o.SourceURL, fullName, o.Dir, true)
 	if err != nil {
 		return errors.Wrapf(err, "failed to create PR")
