@@ -51,11 +51,11 @@ For more documentation see: https://jenkins-x.io/docs/using-jx/creating/import/
       --dry-run                        Performs local changes to the repo but skips the import into Jenkins X
       --external-jenkins-url string    The jenkins url that an external git provider needs to use
       --filter string                  If selecting projects to import from a Git provider this filters the list of repositories
-      --git-api-token string           The Git API token to use for creating new Git repositories
+      --git-api-token string           The Git API token to use for creating new Git repositories. If not specified it's loaded from the git credentials file
       --git-provider-kind string       Kind of Git server. If not specified, kind of server will be autodetected from Git provider URL. Possible values: bitbucketcloud, bitbucketserver, gitea, gitlab, github, fakegit
       --git-provider-url string        The Git server URL to create new Git repositories inside
       --git-public                     Create new Git repositories as public
-      --git-username string            The Git username to use for creating new Git repositories
+      --git-username string            The Git username to use for creating new Git repositories. If not specified it's loaded from the git credentials file
       --github                         If you wish to pick the repositories from GitHub to import
   -h, --help                           help for import
       --hpa                            should we enable the Horizontal Pod Autoscaler for this application.

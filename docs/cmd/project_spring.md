@@ -49,11 +49,11 @@ See Also:
       --docker-registry-org string     The name of the docker registry organisation to use. If not specified then the Git provider organisation will be used
       --dry-run                        Performs local changes to the repo but skips the import into Jenkins X
       --external-jenkins-url string    The jenkins url that an external git provider needs to use
-      --git-api-token string           The Git API token to use for creating new Git repositories
+      --git-api-token string           The Git API token to use for creating new Git repositories. If not specified it's loaded from the git credentials file
       --git-provider-kind string       Kind of Git server. If not specified, kind of server will be autodetected from Git provider URL. Possible values: bitbucketcloud, bitbucketserver, gitea, gitlab, github, fakegit
       --git-provider-url string        The Git server URL to create new Git repositories inside
       --git-public                     Create new Git repositories as public
-      --git-username string            The Git username to use for creating new Git repositories
+      --git-username string            The Git username to use for creating new Git repositories. If not specified it's loaded from the git credentials file
   -g, --group string                   Group ID to generate
   -h, --help                           help for spring
       --hpa                            should we enable the Horizontal Pod Autoscaler for this application.
