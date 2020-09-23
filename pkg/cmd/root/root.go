@@ -6,6 +6,7 @@ import (
 
 	"github.com/jenkins-x/jx-helpers/pkg/cobras/helper"
 	"github.com/jenkins-x/jx-helpers/pkg/input"
+	"github.com/jenkins-x/jx-helpers/pkg/input/survey"
 	"github.com/jenkins-x/jx-project/pkg/cmd/common"
 	"github.com/jenkins-x/jx-project/pkg/cmd/importcmd"
 	"github.com/jenkins-x/jx-project/pkg/cmd/root/pullrequest"
@@ -81,6 +82,10 @@ func NewCmdMain() (*cobra.Command, *WizardOptions) {
 
 // Run implements the command
 func (o *WizardOptions) Run() error {
+	if o.Input == nil {
+		o.Input = survey.NewInput()
+	}
+
 	name, err := o.Input.PickNameWithDefault(createProjectNames, "Which kind of project you want to create: ",
 		"", "there are a number of different wizards for creating or importing new projects.")
 	if err != nil {
