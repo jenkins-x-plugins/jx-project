@@ -39,12 +39,12 @@ For more documentation see: https://jenkins-x.io/developing/create-quickstart/
       --external-jenkins-url string    The jenkins url that an external git provider needs to use
   -f, --filter string                  The text filter
       --framework string               The framework to filter on
-      --git-api-token string           The Git API token to use for creating new Git repositories
+      --git-api-token string           The Git API token to use for creating new Git repositories. If not specified it's loaded from the git credentials file
       --git-host string                The Git server host if not using GitHub when pushing created project
       --git-provider-kind string       Kind of Git server. If not specified, kind of server will be autodetected from Git provider URL. Possible values: bitbucketcloud, bitbucketserver, gitea, gitlab, github, fakegit
       --git-provider-url string        The Git server URL to create new Git repositories inside
       --git-public                     Create new Git repositories as public
-      --git-username string            The Git username to use for creating new Git repositories
+      --git-username string            The Git username to use for creating new Git repositories. If not specified it's loaded from the git credentials file
   -h, --help                           help for quickstart
       --hpa                            should we enable the Horizontal Pod Autoscaler for this application.
       --import-commit-message string   Specifies the initial commit message used when importing the project
