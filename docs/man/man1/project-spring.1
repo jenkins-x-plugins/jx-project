@@ -49,6 +49,10 @@ jx create project :
     Artifact ID to generate
 
 .PP
+\fB\-b\fP, \fB\-\-batch\-mode\fP[=false]
+    Runs in batch mode without prompting for user input
+
+.PP
 \fB\-t\fP, \fB\-\-boot\-version\fP=""
     Spring Boot version
 
@@ -85,28 +89,24 @@ jx create project :
     Performs local changes to the repo but skips the import into Jenkins X
 
 .PP
-\fB\-\-external\-jenkins\-url\fP=""
-    The jenkins url that an external git provider needs to use
-
-.PP
-\fB\-\-git\-api\-token\fP=""
-    The Git API token to use for creating new Git repositories. If not specified it's loaded from the git credentials file
-
-.PP
-\fB\-\-git\-provider\-kind\fP=""
-    Kind of Git server. If not specified, kind of server will be autodetected from Git provider URL. Possible values: bitbucketcloud, bitbucketserver, gitea, gitlab, github, fakegit
+\fB\-\-git\-kind\fP=""
+    the kind of git server to connect to
 
 .PP
 \fB\-\-git\-provider\-url\fP=""
-    The Git server URL to create new Git repositories inside
+    Deprecated: please use \-\-git\-server
 
 .PP
-\fB\-\-git\-public\fP[=false]
-    Create new Git repositories as public
+\fB\-\-git\-server\fP=""
+    the git server URL to create the scm client
 
 .PP
-\fB\-\-git\-username\fP=""
-    The Git username to use for creating new Git repositories. If not specified it's loaded from the git credentials file
+\fB\-\-git\-token\fP=""
+    the git token used to operate on the git repository. If not specified it's loaded from the git credentials file
+
+.PP
+\fB\-\-git\-user\fP=""
+    the git username used to operate on the git repository
 
 .PP
 \fB\-g\fP, \fB\-\-group\fP=""
@@ -157,12 +157,20 @@ jx create project :
     Specify the Git repository name to import the project into (if it is not already in one)
 
 .PP
+\fB\-\-no\-dev\-pr\fP[=false]
+    disables generating a Pull Request on the development git repository
+
+.PP
 \fB\-\-no\-import\fP[=false]
     Disable import after the creation
 
 .PP
 \fB\-\-no\-pack\fP[=false]
     Disable trying to default a Dockerfile and Helm Chart from the build pack
+
+.PP
+\fB\-\-no\-start\fP[=false]
+    disables starting a release pipeline when imprting/creating a new project
 
 .PP
 \fB\-\-org\fP=""
@@ -181,6 +189,14 @@ jx create project :
     Packaging
 
 .PP
+\fB\-\-pr\-poll\-period\fP=20s
+    the time between polls of the Pull Request on the development environment git repository
+
+.PP
+\fB\-\-pr\-poll\-timeout\fP=20m0s
+    the maximum amount of time we wait for the Pull Request on the development environment git repository
+
+.PP
 \fB\-\-scheduler\fP=""
     The name of the Scheduler configuration to use for ChatOps when using Prow
 
@@ -195,6 +211,10 @@ jx create project :
 .PP
 \fB\-\-use\-default\-git\fP[=false]
     use default git account
+
+.PP
+\fB\-\-wait\-for\-pr\fP[=true]
+    waits for the Pull Request generated on the development envirionment git repository to merge
 
 
 .SH EXAMPLE
