@@ -1138,7 +1138,7 @@ func (o *ImportOptions) ensureDockerRepositoryExists() error {
 
 // ReplacePlaceholders replaces app name, git server name, git org, and docker registry org placeholders
 func (o *ImportOptions) ReplacePlaceholders(gitServerName, dockerRegistryOrg string) error {
-	o.Organisation = naming.ToValidName(strings.ToLower(o.Organisation))
+	safeOrganisationName := naming.ToValidName(strings.ToLower(o.Organisation))
 	o.GetReporter().Trace("replacing placeholders in directory %s", o.Dir)
 	o.GetReporter().Trace("app name: %s, git server: %s, org: %s, Docker registry org: %s", o.AppName, gitServerName, o.Organisation, dockerRegistryOrg)
 
@@ -1150,7 +1150,7 @@ func (o *ImportOptions) ReplacePlaceholders(gitServerName, dockerRegistryOrg str
 	replacer := strings.NewReplacer(
 		constants.PlaceHolderAppName, strings.ToLower(o.AppName),
 		constants.PlaceHolderGitProvider, strings.ToLower(gitServerName),
-		constants.PlaceHolderOrg, strings.ToLower(o.Organisation),
+		constants.PlaceHolderOrg, safeOrganisationName,
 		constants.PlaceHolderDockerRegistryOrg, strings.ToLower(dockerRegistryOrg))
 
 	pathsToRename := []string{} // Renaming must be done post-Walk
