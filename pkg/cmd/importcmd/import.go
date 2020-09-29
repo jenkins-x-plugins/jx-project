@@ -262,6 +262,13 @@ func (o *ImportOptions) Validate() error {
 			return errors.Wrapf(err, "failed to find the dev Environment")
 		}
 	}
+	if o.DevEnv == nil {
+		extraMessage := ""
+		if o.Namespace != "jx" {
+			extraMessage = " Please run 'jx ns jx' to switch to the development namespace and retry this command"
+		}
+		return errors.Errorf("could not find the dev Environment in the namespace %s.%s", o.Namespace, extraMessage)
+	}
 
 	if o.ScmFactory.GitServerURL == "" && o.GitProviderURL != "" {
 		o.ScmFactory.GitServerURL = o.GitProviderURL
