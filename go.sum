@@ -827,6 +827,7 @@ github.com/jenkins-x/jx-helpers v1.0.74/go.mod h1:k0xQ0xL1/BC2ENb7Z5EAZQJbv5BitD
 github.com/jenkins-x/jx-helpers v1.0.78/go.mod h1:k0xQ0xL1/BC2ENb7Z5EAZQJbv5BitD2hcOst+Od51UM=
 github.com/jenkins-x/jx-helpers v1.0.80 h1:OUE4la6sSvSfUk76KSkgWKzLC975vLB21IwutISrKL4=
 github.com/jenkins-x/jx-helpers v1.0.80/go.mod h1:k0xQ0xL1/BC2ENb7Z5EAZQJbv5BitD2hcOst+Od51UM=
+github.com/jenkins-x/jx-helpers v1.0.81/go.mod h1:k0xQ0xL1/BC2ENb7Z5EAZQJbv5BitD2hcOst+Od51UM=
 github.com/jenkins-x/jx-kube-client v0.0.8 h1:XK/TP2qnhHPb/vhaGHmvVilWGDtARIZ1DOEHp/6/h0Y=
 github.com/jenkins-x/jx-kube-client v0.0.8/go.mod h1:XvNZQAAF95wzQzSfCpehXwb5FI6WCg+5GiwVA2S4SPA=
 github.com/jenkins-x/jx-logging v0.0.11 h1:t4T653u6oy4SJ2VYlrY5rIobr16jJS9Gf8RWlHqtJvw=
@@ -838,6 +839,8 @@ github.com/jenkins-x/jx-promote v0.0.112/go.mod h1:ywkksBjWVsNtlRTZ8DeaRq2W1r2aw
 github.com/jenkins-x/jx-promote v0.0.120/go.mod h1:v1BIehruuseLtvAtqPczngeOkMO3SZqg1JdwAgh+XR4=
 github.com/jenkins-x/jx-promote v0.0.122 h1:aZEc+FjcMhNHalsMfpcLPTIWlA8LjtAxztuNvAG+YP0=
 github.com/jenkins-x/jx-promote v0.0.122/go.mod h1:OO3PEqnQEvtt0u8R4lW9wxdOVlCzW6ZvmkXn1GuGeFc=
+github.com/jenkins-x/jx-promote v0.0.124 h1:NjXHGCPFsuC0ukgDMLUkJU8C1x0ROQjefj/gpJsKVXs=
+github.com/jenkins-x/jx-promote v0.0.124/go.mod h1:OoPA9cohI/Fgjw/TNmnBuLlPZUe8Mu3KKDjVgash7/M=
 github.com/jenkins-x/lighthouse v0.0.824/go.mod h1:o4ZQzQmaLX8OKLMP/3Lap4OloAP7QUJpZRPY7tUI6LA=
 github.com/jenkins-x/lighthouse v0.0.826/go.mod h1:PDdUKNyQjbPlu1uA/IbvRgm0QXgU9wkHV+DpwWipKkE=
 github.com/jenkins-x/lighthouse v0.0.827/go.mod h1:PDdUKNyQjbPlu1uA/IbvRgm0QXgU9wkHV+DpwWipKkE=
