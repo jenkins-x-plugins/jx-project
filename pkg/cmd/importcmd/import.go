@@ -1057,6 +1057,8 @@ func (o *ImportOptions) addSourceConfigPullRequest(gitURL string, gitKind string
 		_, ao := add.NewCmdAddRepository()
 		ao.Args = []string{gitURL}
 		ao.Dir = dir
+		ao.JXClient = o.JXClient
+		ao.Namespace = o.Namespace
 		err := ao.Run()
 		if err != nil {
 			return errors.Wrapf(err, "failed to add git URL %s to the source-config.yaml file", gitURL)
