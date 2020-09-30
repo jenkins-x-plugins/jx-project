@@ -1043,6 +1043,17 @@ func (o *ImportOptions) addSourceConfigPullRequest(gitURL string, gitKind string
 		base = "master"
 	}
 
+	if o.SchedulerName == "" {
+		g := filepath.Join(o.Dir, ".lighthouse", "*", "triggers.yaml")
+		matches, err := filepath.Glob(g)
+		if err != nil {
+			return errors.Wrapf(err, "failed to evaluate glob %s", g)
+		}
+		if len(matches) > 0 {
+			o.SchedulerName = "in-repo"
+		}
+	}
+
 	pro := &environments.EnvironmentPullRequestOptions{
 		ScmClientFactory:  o.ScmFactory,
 		Gitter:            o.Git(),
@@ -1066,6 +1077,7 @@ func (o *ImportOptions) addSourceConfigPullRequest(gitURL string, gitKind string
 		ao.Dir = dir
 		ao.JXClient = o.JXClient
 		ao.Namespace = o.Namespace
+		ao.Scheduler = o.SchedulerName
 		err := ao.Run()
 		if err != nil {
 			return errors.Wrapf(err, "failed to add git URL %s to the source-config.yaml file", gitURL)
