@@ -9,19 +9,17 @@ import (
 	"path/filepath"
 	"testing"
 
+	v1 "github.com/jenkins-x/jx-api/pkg/apis/jenkins.io/v1"
 	"github.com/jenkins-x/jx-helpers/pkg/files"
 	"github.com/jenkins-x/jx-helpers/pkg/kube/jxenv"
 	"github.com/jenkins-x/jx-helpers/pkg/kube/naming"
 	"github.com/jenkins-x/jx-project/pkg/cmd/importcmd"
 	"github.com/jenkins-x/jx-project/pkg/cmd/testimports"
-	"github.com/jenkins-x/jx-project/pkg/config"
-
-	v1 "github.com/jenkins-x/jx-api/pkg/apis/jenkins.io/v1"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
-func TestImportKubeResourcesProject(t *testing.T) {
+func TestImportTektonCatalogProject(t *testing.T) {
 	tempDir, err := ioutil.TempDir("", "test-import-jx-gha-")
 	assert.NoError(t, err)
 
@@ -33,7 +31,7 @@ func TestImportKubeResourcesProject(t *testing.T) {
 	srcDir := filepath.Join(testData, name)
 	assert.DirExists(t, srcDir, "source dir does not exist")
 
-	buildPackURL := "https://github.com/jenkins-x/jxr-packs-kubernetes.git"
+	buildPackURL := "https://github.com/jenkins-x/jx3-pipeline-catalog.git"
 
 	testDir := tempDir
 
@@ -62,13 +60,14 @@ func TestImportKubeResourcesProject(t *testing.T) {
 	err = o.Run()
 	require.NoError(t, err, "Failed %s with %s", dirName, err)
 
-	assert.FileExists(t, filepath.Join(testDir, "Dockerfile"))
+	// lighthouse tekton pipelines...
+	assert.FileExists(t, filepath.Join(testDir, ".lighthouse", "jenkins-x", "triggers.yaml"))
+	assert.FileExists(t, filepath.Join(testDir, ".lighthouse", "jenkins-x", "release.yaml"))
+	assert.FileExists(t, filepath.Join(testDir, ".lighthouse", "jenkins-x", "pullrequest.yaml"))
+	assert.NoFileExists(t, filepath.Join(testDir, "jenkins-x.yml"))
+
+	// TODO
+	//assert.FileExists(t, filepath.Join(testDir, "Dockerfile"))
 	assert.FileExists(t, filepath.Join(testDir, "charts", dirName, "Chart.yaml"))
-	assert.FileExists(t, filepath.Join(testDir, "charts", dirName, "resources", "README.md"))
-	assert.FileExists(t, filepath.Join(testDir, config.ProjectConfigFileName))
-
-	projectConfig, projectFileName, err := config.LoadProjectConfig(testDir)
-	require.NoError(t, err, "could not load jenkins configuration at %s", testDir)
-
-	assert.Equal(t, "javascript", projectConfig.BuildPack, "buildPack property in file %s", projectFileName)
+	assert.FileExists(t, filepath.Join(testDir, "charts", dirName, "templates", "deployment.yaml"))
 }

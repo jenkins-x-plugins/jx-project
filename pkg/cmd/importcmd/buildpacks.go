@@ -315,18 +315,26 @@ func (o *ImportOptions) InvokeDraftPack(i *InvokeDraftPack) (string, error) {
 	}
 
 	if !jenkinsxYamlExists && i.CreateJenkinsxYamlIfMissing {
-		pipelineConfig, err := config.LoadProjectConfigFile(jenkinsxYaml)
+		// lets check if we have a lighthouse trigger
+		g := filepath.Join(dir, ".lighthouse", "*", "triggers.yaml")
+		matches, err := filepath.Glob(g)
 		if err != nil {
-			return pack, err
+			return pack, errors.Wrapf(err, "failed to evaluate glob %s", g)
 		}
-
-		// only update the build pack if its not currently set to none so that build packs can
-		// use a custom pipeline plugin mechanism
-		if pipelineConfig.BuildPack != pack && pipelineConfig.BuildPack != "none" {
-			pipelineConfig.BuildPack = pack
-			err = pipelineConfig.SaveConfig(jenkinsxYaml)
+		if len(matches) == 0 {
+			pipelineConfig, err := config.LoadProjectConfigFile(jenkinsxYaml)
 			if err != nil {
 				return pack, err
+			}
+
+			// only update the build pack if its not currently set to none so that build packs can
+			// use a custom pipeline plugin mechanism
+			if pipelineConfig.BuildPack != pack && pipelineConfig.BuildPack != "none" {
+				pipelineConfig.BuildPack = pack
+				err = pipelineConfig.SaveConfig(jenkinsxYaml)
+				if err != nil {
+					return pack, err
+				}
 			}
 		}
 	}
