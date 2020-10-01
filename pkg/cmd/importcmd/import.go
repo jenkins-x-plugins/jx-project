@@ -100,6 +100,7 @@ type ImportOptions struct {
 	CommandRunner                      cmdrunner.CommandRunner
 	DevEnv                             *v1.Environment
 
+	OnCompleteCallback    func() error
 	PostDraftPackCallback CallbackFn
 	gitInfo               *giturl.GitRepository
 	Destination           ImportDestination
@@ -416,21 +417,30 @@ func (o *ImportOptions) Run() error {
 		o.DisableBuildPack = true
 	}
 
-	if !o.DisableBuildPack {
-		err = o.EvaluateBuildPack(jenkinsfile)
+	o.OnCompleteCallback = func() error {
+		log.Logger().Infof("applying the pipeline catalog...")
+		if !o.DisableBuildPack {
+			err = o.EvaluateBuildPack(jenkinsfile)
+			if err != nil {
+				return err
+			}
+		}
+		err = o.fixDockerIgnoreFile()
 		if err != nil {
 			return err
 		}
 
-	}
-	err = o.fixDockerIgnoreFile()
-	if err != nil {
-		return err
-	}
-
-	err = o.fixMaven()
-	if err != nil {
-		return err
+		err = o.fixMaven()
+		if err != nil {
+			return err
+		}
+		if shouldClone {
+			err = gitclient.Push(o.Git(), o.Dir, "origin", false, "HEAD")
+			if err != nil {
+				return err
+			}
+		}
+		return nil
 	}
 
 	if o.DiscoveredGitURL == "" {
@@ -440,13 +450,6 @@ func (o *ImportOptions) Run() error {
 				if !o.DisableBuildPack {
 					log.Logger().Warn("Remote repository creation failed. In order to retry consider adding '--no-pack' option.")
 				}
-				return err
-			}
-		}
-	} else {
-		if shouldClone {
-			err = gitclient.Push(o.Git(), o.Dir, "origin", false, "HEAD")
-			if err != nil {
 				return err
 			}
 		}
@@ -1003,14 +1006,24 @@ func (o *ImportOptions) doImport() error {
 	repoFullName := scm.Join(o.Organisation, o.AppName)
 	c := &cmdrunner.Command{
 		Name: "jx",
-		Args: []string{"pipeline", "start", "-f", repoFullName, "--wait"},
+		Args: []string{"pipeline", "wait", "--owner", o.Organisation, "--repo", o.AppName},
 	}
 	_, err = o.CommandRunner(c)
 	if err != nil {
-		return errors.Wrapf(err, "failed to start pipeline for %s", repoFullName)
+		return errors.Wrapf(err, "failed to wait for the pipeline to be setup %s", repoFullName)
 	}
 
-	log.Logger().Infof("Started pipeline: %s", info(repoFullName))
+	// lets git push the build pack changes now to trigger a release
+	//
+	// TODO we could make this an optional Pull request etc?
+	if o.OnCompleteCallback != nil {
+		err = o.OnCompleteCallback()
+		if err != nil {
+			return errors.Wrapf(err, "failed to push git changes")
+		}
+	}
+
+	log.Logger().Infof("Pipeline should start soon for: %s", info(repoFullName))
 	log.Logger().Info("")
 	log.Logger().Infof("Watch pipeline activity via:    %s", info(fmt.Sprintf("jx get activity -f %s -w", repoFullName)))
 	log.Logger().Infof("Browse the pipeline log via:    %s", info(fmt.Sprintf("jx get build logs %s", repoFullName)))
