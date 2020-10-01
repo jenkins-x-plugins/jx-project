@@ -66,8 +66,7 @@ func TestImportTektonCatalogProject(t *testing.T) {
 	assert.FileExists(t, filepath.Join(testDir, ".lighthouse", "jenkins-x", "pullrequest.yaml"))
 	assert.NoFileExists(t, filepath.Join(testDir, "jenkins-x.yml"))
 
-	// TODO
-	//assert.FileExists(t, filepath.Join(testDir, "Dockerfile"))
+	assert.FileExists(t, filepath.Join(testDir, "Dockerfile"))
 	assert.FileExists(t, filepath.Join(testDir, "charts", dirName, "Chart.yaml"))
 	assert.FileExists(t, filepath.Join(testDir, "charts", dirName, "templates", "deployment.yaml"))
 }
