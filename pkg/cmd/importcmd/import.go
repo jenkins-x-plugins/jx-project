@@ -932,7 +932,7 @@ func (o *ImportOptions) DiscoverGit() error {
 		if o.BatchMode {
 			message = "Initial import"
 		} else {
-			message, err = o.Input.PickValue("Commit message: ", "fix: initial import", true, "Please enter the initial git commit message")
+			message, err = o.Input.PickValue("Commit message: ", "chore: initial import", true, "Please enter the initial git commit message")
 			if err != nil {
 				return errors.Wrapf(err, "failed to confirm commit message")
 			}
