@@ -14,7 +14,6 @@ import (
 	"github.com/jenkins-x/go-scm/scm"
 	v1 "github.com/jenkins-x/jx-api/pkg/apis/jenkins.io/v1"
 	"github.com/jenkins-x/jx-api/pkg/client/clientset/versioned"
-	"github.com/jenkins-x/jx-gitops/pkg/cmd/repository/add"
 	"github.com/jenkins-x/jx-helpers/pkg/cmdrunner"
 	"github.com/jenkins-x/jx-helpers/pkg/cobras/helper"
 	"github.com/jenkins-x/jx-helpers/pkg/cobras/templates"
@@ -38,7 +37,6 @@ import (
 	"github.com/jenkins-x/jx-project/pkg/constants"
 	"github.com/jenkins-x/jx-project/pkg/maven"
 	"github.com/jenkins-x/jx-project/pkg/prow"
-	"github.com/jenkins-x/jx-promote/pkg/environments"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"k8s.io/client-go/kubernetes"
@@ -417,14 +415,22 @@ func (o *ImportOptions) Run() error {
 		o.DisableBuildPack = true
 	}
 
+	if !o.DisableBuildPack {
+		err = o.EvaluateBuildPack(jenkinsfile)
+		if err != nil {
+			return err
+		}
+	}
+
 	o.OnCompleteCallback = func() error {
-		log.Logger().Infof("applying the pipeline catalog...")
 		if !o.DisableBuildPack {
-			err = o.EvaluateBuildPack(jenkinsfile)
+			log.Logger().Infof("committing the pipeline catalog changes...")
+			_, err = gitclient.AddAndCommitFiles(o.Git(), o.Dir, "Jenkins X build pack")
 			if err != nil {
 				return err
 			}
 		}
+
 		err = o.fixDockerIgnoreFile()
 		if err != nil {
 			return err
@@ -564,11 +570,10 @@ func (o *ImportOptions) HasJenkinsfile() (string, error) {
 func (o *ImportOptions) EvaluateBuildPack(jenkinsfile string) error {
 	// TODO this is a workaround of this draft issue:
 	// https://github.com/Azure/draft/issues/476
-	dir := o.Dir
 	var err error
 
 	args := &InvokeDraftPack{
-		Dir:             dir,
+		Dir:             o.Dir,
 		CustomDraftPack: o.Pack,
 		Jenkinsfile:     jenkinsfile,
 		InitialisedGit:  o.InitialisedGit,
@@ -625,8 +630,7 @@ func (o *ImportOptions) EvaluateBuildPack(jenkinsfile string) error {
 	}
 
 	if o.AppName == "" {
-		dir := o.Dir
-		_, defaultRepoName := filepath.Split(dir)
+		_, defaultRepoName := filepath.Split(o.Dir)
 
 		o.AppName, err = o.PickRepoName(o.Organisation, defaultRepoName, false)
 		if err != nil {
@@ -646,11 +650,6 @@ func (o *ImportOptions) EvaluateBuildPack(jenkinsfile string) error {
 		return err
 	}
 	err = o.CreateProwOwnersAliasesFile()
-	if err != nil {
-		return err
-	}
-
-	_, err = gitclient.AddAndCommitFiles(o.Git(), dir, "Jenkins X build pack")
 	if err != nil {
 		return err
 	}
@@ -1007,6 +1006,8 @@ func (o *ImportOptions) doImport() error {
 	c := &cmdrunner.Command{
 		Name: "jx",
 		Args: []string{"pipeline", "wait", "--owner", o.Organisation, "--repo", o.AppName},
+		Out:  os.Stdout,
+		Err:  os.Stderr,
 	}
 	_, err = o.CommandRunner(c)
 	if err != nil {
@@ -1033,99 +1034,6 @@ func (o *ImportOptions) doImport() error {
 	log.Logger().Infof("For more help on available commands see: %s", info("https://jenkins-x.io/developing/browsing/"))
 	log.Logger().Info("")
 
-	return nil
-}
-
-func (o *ImportOptions) addSourceConfigPullRequest(gitURL string, gitKind string) error {
-	if o.NoDevPullRequest {
-		return nil
-	}
-	devEnv, err := jxenv.GetDevEnvironment(o.JXClient, o.Namespace)
-	if err != nil {
-		return errors.Wrapf(err, "failed to find the dev Environment")
-	}
-
-	devGitURL := devEnv.Spec.Source.URL
-	if devGitURL == "" {
-		return errors.Errorf("no git source URL for Environment %s", devEnv.Name)
-	}
-
-	// lets generate a PR
-	base := devEnv.Spec.Source.Ref
-	if base == "" {
-		base = "master"
-	}
-
-	if o.SchedulerName == "" {
-		g := filepath.Join(o.Dir, ".lighthouse", "*", "triggers.yaml")
-		matches, err := filepath.Glob(g)
-		if err != nil {
-			return errors.Wrapf(err, "failed to evaluate glob %s", g)
-		}
-		if len(matches) > 0 {
-			o.SchedulerName = "in-repo"
-		}
-	}
-
-	pro := &environments.EnvironmentPullRequestOptions{
-		ScmClientFactory:  o.ScmFactory,
-		Gitter:            o.Git(),
-		CommandRunner:     o.CommandRunner,
-		GitKind:           o.ScmFactory.GitKind,
-		OutDir:            "",
-		BranchName:        "",
-		PullRequestNumber: 0,
-		CommitTitle:       "fix: import repository",
-		CommitMessage:     "",
-		ScmClient:         o.ScmFactory.ScmClient,
-		BatchMode:         o.BatchMode,
-		UseGitHubOAuth:    false,
-		Fork:              false,
-	}
-
-	pro.Function = func() error {
-		dir := pro.OutDir
-		_, ao := add.NewCmdAddRepository()
-		ao.Args = []string{gitURL}
-		ao.Dir = dir
-		ao.JXClient = o.JXClient
-		ao.Namespace = o.Namespace
-		ao.Scheduler = o.SchedulerName
-		err := ao.Run()
-		if err != nil {
-			return errors.Wrapf(err, "failed to add git URL %s to the source-config.yaml file", gitURL)
-		}
-
-		err = o.modifyDevEnvironmentSource(o.Dir, dir, o.gitInfo, gitURL, gitKind)
-		if err != nil {
-			return errors.Wrapf(err, "failed to modify remote cluster")
-		}
-		return nil
-	}
-
-	/** TODO
-	if pro.Username == "" {
-		pro.Username = o.getCurrentUser()
-		log.Logger().Infof("defaulting the user name to %s so we can create a PullRequest", pro.Username)
-	}
-	*/
-	prDetails := &scm.PullRequest{}
-
-	pr, err := pro.Create(devGitURL, "", prDetails, true)
-	if err != nil {
-		return errors.Wrapf(err, "failed to create Pull Request on the development environment git repository %s", devGitURL)
-	}
-	prURL := ""
-	if pr != nil {
-		prURL = pr.Link
-		if o.WaitForSourceRepositoryPullRequest {
-			err = o.waitForSourceRepositoryPullRequest(pr, devGitURL)
-			if err != nil {
-				return errors.Wrapf(err, "failed to wait for the Pull Request %s to merge", prURL)
-			}
-		}
-	}
-	o.GetReporter().CreatedDevRepoPullRequest(prURL, devGitURL)
 	return nil
 }
 

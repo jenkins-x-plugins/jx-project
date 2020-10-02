@@ -160,22 +160,13 @@ func assertImport(t *testing.T, testDir string, testcase string, importToJenkins
 			assert.FileExists(t, filepath.Join(testDir, jenkinsfile.Name))
 			assert.NoFileExists(t, filepath.Join(testDir, jenkinsfile.Name+".backup"))
 			assert.NoFileExists(t, filepath.Join(testDir, jenkinsfile.Name+"-Renamed"))
-			if importToJenkinsX {
-				assert.FileExists(t, filepath.Join(testDir, config.ProjectConfigFileName))
-			} else {
-				assert.NoFileExists(t, filepath.Join(testDir, config.ProjectConfigFileName))
-			}
+			assert.NoFileExists(t, filepath.Join(testDir, config.ProjectConfigFileName))
 		} else if importToJenkinsX {
 			assert.NoFileExists(t, jfname)
 		} else {
 			assert.FileExists(t, jfname)
 		}
 
-		if (dirName == "docker" || dirName == "docker-helm") && importToJenkinsX {
-			assert.FileExists(t, filepath.Join(testDir, "skaffold.yaml"))
-		} else if dirName == "helm" || dirName == "custom-jenkins" || !importToJenkinsX {
-			assert.NoFileExists(t, filepath.Join(testDir, "skaffold.yaml"))
-		}
 		if importToJenkinsX {
 			if dirName == "helm" || dirName == "custom-jenkins" {
 				assert.NoFileExists(t, filepath.Join(testDir, "Dockerfile"))

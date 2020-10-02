@@ -90,7 +90,7 @@ func (o *ImportOptions) PickBuildPackLibrary(i *InvokeDraftPack) (*v1.BuildPack,
 		}
 	}
 	if buildPackURL == "" {
-		buildPackURL = "https://github.com/jenkins-x/jxr-packs-kubernetes"
+		buildPackURL = "https://github.com/jenkins-x/jx3-pipeline-catalog"
 	}
 	if !found {
 		defaultName = "Team Build Pack"
