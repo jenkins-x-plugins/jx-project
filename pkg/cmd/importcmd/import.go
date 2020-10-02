@@ -1007,6 +1007,8 @@ func (o *ImportOptions) doImport() error {
 	c := &cmdrunner.Command{
 		Name: "jx",
 		Args: []string{"pipeline", "wait", "--owner", o.Organisation, "--repo", o.AppName},
+		Out:  os.Stdout,
+		Err:  os.Stderr,
 	}
 	_, err = o.CommandRunner(c)
 	if err != nil {
