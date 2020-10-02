@@ -46,6 +46,7 @@ func TestCreateQuickstartProjects(t *testing.T) {
 		pipelineFile := filepath.Join(appDir, "jenkins-x.yml")
 		assert.FileExists(t, filepath.Join(appDir, "Dockerfile"))
 		assert.FileExists(t, filepath.Join(appDir, "charts", appName, "Chart.yaml"))
-		assert.FileExists(t, pipelineFile)
+		assert.NoFileExists(t, pipelineFile)
+		assert.FileExists(t, filepath.Join(appDir, ".lighthouse", "jenkins-x", "triggers.yaml"))
 	}
 }
