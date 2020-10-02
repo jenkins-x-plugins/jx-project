@@ -13,8 +13,8 @@ require (
 	github.com/jbrukh/bayesian v0.0.0-20200318221351-d726b684ca4a // indirect
 	github.com/jenkins-x/go-scm v1.5.177
 	github.com/jenkins-x/jx-api v0.0.24
-	github.com/jenkins-x/jx-gitops v0.0.356
-	github.com/jenkins-x/jx-helpers v1.0.86
+	github.com/jenkins-x/jx-gitops v0.0.364
+	github.com/jenkins-x/jx-helpers v1.0.88
 	github.com/jenkins-x/jx-logging v0.0.11
 	github.com/jenkins-x/jx-promote v0.0.128
 	github.com/pkg/errors v0.9.1
