@@ -117,6 +117,8 @@ const (
 
 	jenkinsfileName = "Jenkinsfile"
 
+	jenkinsXfilename = "jenkins-x.yml"
+
 	jenkinsfileRunnerBuildPack = "jenkinsfilerunner"
 	jenkinsServerEnvVar        = "TRIGGER_JENKINS_SERVER"
 
@@ -407,11 +409,16 @@ func (o *ImportOptions) Run() error {
 	}
 	*/
 
+	// Don't pick a buildpack if it's a gitops repo or if the repo already has a jenkins-x.yml file
 	gitOpsRepo, err := IsGitOpsRepositoryWithPipeline(o.Dir)
 	if err != nil {
 		return errors.Wrapf(err, "failed to check if dir contains a gitops repository %s", o.Dir)
 	}
-	if gitOpsRepo {
+	jenkinsXfileExists, err := files.FileExists(filepath.Join(o.Dir, jenkinsXfilename))
+	if err != nil {
+		return errors.Wrapf(err, "failed to check if dir contains a %s file", jenkinsXfilename)
+	}
+	if gitOpsRepo || jenkinsXfileExists {
 		o.DisableBuildPack = true
 	}
 
