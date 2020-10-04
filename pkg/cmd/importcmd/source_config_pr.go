@@ -1,6 +1,7 @@
 package importcmd
 
 import (
+	"fmt"
 	"path/filepath"
 
 	"github.com/jenkins-x/go-scm/scm"
@@ -49,7 +50,7 @@ func (o *ImportOptions) addSourceConfigPullRequest(gitURL string, gitKind string
 		OutDir:            "",
 		BranchName:        "",
 		PullRequestNumber: 0,
-		CommitTitle:       "fix: import repository",
+		CommitTitle:       fmt.Sprintf("chore: import repository %s", gitURL),
 		CommitMessage:     "",
 		ScmClient:         o.ScmFactory.ScmClient,
 		BatchMode:         o.BatchMode,
