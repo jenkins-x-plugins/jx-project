@@ -33,6 +33,7 @@ import (
 	"github.com/jenkins-x/jx-helpers/pkg/termcolor"
 	"github.com/jenkins-x/jx-logging/pkg/log"
 	"github.com/jenkins-x/jx-project/pkg/cmd/common"
+	"github.com/jenkins-x/jx-project/pkg/config"
 	"github.com/jenkins-x/jx-project/pkg/constants"
 	"github.com/jenkins-x/jx-project/pkg/maven"
 	"github.com/jenkins-x/jx-project/pkg/prow"
@@ -406,12 +407,24 @@ func (o *ImportOptions) Run() error {
 	}
 	*/
 
-	gitOpsRepo, err := IsGitOpsRepositoryWithPipeline(o.Dir)
+	// lets disable the build pack if we have a jenkins-x.yml or a .lighthouse/*/triggers.yaml file
+	jxProjectFile := filepath.Join(o.Dir, config.ProjectConfigFileName)
+	jxProjectFileExists, err := files.FileExists(jxProjectFile)
 	if err != nil {
-		return errors.Wrapf(err, "failed to check if dir contains a gitops repository %s", o.Dir)
+		return errors.Wrapf(err, "failed to check if dir contains a %s file", jxProjectFile)
 	}
-	if gitOpsRepo {
+	if jxProjectFileExists {
 		o.DisableBuildPack = true
+	}
+	if !o.DisableBuildPack {
+		g := filepath.Join(o.Dir, ".lighthouse", "*", "triggers.yaml")
+		matches, err := filepath.Glob(g)
+		if err != nil {
+			return errors.Wrapf(err, "failed to evaluate glob %s", g)
+		}
+		if len(matches) > 0 {
+			o.DisableBuildPack = true
+		}
 	}
 
 	if !o.DisableBuildPack {
