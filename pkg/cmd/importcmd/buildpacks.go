@@ -1,23 +1,24 @@
 package importcmd
 
 import (
+	"context"
 	"fmt"
 	"io/ioutil"
 	"os"
 	"path/filepath"
 	"sort"
 
-	"github.com/jenkins-x/jx-helpers/pkg/files"
-	"github.com/jenkins-x/jx-helpers/pkg/kube/jxenv"
-	"github.com/jenkins-x/jx-helpers/pkg/termcolor"
+	"github.com/jenkins-x/jx-helpers/v3/pkg/files"
+	"github.com/jenkins-x/jx-helpers/v3/pkg/kube/jxenv"
+	"github.com/jenkins-x/jx-helpers/v3/pkg/termcolor"
 	"github.com/jenkins-x/jx-project/pkg/gitresolver"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	v1 "github.com/jenkins-x/jx-api/pkg/apis/jenkins.io/v1"
+	v1 "github.com/jenkins-x/jx-api/v3/pkg/apis/jenkins.io/v1"
 
 	"github.com/pkg/errors"
 
-	"github.com/jenkins-x/jx-logging/pkg/log"
+	"github.com/jenkins-x/jx-logging/v3/pkg/log"
 	"github.com/jenkins-x/jx-project/pkg/config"
 	jxdraft "github.com/jenkins-x/jx-project/pkg/draft"
 	"github.com/jenkins-x/jx-project/pkg/jenkinsfile"
@@ -56,7 +57,7 @@ func (o *ImportOptions) PickBuildPackLibrary(i *InvokeDraftPack) (*v1.BuildPack,
 		return nil, nil, errors.Wrapf(err, "failed to load the team settings")
 	}
 
-	list, err := jxClient.JenkinsV1().BuildPacks(ns).List(metav1.ListOptions{})
+	list, err := jxClient.JenkinsV1().BuildPacks(ns).List(context.TODO(), metav1.ListOptions{})
 	if err != nil && !apierrors.IsNotFound(err) {
 		return nil, settings, err
 	}

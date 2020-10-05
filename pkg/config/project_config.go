@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/jenkins-x/jx-helpers/pkg/files"
-	"github.com/jenkins-x/jx-helpers/pkg/yamls/validate"
+	"github.com/jenkins-x/jx-helpers/v3/pkg/files"
+	"github.com/jenkins-x/jx-helpers/v3/pkg/yamls/validate"
 	"github.com/jenkins-x/jx-project/pkg/jenkinsfile"
 	"github.com/jenkins-x/jx-project/pkg/tekton/syntax"
 	"github.com/pkg/errors"

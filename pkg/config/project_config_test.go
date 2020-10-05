@@ -5,8 +5,8 @@ package config_test
 import (
 	"testing"
 
-	"github.com/jenkins-x/jx-helpers/pkg/testhelpers"
-	"github.com/jenkins-x/jx-logging/pkg/log"
+	"github.com/jenkins-x/jx-helpers/v3/pkg/testhelpers"
+	"github.com/jenkins-x/jx-logging/v3/pkg/log"
 	"github.com/jenkins-x/jx-project/pkg/config"
 	"github.com/jenkins-x/jx-project/pkg/jenkinsfile"
 	"github.com/jenkins-x/jx-project/pkg/tekton/syntax"

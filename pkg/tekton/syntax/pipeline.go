@@ -14,12 +14,11 @@ import (
 	"strings"
 	"time"
 
-	v1 "github.com/jenkins-x/jx-api/pkg/apis/jenkins.io/v1"
-	"github.com/jenkins-x/jx-helpers/pkg/kube/naming"
-	"github.com/jenkins-x/jx-helpers/pkg/maps"
-	"github.com/jenkins-x/jx-helpers/pkg/termcolor"
-	"github.com/jenkins-x/jx-helpers/pkg/versionstream"
-	"github.com/jenkins-x/jx-logging/pkg/log"
+	"github.com/jenkins-x/jx-helpers/v3/pkg/kube/naming"
+	"github.com/jenkins-x/jx-helpers/v3/pkg/maps"
+	"github.com/jenkins-x/jx-helpers/v3/pkg/termcolor"
+	"github.com/jenkins-x/jx-helpers/v3/pkg/versionstream"
+	"github.com/jenkins-x/jx-logging/v3/pkg/log"
 	"github.com/jenkins-x/jx-project/pkg/constants"
 	"github.com/jenkins-x/jx-project/pkg/statement"
 	"github.com/pkg/errors"
@@ -839,7 +838,7 @@ func validateVolume(v *corev1.Volume, kubeClient kubernetes.Interface, ns string
 		}
 		if kubeClient != nil {
 			if v.Secret != nil {
-				_, err := kubeClient.CoreV1().Secrets(ns).Get(v.Secret.SecretName, metav1.GetOptions{})
+				_, err := kubeClient.CoreV1().Secrets(ns).Get(context.TODO(), v.Secret.SecretName, metav1.GetOptions{})
 				if err != nil {
 					return &apis.FieldError{
 						Message: fmt.Sprintf("Secret %s does not exist, so cannot be used as a volume", v.Secret.SecretName),
@@ -847,7 +846,7 @@ func validateVolume(v *corev1.Volume, kubeClient kubernetes.Interface, ns string
 					}
 				}
 			} else if v.PersistentVolumeClaim != nil {
-				_, err := kubeClient.CoreV1().PersistentVolumeClaims(ns).Get(v.PersistentVolumeClaim.ClaimName, metav1.GetOptions{})
+				_, err := kubeClient.CoreV1().PersistentVolumeClaims(ns).Get(context.TODO(), v.PersistentVolumeClaim.ClaimName, metav1.GetOptions{})
 				if err != nil {
 					return &apis.FieldError{
 						Message: fmt.Sprintf("PVC %s does not exist, so cannot be used as a volume", v.PersistentVolumeClaim.ClaimName),
@@ -1353,60 +1352,6 @@ type transformedStage struct {
 	// The stage immediately before this stage at the same depth, or nil if there is no such stage
 	PreviousSiblingStage *transformedStage
 	// TODO: Add the equivalent reverse relationship
-}
-
-func (ts transformedStage) toPipelineStructureStage() v1.PipelineStructureStage {
-	s := v1.PipelineStructureStage{
-		Name:  ts.Stage.Name,
-		Depth: ts.Depth,
-	}
-
-	if ts.EnclosingStage != nil {
-		s.Parent = &ts.EnclosingStage.Stage.Name
-	}
-
-	if ts.PreviousSiblingStage != nil {
-		s.Previous = &ts.PreviousSiblingStage.Stage.Name
-	}
-	// TODO: Add the equivalent reverse relationship
-
-	if ts.PipelineTask != nil {
-		s.TaskRef = &ts.PipelineTask.TaskRef.Name
-	}
-
-	if len(ts.Parallel) > 0 {
-		for _, n := range ts.Parallel {
-			s.Parallel = append(s.Parallel, n.Stage.Name)
-		}
-	}
-
-	if len(ts.Sequential) > 0 {
-		for _, n := range ts.Sequential {
-			s.Stages = append(s.Stages, n.Stage.Name)
-		}
-	}
-
-	return s
-}
-
-func (ts transformedStage) getAllAsPipelineStructureStages() []v1.PipelineStructureStage {
-	var stages []v1.PipelineStructureStage
-
-	stages = append(stages, ts.toPipelineStructureStage())
-
-	if len(ts.Parallel) > 0 {
-		for _, n := range ts.Parallel {
-			stages = append(stages, n.getAllAsPipelineStructureStages()...)
-		}
-	}
-
-	if len(ts.Sequential) > 0 {
-		for _, n := range ts.Sequential {
-			stages = append(stages, n.getAllAsPipelineStructureStages()...)
-		}
-	}
-
-	return stages
 }
 
 func (ts transformedStage) isSequential() bool {
@@ -1931,10 +1876,10 @@ type CRDsFromPipelineParams struct {
 	InterpretMode      bool
 }
 
-// GenerateCRDs translates the Pipeline structure into the corresponding Pipeline and Task CRDs
-func (j *ParsedPipeline) GenerateCRDs(params CRDsFromPipelineParams) (*tektonv1alpha1.Pipeline, []*tektonv1alpha1.Task, *v1.PipelineStructure, error) {
+// GenerateCRDs translates the Pipeline into the corresponding Pipeline and Task CRDs
+func (j *ParsedPipeline) GenerateCRDs(params CRDsFromPipelineParams) (*tektonv1alpha1.Pipeline, []*tektonv1alpha1.Task, error) {
 	if len(j.Post) != 0 {
-		return nil, nil, nil, errors.New("Post at top level not yet supported")
+		return nil, nil, errors.New("Post at top level not yet supported")
 	}
 
 	var parentContainer *corev1.Container
@@ -1946,7 +1891,7 @@ func (j *ParsedPipeline) GenerateCRDs(params CRDsFromPipelineParams) (*tektonv1a
 	if j.Options != nil {
 		o := j.Options
 		if o.Retry > 0 {
-			return nil, nil, nil, errors.New("Retry at top level not yet supported")
+			return nil, nil, errors.New("Retry at top level not yet supported")
 		}
 		parentContainer = o.ContainerOptions
 		parentSidecars = o.Sidecars
@@ -1974,15 +1919,8 @@ func (j *ParsedPipeline) GenerateCRDs(params CRDsFromPipelineParams) (*tektonv1a
 
 	p.SetDefaults(context.Background())
 
-	structure := &v1.PipelineStructure{
-		ObjectMeta: metav1.ObjectMeta{
-			Name: p.Name,
-		},
-	}
-
 	if len(params.Labels) > 0 {
 		p.Labels = maps.MergeMaps(params.Labels)
-		structure.Labels = maps.MergeMaps(params.Labels)
 	}
 
 	var previousStage *transformedStage
@@ -2008,7 +1946,7 @@ func (j *ParsedPipeline) GenerateCRDs(params CRDsFromPipelineParams) (*tektonv1a
 			previousSiblingStage: previousStage,
 		})
 		if err != nil {
-			return nil, nil, nil, err
+			return nil, nil, err
 		}
 
 		o := stage.Stage.Options
@@ -2036,10 +1974,10 @@ func (j *ParsedPipeline) GenerateCRDs(params CRDsFromPipelineParams) (*tektonv1a
 
 		tasks = append(tasks, linearTasks...)
 		p.Spec.Tasks = append(p.Spec.Tasks, pipelineTasks...)
-		structure.Stages = append(structure.Stages, stage.getAllAsPipelineStructureStages()...)
+
 	}
 
-	return p, tasks, structure, nil
+	return p, tasks, nil
 }
 
 func shouldRemoveWorkspaceOutput(stage *transformedStage, taskName string, index int, tasksLen int, isLastStage bool) bool {

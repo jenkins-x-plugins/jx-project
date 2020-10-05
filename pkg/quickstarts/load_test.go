@@ -7,7 +7,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	fakejx "github.com/jenkins-x/jx-api/pkg/client/clientset/versioned/fake"
+	fakejx "github.com/jenkins-x/jx-api/v3/pkg/client/clientset/versioned/fake"
 	"github.com/jenkins-x/jx-project/pkg/quickstarts"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
