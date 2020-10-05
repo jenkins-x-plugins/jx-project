@@ -4,7 +4,7 @@ import (
 	"os"
 	"strconv"
 
-	"github.com/jenkins-x/jx-logging/pkg/log"
+	"github.com/jenkins-x/jx-logging/v3/pkg/log"
 	"github.com/spf13/cobra"
 )
 

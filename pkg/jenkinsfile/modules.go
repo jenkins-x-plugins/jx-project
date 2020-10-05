@@ -1,7 +1,7 @@
 package jenkinsfile
 
 import (
-	"github.com/jenkins-x/jx-helpers/pkg/options"
+	"github.com/jenkins-x/jx-helpers/v3/pkg/options"
 )
 
 const (

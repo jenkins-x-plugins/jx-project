@@ -4,11 +4,11 @@ import (
 	"testing"
 
 	fakescm "github.com/jenkins-x/go-scm/scm/driver/fake"
-	fakejx "github.com/jenkins-x/jx-api/pkg/client/clientset/versioned/fake"
-	"github.com/jenkins-x/jx-helpers/pkg/cmdrunner"
-	"github.com/jenkins-x/jx-helpers/pkg/cmdrunner/fakerunner"
-	fakeinput "github.com/jenkins-x/jx-helpers/pkg/input/fake"
-	"github.com/jenkins-x/jx-helpers/pkg/kube/jxenv"
+	fakejx "github.com/jenkins-x/jx-api/v3/pkg/client/clientset/versioned/fake"
+	"github.com/jenkins-x/jx-helpers/v3/pkg/cmdrunner"
+	"github.com/jenkins-x/jx-helpers/v3/pkg/cmdrunner/fakerunner"
+	fakeinput "github.com/jenkins-x/jx-helpers/v3/pkg/input/fake"
+	"github.com/jenkins-x/jx-helpers/v3/pkg/kube/jxenv"
 	"github.com/jenkins-x/jx-project/pkg/cmd/importcmd"
 	"k8s.io/client-go/kubernetes/fake"
 )

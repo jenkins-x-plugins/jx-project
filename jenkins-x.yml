@@ -9,11 +9,11 @@ pipelineConfig:
       - name: make-linux
         step:
           sh: make linux
-          image: golang:1.13
+          image: golang:1.15
       - name: make-test
         step:
           sh: make test
-          image: golang:1.13
+          image: golang:1.15
       - name: container-build
         step:
           sh: /kaniko/executor $KANIKO_FLAGS --cache=true --cache-dir=/workspace --context=/workspace/source --dockerfile=/workspace/source/Dockerfile-preview --destination=$DOCKER_REGISTRY/$DOCKER_REGISTRY_ORG/jx-project:$VERSION --cache-repo=$DOCKER_REGISTRY/$DOCKER_REGISTRY_ORG/cache
@@ -42,7 +42,7 @@ pipelineConfig:
             steps:
               - name: release-binary
                 command: make release
-                image: golang:1.13
+                image: golang:1.15
               - name: changelog
                 command: jx step changelog --verbose --header-file=hack/changelog-header.md --version=$VERSION --rev=$PULL_BASE_SHA --output-markdown=changelog.md --update-release=false
               - name: upload-binaries
