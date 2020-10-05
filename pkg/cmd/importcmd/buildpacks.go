@@ -338,6 +338,18 @@ func (o *ImportOptions) InvokeDraftPack(i *InvokeDraftPack) (string, error) {
 			}
 		}
 	}
+
+	lighthouseDir := filepath.Join(packsDir, pack, ".lighthouse")
+	exists, err = files.DirExists(lighthouseDir)
+	if err != nil {
+		return pack, errors.Wrapf(err, "failed to detect lighthouse dir %s", lighthouseDir)
+	}
+	if exists {
+		err = o.createMissingLighthouseKptFiles(lighthouseDir, pack)
+		if err != nil {
+			return pack, errors.Wrapf(err, "failed to add missing Kptfiles for pipeline catalog")
+		}
+	}
 	return pack, nil
 }
 
