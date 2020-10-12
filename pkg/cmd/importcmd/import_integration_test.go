@@ -106,12 +106,13 @@ func testImportProject(t *testing.T, tempDir string, testcase string, srcDir str
 func assertImport(t *testing.T, testDir string, testcase string, importToJenkinsX bool, buildPackURL string) error {
 	_, dirName := filepath.Split(testDir)
 	dirName = naming.ToValidName(dirName)
-	o := &importcmd.ImportOptions{}
+	_, o := importcmd.NewCmdImportAndOptions()
 
 	testimports.SetFakeClients(t, o)
 	o.Dir = testDir
 	o.DisableMaven = true
 	o.UseDefaultGit = true
+	o.WaitForSourceRepositoryPullRequest = false
 
 	if dirName == "maven-camel" {
 		o.DeployKind = constants.DeployKindKnative

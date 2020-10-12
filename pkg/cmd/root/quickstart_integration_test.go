@@ -7,10 +7,8 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/jenkins-x/jx-project/pkg/cmd/importcmd"
 	"github.com/jenkins-x/jx-project/pkg/cmd/root"
 	"github.com/jenkins-x/jx-project/pkg/cmd/testimports"
-	"github.com/jenkins-x/jx-project/pkg/quickstarts"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -20,17 +18,10 @@ func TestCreateQuickstartProjects(t *testing.T) {
 
 	appName := "mynode"
 
-	o := &root.CreateQuickstartOptions{
-		Options: root.Options{
-			ImportOptions: importcmd.ImportOptions{},
-		},
-		// TODO
-		//GitHubOrganisations: []string{"petclinic-gcp"},
-		Filter: quickstarts.QuickstartFilter{
-			Text:        "node-http",
-			ProjectName: appName,
-		},
-	}
+	_, o := root.NewCmdCreateQuickstart()
+	o.Filter.Text = "node-http"
+	o.Filter.ProjectName = appName
+
 	testimports.SetFakeClients(t, &o.Options.ImportOptions)
 
 	o.Dir = testDir
@@ -38,6 +29,7 @@ func TestCreateQuickstartProjects(t *testing.T) {
 	o.DisableMaven = true
 	o.IgnoreTeam = true
 	o.Repository = appName
+	o.WaitForSourceRepositoryPullRequest = false
 
 	err = o.Run()
 	assert.NoError(t, err)

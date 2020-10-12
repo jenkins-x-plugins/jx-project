@@ -40,12 +40,13 @@ func TestImportGoLangProject(t *testing.T) {
 	files.CopyDir(srcDir, testDir, true)
 	_, dirName := filepath.Split(testDir)
 	dirName = naming.ToValidName(dirName)
-	o := &importcmd.ImportOptions{}
+	_, o := importcmd.NewCmdImportAndOptions()
 
 	testimports.SetFakeClients(t, o)
 	o.Dir = testDir
 	o.DisableMaven = true
 	o.UseDefaultGit = true
+	o.WaitForSourceRepositoryPullRequest = false
 
 	o.Destination.JenkinsX.Enabled = true
 	callback := func(env *v1.Environment) error {
