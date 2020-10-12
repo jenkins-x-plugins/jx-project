@@ -13,6 +13,7 @@ import (
 	"github.com/jenkins-x/go-scm/scm"
 	v1 "github.com/jenkins-x/jx-api/v3/pkg/apis/jenkins.io/v1"
 	"github.com/jenkins-x/jx-api/v3/pkg/client/clientset/versioned"
+	"github.com/jenkins-x/jx-helpers/v3/pkg/boot"
 	"github.com/jenkins-x/jx-helpers/v3/pkg/cmdrunner"
 	"github.com/jenkins-x/jx-helpers/v3/pkg/cobras/helper"
 	"github.com/jenkins-x/jx-helpers/v3/pkg/cobras/templates"
@@ -71,6 +72,8 @@ type ImportOptions struct {
 	ImportMode                         string
 	ServiceAccount                     string
 	Namespace                          string
+	OperatorNamespace                  string
+	BootSecretName                     string
 	DisableMaven                       bool
 	UseDefaultGit                      bool
 	GithubAppInstalled                 bool
@@ -97,6 +100,7 @@ type ImportOptions struct {
 	Gitter                             gitclient.Interface
 	CommandRunner                      cmdrunner.CommandRunner
 	DevEnv                             *v1.Environment
+	BootScmClient                      *scm.Client
 
 	OnCompleteCallback    func() error
 	PostDraftPackCallback CallbackFn
@@ -211,6 +215,8 @@ func (o *ImportOptions) AddImportFlags(cmd *cobra.Command, createProject bool) {
 	cmd.Flags().StringVarP(&o.Pack, "pack", "", "", "The name of the build pack to use. If none is specified it will be chosen based on matching the source code languages")
 	cmd.Flags().StringVarP(&o.SchedulerName, "scheduler", "", "", "The name of the Scheduler configuration to use for ChatOps when using Prow")
 	cmd.Flags().StringVarP(&o.DockerRegistryOrg, "docker-registry-org", "", "", "The name of the docker registry organisation to use. If not specified then the Git provider organisation will be used")
+	cmd.Flags().StringVarP(&o.OperatorNamespace, "operator-namespace", "", boot.GitOperatorNamespace, "The namespace where the git operator is installed")
+	cmd.Flags().StringVarP(&o.BootSecretName, "boot-secret-name", "", boot.SecretName, "The name of the boot secret")
 	// TODO
 	//cmd.Flags().StringVarP(&o.ExternalJenkinsBaseURL, "external-jenkins-url", "", "", "The jenkins url that an external git provider needs to use")
 	cmd.Flags().BoolVarP(&o.DisableMaven, "disable-updatebot", "", false, "disable updatebot-maven-plugin from attempting to fix/update the maven pom.xml")
@@ -474,6 +480,7 @@ func (o *ImportOptions) Run() error {
 		return nil
 	}
 
+	newRepository := false
 	if o.DiscoveredGitURL == "" {
 		if !o.DryRun {
 			err = o.CreateNewRemoteRepository()
@@ -483,7 +490,12 @@ func (o *ImportOptions) Run() error {
 				}
 				return err
 			}
+			newRepository = true
 		}
+	}
+	err = o.AddAndAcceptCollaborator(newRepository)
+	if err != nil {
+		return errors.Wrapf(err, "failed to add and accept collaborator")
 	}
 
 	if o.DryRun {
@@ -625,76 +637,6 @@ func (o *ImportOptions) CreateNewRemoteRepository() error {
 	}
 	repoURL := repo.Link
 	o.GetReporter().PushedGitRepository(repoURL)
-
-	githubAppMode, err := o.IsGitHubAppMode()
-	if err != nil {
-		return err
-	}
-
-	if !githubAppMode {
-		userName := o.getCurrentUser()
-
-		// If the user creating the repo is not the pipeline user, add the pipeline user as a contributor to the repo
-		if o.PipelineUserName != "" && o.PipelineUserName != userName && o.ScmFactory.GitServerURL == o.PipelineServer {
-			// Make the invitation
-			fullRepoName := scm.Join(o.Organisation, details.Name)
-			permission := "admin"
-			_, _, _, err = o.ScmFactory.ScmClient.Repositories.AddCollaborator(ctx, fullRepoName, o.PipelineUserName, permission)
-			if err != nil {
-				return errors.Wrapf(err, "failed to add %s as a collaborator to %s", o.PipelineUserName, fullRepoName)
-			}
-
-			/**
-			TODO
-			Load the git user / token for the pipeline bot user and approve the invite...
-
-			// If repo is put in an organisation that the pipeline user is not part of an invitation needs to be accepted.
-			// Create a new provider for the pipeline user
-			authConfig := authConfigSvc.Config()
-			if err != nil {
-				return err
-			}
-			pipelineUserAuth := authConfig.FindUserAuth(o.GitServer.URL, o.PipelineUserName)
-			if pipelineUserAuth == nil {
-				log.Logger().Warnf("Pipeline Git user credentials not found. %s will need to accept the invitation to collaborate"+
-					"on %s if %s is not part of %s.\n",
-					o.PipelineUserName, details.RepoName, o.PipelineUserName, details.Organisation)
-			} else {
-				pipelineServerAuth := authConfig.GetServer(authConfig.CurrentServer)
-				pipelineUserProvider, err := gits.CreateProvider(pipelineServerAuth, pipelineUserAuth, o.Git())
-				if err != nil {
-					return err
-				}
-
-				// Get all invitations for the pipeline user
-				// Wrapped in retry to not immediately fail the quickstart creation if APIs are flaky.
-				f := func() error {
-					invites, _, err := pipelineUserProvider.ListInvitations()
-					if err != nil {
-						return err
-					}
-					for _, x := range invites {
-						// Accept all invitations for the pipeline user
-						_, err = pipelineUserProvider.AcceptInvitation(*x.ID)
-						if err != nil {
-							return err
-						}
-					}
-					return nil
-				}
-				exponentialBackOff := backoff.NewExponentialBackOff()
-				timeout := 20 * time.Second
-				exponentialBackOff.MaxElapsedTime = timeout
-				exponentialBackOff.Reset()
-				err = backoff.Retry(f, exponentialBackOff)
-				if err != nil {
-					return err
-				}
-			}
-			*/
-
-		}
-	}
 	return nil
 }
 

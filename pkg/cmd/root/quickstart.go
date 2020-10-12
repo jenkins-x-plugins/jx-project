@@ -53,8 +53,8 @@ type CreateQuickstartOptions struct {
 }
 
 // NewCmdCreateQuickstart creates a command object for the "create" command
-func NewCmdCreateQuickstart() *cobra.Command {
-	options := &CreateQuickstartOptions{}
+func NewCmdCreateQuickstart() (*cobra.Command, *CreateQuickstartOptions) {
+	o := &CreateQuickstartOptions{}
 
 	cmd := &cobra.Command{
 		Use:     "quickstart",
@@ -63,23 +63,23 @@ func NewCmdCreateQuickstart() *cobra.Command {
 		Example: fmt.Sprintf(createQuickstartExample, common.BinaryName, common.BinaryName),
 		Aliases: []string{"arch"},
 		Run: func(cmd *cobra.Command, args []string) {
-			options.Args = args
-			err := options.Run()
+			o.Args = args
+			err := o.Run()
 			helper.CheckErr(err)
 		},
 	}
-	options.addCreateAppFlags(cmd)
+	o.addCreateAppFlags(cmd)
 
-	cmd.Flags().StringArrayVarP(&options.GitHubOrganisations, "organisations", "g", []string{}, "The GitHub organisations to query for quickstarts")
-	cmd.Flags().StringArrayVarP(&options.Filter.Tags, "tag", "t", []string{}, "The tags on the quickstarts to filter")
-	cmd.Flags().StringVarP(&options.Filter.Owner, "owner", "", "", "The owner to filter on")
-	cmd.Flags().StringVarP(&options.Filter.Language, "language", "l", "", "The language to filter on")
-	cmd.Flags().StringVarP(&options.Filter.Framework, "framework", "", "", "The framework to filter on")
-	cmd.Flags().StringVarP(&options.GitHost, "git-host", "", "", "The Git server host if not using GitHub when pushing created project")
-	cmd.Flags().StringVarP(&options.Filter.Text, "filter", "f", "", "The text filter")
-	cmd.Flags().StringVarP(&options.Filter.ProjectName, "project-name", "p", "", "The project name (for use with -b batch mode)")
-	cmd.Flags().BoolVarP(&options.Filter.AllowML, "machine-learning", "", false, "Allow machine-learning quickstarts in results")
-	return cmd
+	cmd.Flags().StringArrayVarP(&o.GitHubOrganisations, "organisations", "g", []string{}, "The GitHub organisations to query for quickstarts")
+	cmd.Flags().StringArrayVarP(&o.Filter.Tags, "tag", "t", []string{}, "The tags on the quickstarts to filter")
+	cmd.Flags().StringVarP(&o.Filter.Owner, "owner", "", "", "The owner to filter on")
+	cmd.Flags().StringVarP(&o.Filter.Language, "language", "l", "", "The language to filter on")
+	cmd.Flags().StringVarP(&o.Filter.Framework, "framework", "", "", "The framework to filter on")
+	cmd.Flags().StringVarP(&o.GitHost, "git-host", "", "", "The Git server host if not using GitHub when pushing created project")
+	cmd.Flags().StringVarP(&o.Filter.Text, "filter", "f", "", "The text filter")
+	cmd.Flags().StringVarP(&o.Filter.ProjectName, "project-name", "p", "", "The project name (for use with -b batch mode)")
+	cmd.Flags().BoolVarP(&o.Filter.AllowML, "machine-learning", "", false, "Allow machine-learning quickstarts in results")
+	return cmd, o
 }
 
 // Run implements the generic Create command

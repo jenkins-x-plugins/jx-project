@@ -3,6 +3,7 @@
 package importcmd_test
 
 import (
+	"context"
 	"io/ioutil"
 	"os"
 	"path"
@@ -38,13 +39,14 @@ func TestImportTektonCatalogProject(t *testing.T) {
 	files.CopyDir(srcDir, testDir, true)
 	_, dirName := filepath.Split(testDir)
 	dirName = naming.ToValidName(dirName)
-	o := &importcmd.ImportOptions{}
+	_, o := importcmd.NewCmdImportAndOptions()
 
 	testimports.SetFakeClients(t, o)
 
 	o.Dir = testDir
 	o.DisableMaven = true
 	o.UseDefaultGit = true
+	o.WaitForSourceRepositoryPullRequest = false
 
 	o.Destination.JenkinsX.Enabled = true
 	callback := func(env *v1.Environment) error {
@@ -70,4 +72,13 @@ func TestImportTektonCatalogProject(t *testing.T) {
 	assert.FileExists(t, filepath.Join(testDir, "Dockerfile"))
 	assert.FileExists(t, filepath.Join(testDir, "charts", dirName, "Chart.yaml"))
 	assert.FileExists(t, filepath.Join(testDir, "charts", dirName, "templates", "deployment.yaml"))
+
+	// lets verify the pipeline bot user is a collaborator on the repository
+	require.NotNil(t, o.BootScmClient, "should have created a boot SCM client")
+
+	ctx := context.Background()
+	_, repoFullName := filepath.Split(tempDir)
+	flag, _, err := o.ScmFactory.ScmClient.Repositories.IsCollaborator(ctx, repoFullName, testimports.PipelineUsername)
+	require.NoError(t, err, "failed to check for collaborator for repo %s user %s", repoFullName, testimports.PipelineUsername)
+	assert.True(t, flag, "should be a collaborator for repo %s user %s", repoFullName, testimports.PipelineUsername)
 }

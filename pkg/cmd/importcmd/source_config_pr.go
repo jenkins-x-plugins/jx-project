@@ -7,6 +7,7 @@ import (
 	"github.com/jenkins-x/go-scm/scm"
 	"github.com/jenkins-x/jx-gitops/pkg/cmd/repository/add"
 	"github.com/jenkins-x/jx-helpers/v3/pkg/kube/jxenv"
+	"github.com/jenkins-x/jx-helpers/v3/pkg/stringhelpers"
 	"github.com/jenkins-x/jx-promote/pkg/environments"
 	"github.com/pkg/errors"
 )
@@ -19,6 +20,8 @@ func (o *ImportOptions) addSourceConfigPullRequest(gitURL string, gitKind string
 	if err != nil {
 		return errors.Wrapf(err, "failed to find the dev Environment")
 	}
+
+	safeGitURL := stringhelpers.SanitizeURL(gitURL)
 
 	devGitURL := devEnv.Spec.Source.URL
 	if devGitURL == "" {
@@ -50,7 +53,7 @@ func (o *ImportOptions) addSourceConfigPullRequest(gitURL string, gitKind string
 		OutDir:            "",
 		BranchName:        "",
 		PullRequestNumber: 0,
-		CommitTitle:       fmt.Sprintf("chore: import repository %s", gitURL),
+		CommitTitle:       fmt.Sprintf("chore: import repository %s", safeGitURL),
 		CommitMessage:     "",
 		ScmClient:         o.ScmFactory.ScmClient,
 		BatchMode:         o.BatchMode,
@@ -61,17 +64,17 @@ func (o *ImportOptions) addSourceConfigPullRequest(gitURL string, gitKind string
 	pro.Function = func() error {
 		dir := pro.OutDir
 		_, ao := add.NewCmdAddRepository()
-		ao.Args = []string{gitURL}
+		ao.Args = []string{safeGitURL}
 		ao.Dir = dir
 		ao.JXClient = o.JXClient
 		ao.Namespace = o.Namespace
 		ao.Scheduler = o.SchedulerName
 		err := ao.Run()
 		if err != nil {
-			return errors.Wrapf(err, "failed to add git URL %s to the source-config.yaml file", gitURL)
+			return errors.Wrapf(err, "failed to add git URL %s to the source-config.yaml file", safeGitURL)
 		}
 
-		err = o.modifyDevEnvironmentSource(o.Dir, dir, o.gitInfo, gitURL, gitKind)
+		err = o.modifyDevEnvironmentSource(o.Dir, dir, o.gitInfo, safeGitURL, gitKind)
 		if err != nil {
 			return errors.Wrapf(err, "failed to modify remote cluster")
 		}

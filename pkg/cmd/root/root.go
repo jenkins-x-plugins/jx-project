@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/jenkins-x/jx-helpers/v3/pkg/cobras"
 	"github.com/jenkins-x/jx-helpers/v3/pkg/cobras/helper"
 	"github.com/jenkins-x/jx-helpers/v3/pkg/input"
 	"github.com/jenkins-x/jx-helpers/v3/pkg/input/survey"
@@ -72,7 +73,7 @@ func NewCmdMain() (*cobra.Command, *WizardOptions) {
 		},
 	}
 
-	cmd.AddCommand(NewCmdCreateQuickstart())
+	cmd.AddCommand(cobras.SplitCommand(NewCmdCreateQuickstart()))
 	cmd.AddCommand(NewCmdCreateSpring())
 	cmd.AddCommand(importcmd.NewCmdImport())
 	cmd.AddCommand(pullrequest.NewCmdCreatePullRequest())
