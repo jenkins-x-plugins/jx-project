@@ -23,8 +23,7 @@ import (
 	"github.com/jenkins-x/jx-helpers/v3/pkg/gitclient/gitdiscovery"
 	"github.com/jenkins-x/jx-helpers/v3/pkg/gitclient/giturl"
 	"github.com/jenkins-x/jx-helpers/v3/pkg/input"
-	"github.com/jenkins-x/jx-helpers/v3/pkg/input/batch"
-	"github.com/jenkins-x/jx-helpers/v3/pkg/input/survey"
+	"github.com/jenkins-x/jx-helpers/v3/pkg/input/inputfactory"
 	"github.com/jenkins-x/jx-helpers/v3/pkg/kube"
 	"github.com/jenkins-x/jx-helpers/v3/pkg/kube/jxclient"
 	"github.com/jenkins-x/jx-helpers/v3/pkg/kube/jxenv"
@@ -49,6 +48,8 @@ type CallbackFn func() error
 
 // ImportOptions options struct for jx-project import
 type ImportOptions struct {
+	options.BaseOptions
+
 	Args                               []string
 	RepoURL                            string
 	GitProviderURL                     string
@@ -87,7 +88,6 @@ type ImportOptions struct {
 	InitialisedGit                     bool
 	WaitForSourceRepositoryPullRequest bool
 	NoDevPullRequest                   bool
-	BatchMode                          bool
 	IgnoreExistingRepository           bool
 	PullRequestPollPeriod              time.Duration
 	PullRequestPollTimeout             time.Duration
@@ -228,7 +228,6 @@ func (o *ImportOptions) AddImportFlags(cmd *cobra.Command, createProject bool) {
 	cmd.Flags().BoolVarP(&o.Destination.JenkinsX.Enabled, "jx", "", false, "if you want to default to importing this project into Jenkins X instead of a Jenkins server if you have a mixed Jenkins X and Jenkins cluster")
 	cmd.Flags().StringVarP(&o.Destination.JenkinsfileRunner.Image, "jenkinsfilerunner", "", "", "if you want to import into Jenkins X with Jenkinsfilerunner this argument lets you specify the container image to use")
 	cmd.Flags().StringVar(&o.ServiceAccount, "service-account", "tekton-bot", "The Kubernetes ServiceAccount to use to run the initial pipeline")
-	cmd.Flags().BoolVarP(&o.BatchMode, "batch-mode", "b", false, "Runs in batch mode without prompting for user input")
 
 	cmd.Flags().BoolVarP(&o.WaitForSourceRepositoryPullRequest, "wait-for-pr", "", true, "waits for the Pull Request generated on the development envirionment git repository to merge")
 	cmd.Flags().BoolVarP(&o.NoDevPullRequest, "no-dev-pr", "", false, "disables generating a Pull Request on the development git repository")
@@ -236,18 +235,16 @@ func (o *ImportOptions) AddImportFlags(cmd *cobra.Command, createProject bool) {
 	cmd.Flags().DurationVarP(&o.PullRequestPollPeriod, "pr-poll-period", "", time.Second*20, "the time between polls of the Pull Request on the development environment git repository")
 	cmd.Flags().DurationVarP(&o.PullRequestPollTimeout, "pr-poll-timeout", "", time.Minute*20, "the maximum amount of time we wait for the Pull Request on the development environment git repository")
 
+	o.BaseOptions.AddBaseFlags(cmd)
 	o.ScmFactory.AddFlags(cmd)
 }
 
 // Validate validates the command line options
 func (o *ImportOptions) Validate() error {
 	if o.Input == nil {
-		if o.BatchMode {
-			o.Input = batch.NewBatchInput()
-		} else {
-			o.Input = survey.NewInput()
-		}
+		o.Input = inputfactory.NewInput(&o.BaseOptions)
 	}
+
 	var err error
 	o.KubeClient, o.Namespace, err = kube.LazyCreateKubeClientAndNamespace(o.KubeClient, o.Namespace)
 	if err != nil {
@@ -301,6 +298,9 @@ func (o *ImportOptions) Validate() error {
 	}
 
 	if o.ScmFactory.ScmClient == nil {
+		if !o.BatchMode && o.ScmFactory.Input == nil {
+			o.ScmFactory.Input = o.Input
+		}
 		o.ScmFactory.ScmClient, err = o.ScmFactory.Create()
 		if err != nil {
 			return errors.Wrapf(err, "failed to create ScmClient")
