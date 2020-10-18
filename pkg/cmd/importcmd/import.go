@@ -386,7 +386,6 @@ func (o *ImportOptions) Run() error {
 		}
 		_, o.AppName = filepath.Split(dir)
 	}
-	o.AppName = naming.ToValidName(strings.ToLower(o.AppName))
 
 	jenkinsfile, err := o.HasJenkinsfile()
 	if err != nil {
