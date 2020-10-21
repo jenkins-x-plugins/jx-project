@@ -44,6 +44,10 @@ func (o *ImportOptions) InitBuildPacks(i *InvokeDraftPack) (string, *v1.TeamSett
 		return "", settings, err
 	}
 
+	if o.PipelineCatalogDir != "" {
+		log.Logger().Infof("using the pipeline catalog dir %s", termcolor.ColorInfo(o.PipelineCatalogDir))
+		return o.PipelineCatalogDir, settings, err
+	}
 	dir, err := gitresolver.InitBuildPack(o.Git(), bp.Spec.GitURL, bp.Spec.GitRef)
 	return dir, settings, err
 }

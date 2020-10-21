@@ -75,6 +75,7 @@ type ImportOptions struct {
 	Namespace                          string
 	OperatorNamespace                  string
 	BootSecretName                     string
+	PipelineCatalogDir                 string
 	DisableMaven                       bool
 	UseDefaultGit                      bool
 	GithubAppInstalled                 bool
@@ -205,6 +206,8 @@ func (o *ImportOptions) AddImportFlags(cmd *cobra.Command, createProject bool) {
 	}
 	cmd.Flags().StringVarP(&o.GitProviderURL, "git-provider-url", "", "", "Deprecated: please use --git-server")
 	cmd.Flags().StringVarP(&o.Organisation, "org", "", "", "Specify the Git provider organisation to import the project into (if it is not already in one)")
+	cmd.Flags().StringVarP(&o.Dir, "dir", "", ".", "Specify the directory to import")
+	cmd.Flags().StringVarP(&o.PipelineCatalogDir, "pipeline-catalog-dir", "", "", "The pipeline catalog directory you want to use instead of the buildPackGitURL in the dev Environment Team settings. Generally only used for testing pipelines")
 	cmd.Flags().StringVarP(&o.Repository, "name", notCreateProject("n"), "", "Specify the Git repository name to import the project into (if it is not already in one)")
 	cmd.Flags().StringVarP(&o.Credentials, "credentials", notCreateProject("c"), "", "The Jenkins credentials name used by the job")
 	cmd.Flags().StringVarP(&o.Jenkinsfile, "jenkinsfile", notCreateProject("j"), "", "The name of the Jenkinsfile to use. If not specified then 'Jenkinsfile' will be used")
@@ -308,16 +311,11 @@ func (o *ImportOptions) Validate() error {
 	}
 
 	if o.Dir == "" {
-		args := o.Args
-		if len(args) > 0 {
-			o.Dir = args[0]
-		} else {
-			dir, err := os.Getwd()
-			if err != nil {
-				return err
-			}
-			o.Dir = dir
+		dir, err := os.Getwd()
+		if err != nil {
+			return err
 		}
+		o.Dir = dir
 	}
 	return nil
 }
