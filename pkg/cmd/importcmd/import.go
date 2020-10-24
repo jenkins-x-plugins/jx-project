@@ -491,14 +491,14 @@ func (o *ImportOptions) Run() error {
 			newRepository = true
 		}
 	}
+	if o.DryRun {
+		log.Logger().Info("dry-run so skipping actual import to Jenkins X")
+		return nil
+	}
+
 	err = o.AddAndAcceptCollaborator(newRepository)
 	if err != nil {
 		return errors.Wrapf(err, "failed to add and accept collaborator")
-	}
-
-	if o.DryRun {
-		log.Logger().Info("dry-run so skipping import to Jenkins X")
-		return nil
 	}
 
 	gitURL := ""
