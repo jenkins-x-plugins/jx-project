@@ -118,6 +118,8 @@ type ImportOptions struct {
 }
 
 const (
+	updateBotMavenPluginVersion = "RELEASE"
+
 	triggerPipelineBuildPack = "trigger-jenkins"
 
 	jenkinsfileName = "Jenkinsfile"
@@ -1160,36 +1162,35 @@ func (o *ImportOptions) fixMaven() error {
 		}
 
 		// lets ensure the mvn plugins are ok
-		out, err := o.CommandRunner(cmdrunner.NewCommand(dir, "mvn", "io.jenkins.updatebot:updatebot-maven-plugin:RELEASE:plugin", "-Dartifact=maven-deploy-plugin", "-Dversion="+constants.MinimumMavenDeployVersion))
+		out, err := o.CommandRunner(cmdrunner.NewCommand(dir, "mvn", "io.jenkins.updatebot:updatebot-maven-plugin:"+updateBotMavenPluginVersion+":plugin", "-Dartifact=maven-deploy-plugin", "-Dversion="+constants.MinimumMavenDeployVersion))
 		if err != nil {
 			return fmt.Errorf("Failed to update maven deploy plugin: %s output: %s", err, out)
 		}
-		out, err = o.CommandRunner(cmdrunner.NewCommand(dir, "mvn", "io.jenkins.updatebot:updatebot-maven-plugin:RELEASE:plugin", "-Dartifact=maven-surefire-plugin", "-Dversion=3.0.0-M1"))
+		out, err = o.CommandRunner(cmdrunner.NewCommand(dir, "mvn", "io.jenkins.updatebot:updatebot-maven-plugin:"+updateBotMavenPluginVersion+":plugin", "-Dartifact=maven-surefire-plugin", "-Dversion=3.0.0-M1"))
 		if err != nil {
 			return fmt.Errorf("Failed to update maven surefire plugin: %s output: %s", err, out)
 		}
-		if !o.DryRun {
-			_, err = gitclient.AddAndCommitFiles(o.Git(), dir, "fix:(plugins) use a better version of maven plugins")
-			if err != nil {
-				return err
-			}
+		_, err = gitclient.AddAndCommitFiles(o.Git(), dir, "fix:(plugins) use a better version of maven plugins")
+		if err != nil {
+			return err
 		}
 
 		// lets ensure the probe paths are ok
-		out, err = o.CommandRunner(cmdrunner.NewCommand(dir, "mvn", "io.jenkins.updatebot:updatebot-maven-plugin:RELEASE:chart"))
+		out, err = o.CommandRunner(cmdrunner.NewCommand(dir, "mvn", "io.jenkins.updatebot:updatebot-maven-plugin:"+updateBotMavenPluginVersion+":chart"))
 		if err != nil {
 			return fmt.Errorf("Failed to update chart: %s output: %s", err, out)
 		}
-		if !o.DryRun {
-			exists, err := files.FileExists(filepath.Join(dir, "charts"))
+		if out != "" {
+			log.Logger().Infof(out)
+		}
+		exists, err := files.FileExists(filepath.Join(dir, "charts"))
+		if err != nil {
+			return err
+		}
+		if exists {
+			_, err = gitclient.AddAndCommitFiles(o.Git(), dir, "fix:(chart) fix up the probe path")
 			if err != nil {
 				return err
-			}
-			if exists {
-				_, err = gitclient.AddAndCommitFiles(o.Git(), dir, "fix:(chart) fix up the probe path")
-				if err != nil {
-					return err
-				}
 			}
 		}
 	}
