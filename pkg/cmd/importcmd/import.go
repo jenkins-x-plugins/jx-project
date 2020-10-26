@@ -492,6 +492,12 @@ func (o *ImportOptions) Run() error {
 		}
 	}
 	if o.DryRun {
+		shouldClone = false
+		err = o.OnCompleteCallback()
+		if err != nil {
+			return errors.Wrapf(err, "failed to fix dockerfile and maven")
+		}
+
 		log.Logger().Info("dry-run so skipping actual import to Jenkins X")
 		return nil
 	}
@@ -1400,8 +1406,8 @@ func (o *ImportOptions) enableJenkinsfileRunnerPipeline(destination ImportDestin
 }
 */
 
-// PickBuildPackName if not in batch mode lets confirm to the user which build pack we are going to use
-func (o *ImportOptions) PickBuildPackName(i *InvokeDraftPack, dir string, chosenPack string) (string, error) {
+// PickCatalogFolderName if not in batch mode lets confirm to the user which catalog folder we are going to use
+func (o *ImportOptions) PickCatalogFolderName(i *InvokeDraftPack, dir string, chosenPack string) (string, error) {
 	if o.BatchMode || o.Pack != "" {
 		return chosenPack, nil
 	}
@@ -1417,8 +1423,8 @@ func (o *ImportOptions) PickBuildPackName(i *InvokeDraftPack, dir string, chosen
 		}
 	}
 
-	name, err := o.Input.PickNameWithDefault(names, "Confirm the build pack name you wish to use on this project", chosenPack,
-		"the build pack name is used to determine the automated pipeline for your source code")
+	name, err := o.Input.PickNameWithDefault(names, "Confirm the catalog folder you wish to use on this project", chosenPack,
+		"the catalog folder contains the tekton pipelines and associated files to be used on your source code")
 	return name, err
 }
 
