@@ -112,8 +112,8 @@ func (o *ImportOptions) PickBuildPackLibrary(i *InvokeDraftPack) (*v1.BuildPack,
 
 	name := defaultName
 	if !o.BatchMode {
-		name, err = o.Input.PickNameWithDefault(names, "Pick the build pack library you would like to use", defaultName,
-			"the build pack library contains the default pipelines and associated files")
+		name, err = o.Input.PickNameWithDefault(names, "Pick the pipeline catalog folder you would like to use", defaultName,
+			"the pipeline catalog folder contains the tekton pipelines and associated files")
 		if err != nil {
 			return nil, settings, errors.Wrap(err, "failed to pick the build pack name")
 		}
@@ -280,13 +280,13 @@ func (o *ImportOptions) InvokeDraftPack(i *InvokeDraftPack) (string, error) {
 	}
 
 	pack := filepath.Base(lpack)
-	pack, err = o.PickBuildPackName(i, packsDir, pack)
+	pack, err = o.PickCatalogFolderName(i, packsDir, pack)
 	if err != nil {
 		return "", err
 	}
 	lpack = filepath.Join(packsDir, pack)
 
-	log.Logger().Infof("selected build pack: %s", termcolor.ColorInfo(pack))
+	log.Logger().Infof("selected catalog folder: %s", termcolor.ColorInfo(pack))
 	i.CustomDraftPack = pack
 
 	if i.DisableAddFiles {
