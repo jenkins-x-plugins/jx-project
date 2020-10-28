@@ -456,7 +456,7 @@ func (o *ImportOptions) Run() error {
 	o.OnCompleteCallback = func() error {
 		if !o.DisableBuildPack {
 			log.Logger().Infof("committing the pipeline catalog changes...")
-			_, err = gitclient.AddAndCommitFiles(o.Git(), o.Dir, "Jenkins X build pack")
+			_, err = gitclient.AddAndCommitFiles(o.Git(), o.Dir, "chore: Jenkins X build pack")
 			if err != nil {
 				return err
 			}
@@ -736,7 +736,7 @@ func (o *ImportOptions) DiscoverGit() error {
 	message := o.ImportGitCommitMessage
 	if message == "" {
 		if o.BatchMode {
-			message = "Initial import"
+			message = "chore: initial import"
 		} else {
 			message, err = o.Input.PickValue("Commit message: ", "chore: initial import", true, "Please enter the initial git commit message")
 			if err != nil {
@@ -1170,7 +1170,7 @@ func (o *ImportOptions) fixMaven() error {
 		if err != nil {
 			return fmt.Errorf("Failed to update maven surefire plugin: %s output: %s", err, out)
 		}
-		_, err = gitclient.AddAndCommitFiles(o.Git(), dir, "fix:(plugins) use a better version of maven plugins")
+		_, err = gitclient.AddAndCommitFiles(o.Git(), dir, "fix(plugins): use a better version of maven plugins")
 		if err != nil {
 			return err
 		}
@@ -1188,7 +1188,7 @@ func (o *ImportOptions) fixMaven() error {
 			return err
 		}
 		if exists {
-			_, err = gitclient.AddAndCommitFiles(o.Git(), dir, "fix:(chart) fix up the probe path")
+			_, err = gitclient.AddAndCommitFiles(o.Git(), dir, "fix(chart): fix up the probe path")
 			if err != nil {
 				return err
 			}

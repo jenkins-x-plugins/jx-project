@@ -49,7 +49,7 @@ func TestBuildPackInitClone(t *testing.T) {
 	readmePath := filepath.Join(remoteRepo, readme)
 	err = ioutil.WriteFile(readmePath, []byte(initialReadme), 0600)
 	assert.NoError(t, err)
-	_, err = gitclient.AddAndCommitFiles(gitter, remoteRepo, "Initial Commit")
+	_, err = gitclient.AddAndCommitFiles(gitter, remoteRepo, "chore: Initial Commit")
 	assert.NoError(t, err, "failed to add and commit files")
 
 	// Prepare another git repo, this is local repo
