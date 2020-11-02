@@ -59,6 +59,7 @@ func (o *ImportOptions) addSourceConfigPullRequest(gitURL string, gitKind string
 		BatchMode:         o.BatchMode,
 		UseGitHubOAuth:    false,
 		Fork:              false,
+		Labels:            []string{"env/dev"},
 	}
 
 	pro.Function = func() error {
