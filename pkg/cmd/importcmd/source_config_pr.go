@@ -90,7 +90,7 @@ func (o *ImportOptions) addSourceConfigPullRequest(gitURL string, gitKind string
 	*/
 	prDetails := &scm.PullRequest{}
 
-	pr, err := pro.Create(devGitURL, "", prDetails, true)
+	pr, err := pro.Create(devGitURL, "", prDetails, false)
 	if err != nil {
 		return errors.Wrapf(err, "failed to create Pull Request on the development environment git repository %s", devGitURL)
 	}
