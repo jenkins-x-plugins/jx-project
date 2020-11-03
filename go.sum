@@ -883,12 +883,12 @@ github.com/jenkins-x/jx-kube-client/v3 v3.0.1/go.mod h1:0CYp1ACEgSmOxul1bx5qbZgQ
 github.com/jenkins-x/jx-logging/v3 v3.0.0/go.mod h1:bOYlj+Cdd9v7/vDXjkwlUylxGs5sfQJvYnuYbCL0IrY=
 github.com/jenkins-x/jx-logging/v3 v3.0.2 h1:9IEeySM86yECc520Spaq38xO8JIpb6QDl1jFBEQHAwg=
 github.com/jenkins-x/jx-logging/v3 v3.0.2/go.mod h1:Vp2ER2SYgGhAgEEHlLwfi2ZB54tz6ya1qExq0A4CKMI=
-github.com/jenkins-x/jx-promote v0.0.139 h1:JG7p5Yo+XZ3CQSrxERffV1VXf/nr6cHKmfIvHcShdt0=
-github.com/jenkins-x/jx-promote v0.0.139/go.mod h1:cYiImdKG0aK4j3LWEWSjIuWLfPeqxjvw6G40dw9hoyI=
+github.com/jenkins-x/jx-promote v0.0.140 h1:whsQSIryZzYwqaVY3sRORcS3xk+JmTSHiedH728rVRI=
+github.com/jenkins-x/jx-promote v0.0.140/go.mod h1:JH8hlOEjOS5tmtpi5ZkYa0aDDMJ9ZcH6EZ8X5/oAB8U=
 github.com/jenkins-x/jx-secret v0.0.172/go.mod h1:1p58leAkNkypZlG35UbcfV7zbFfCoYiRY7RoQpl5csA=
 github.com/jenkins-x/jx-secret v0.0.173/go.mod h1:1p58leAkNkypZlG35UbcfV7zbFfCoYiRY7RoQpl5csA=
 github.com/jenkins-x/lighthouse v0.0.865/go.mod h1:L4+XbCH0QKySF7osQY02haNWnGtCJ2sYpq+W52O/NIs=
-github.com/jenkins-x/lighthouse v0.0.869/go.mod h1:L4+XbCH0QKySF7osQY02haNWnGtCJ2sYpq+W52O/NIs=
+github.com/jenkins-x/lighthouse v0.0.870/go.mod h1:L4+XbCH0QKySF7osQY02haNWnGtCJ2sYpq+W52O/NIs=
 github.com/jenkins-x/logrus-stackdriver-formatter v0.2.3 h1:NuRWKUPCEX1wKlXA8ZYSG28qGKd41R7BK11YDQkPwqo=
 github.com/jenkins-x/logrus-stackdriver-formatter v0.2.3/go.mod h1:litPp7VZWDRCl8LvXuqGngy+65kkg/+T23TgFnDmfTk=
 github.com/jenkins-x/pipeline v0.3.2-0.20201002150609-ca0741e5d19a h1:61elqi3/+fzUXLGEX7WwR9MUlsnWD2LRsAUK3ov5EgQ=
