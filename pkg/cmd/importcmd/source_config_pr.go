@@ -29,11 +29,6 @@ func (o *ImportOptions) addSourceConfigPullRequest(gitURL string, gitKind string
 	}
 
 	// lets generate a PR
-	base := devEnv.Spec.Source.Ref
-	if base == "" {
-		base = "master"
-	}
-
 	if o.SchedulerName == "" {
 		g := filepath.Join(o.Dir, ".lighthouse", "*", "triggers.yaml")
 		matches, err := filepath.Glob(g)
