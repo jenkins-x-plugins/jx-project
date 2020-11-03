@@ -883,8 +883,8 @@ github.com/jenkins-x/jx-kube-client/v3 v3.0.1/go.mod h1:0CYp1ACEgSmOxul1bx5qbZgQ
 github.com/jenkins-x/jx-logging/v3 v3.0.0/go.mod h1:bOYlj+Cdd9v7/vDXjkwlUylxGs5sfQJvYnuYbCL0IrY=
 github.com/jenkins-x/jx-logging/v3 v3.0.2 h1:9IEeySM86yECc520Spaq38xO8JIpb6QDl1jFBEQHAwg=
 github.com/jenkins-x/jx-logging/v3 v3.0.2/go.mod h1:Vp2ER2SYgGhAgEEHlLwfi2ZB54tz6ya1qExq0A4CKMI=
-github.com/jenkins-x/jx-promote v0.0.138 h1:LR5SZYq70xDldykI/kX5BO7A6OYhYSIX39hd1vkgzLw=
-github.com/jenkins-x/jx-promote v0.0.138/go.mod h1:cYiImdKG0aK4j3LWEWSjIuWLfPeqxjvw6G40dw9hoyI=
+github.com/jenkins-x/jx-promote v0.0.139 h1:JG7p5Yo+XZ3CQSrxERffV1VXf/nr6cHKmfIvHcShdt0=
+github.com/jenkins-x/jx-promote v0.0.139/go.mod h1:cYiImdKG0aK4j3LWEWSjIuWLfPeqxjvw6G40dw9hoyI=
 github.com/jenkins-x/jx-secret v0.0.172/go.mod h1:1p58leAkNkypZlG35UbcfV7zbFfCoYiRY7RoQpl5csA=
 github.com/jenkins-x/jx-secret v0.0.173/go.mod h1:1p58leAkNkypZlG35UbcfV7zbFfCoYiRY7RoQpl5csA=
 github.com/jenkins-x/lighthouse v0.0.865/go.mod h1:L4+XbCH0QKySF7osQY02haNWnGtCJ2sYpq+W52O/NIs=
