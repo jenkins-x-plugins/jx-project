@@ -11,6 +11,7 @@ import (
 	"github.com/jenkins-x/jx-helpers/v3/pkg/cobras/helper"
 	"github.com/jenkins-x/jx-helpers/v3/pkg/files"
 	"github.com/jenkins-x/jx-helpers/v3/pkg/gitclient"
+	"github.com/jenkins-x/jx-helpers/v3/pkg/gitclient/giturl"
 	"github.com/jenkins-x/jx-helpers/v3/pkg/options"
 	"github.com/jenkins-x/jx-project/pkg/cmd/common"
 	"github.com/jenkins-x/jx-project/pkg/cmd/importcmd"
@@ -201,6 +202,11 @@ func (o *CreateQuickstartOptions) CreateQuickStart(q *quickstarts.QuickstartForm
 
 	// Prevent accidental attempts to use ML Project Sets in create quickstart
 	gitToken := o.ScmFactory.GitToken
+
+	// lets not pass in a token if we are not using github
+	if !strings.HasPrefix(o.ScmFactory.GitServerURL, giturl.GitHubURL) {
+		gitToken = ""
+	}
 	if isMLProjectSet(q.Quickstart, currentUser, gitToken) {
 		return fmt.Errorf("you have tried to select a machine-learning quickstart projectset please try again using jx create mlquickstart instead")
 	}
