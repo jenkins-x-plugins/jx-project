@@ -884,6 +884,7 @@ github.com/jenkins-x/jx-logging/v3 v3.0.2 h1:9IEeySM86yECc520Spaq38xO8JIpb6QDl1j
 github.com/jenkins-x/jx-logging/v3 v3.0.2/go.mod h1:Vp2ER2SYgGhAgEEHlLwfi2ZB54tz6ya1qExq0A4CKMI=
 github.com/jenkins-x/jx-promote v0.0.142 h1:lEExPkmRQm/mf5FZ5UDQ1DuJcuMyJW3q4EnNwVYiY8w=
 github.com/jenkins-x/jx-promote v0.0.142/go.mod h1:MfUlIUJI0g0eKEgPKDTbiXmt4XXOFDKonCWDcCLspM8=
+github.com/jenkins-x/jx-promote v0.0.143/go.mod h1:MfUlIUJI0g0eKEgPKDTbiXmt4XXOFDKonCWDcCLspM8=
 github.com/jenkins-x/jx-secret v0.0.173/go.mod h1:1p58leAkNkypZlG35UbcfV7zbFfCoYiRY7RoQpl5csA=
 github.com/jenkins-x/lighthouse v0.0.873/go.mod h1:L4+XbCH0QKySF7osQY02haNWnGtCJ2sYpq+W52O/NIs=
 github.com/jenkins-x/lighthouse v0.0.874/go.mod h1:L4+XbCH0QKySF7osQY02haNWnGtCJ2sYpq+W52O/NIs=
