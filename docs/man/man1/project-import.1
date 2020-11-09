@@ -38,6 +38,10 @@ For more documentation see:
     Runs in batch mode without prompting for user input
 
 .PP
+\fB\-\-boot\-secret\-name\fP="jx\-boot"
+    The name of the boot secret
+
+.PP
 \fB\-\-branches\fP=""
     The branch pattern for branches to trigger CI/CD pipelines on
 
@@ -52,6 +56,10 @@ For more documentation see:
 .PP
 \fB\-\-deploy\-kind\fP=""
     The kind of deployment to use for the project. Should be one of knative, default
+
+.PP
+\fB\-\-dir\fP="."
+    Specify the directory to import
 
 .PP
 \fB\-\-disable\-updatebot\fP[=false]
@@ -86,8 +94,8 @@ For more documentation see:
     the git token used to operate on the git repository. If not specified it's loaded from the git credentials file
 
 .PP
-\fB\-\-git\-user\fP=""
-    the git username used to operate on the git repository
+\fB\-\-git\-username\fP=""
+    the git username used to operate on the git repository. If not specified it's loaded from the git credentials file
 
 .PP
 \fB\-\-github\fP[=false]
@@ -126,7 +134,11 @@ For more documentation see:
     if you want to default to importing this project into Jenkins X instead of a Jenkins server if you have a mixed Jenkins X and Jenkins cluster
 
 .PP
-\fB\-\-name\fP="n"
+\fB\-\-log\-level\fP=""
+    Sets the logging level. If not specified defaults to $JX\_LOG\_LEVEL
+
+.PP
+\fB\-n\fP, \fB\-\-name\fP=""
     Specify the Git repository name to import the project into (if it is not already in one)
 
 .PP
@@ -146,12 +158,20 @@ For more documentation see:
     disables starting a release pipeline when imprting/creating a new project
 
 .PP
+\fB\-\-operator\-namespace\fP="jx\-git\-operator"
+    The namespace where the git operator is installed
+
+.PP
 \fB\-\-org\fP=""
     Specify the Git provider organisation to import the project into (if it is not already in one)
 
 .PP
 \fB\-\-pack\fP=""
     The name of the build pack to use. If none is specified it will be chosen based on matching the source code languages
+
+.PP
+\fB\-\-pipeline\-catalog\-dir\fP=""
+    The pipeline catalog directory you want to use instead of the buildPackGitURL in the dev Environment Team settings. Generally only used for testing pipelines
 
 .PP
 \fB\-\-pr\-poll\-period\fP=20s
@@ -180,6 +200,10 @@ For more documentation see:
 .PP
 \fB\-\-use\-default\-git\fP[=false]
     use default git account
+
+.PP
+\fB\-\-verbose\fP[=false]
+    Enables verbose output. The environment variable JX\_LOG\_LEVEL has precedence over this flag and allows setting the logging level to any value of: panic, fatal, error, warn, info, debug, trace
 
 .PP
 \fB\-\-wait\-for\-pr\fP[=true]

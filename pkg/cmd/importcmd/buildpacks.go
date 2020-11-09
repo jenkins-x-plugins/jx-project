@@ -1,28 +1,27 @@
 package importcmd
 
 import (
-	"context"
 	"fmt"
 	"io/ioutil"
 	"os"
 	"path/filepath"
 	"sort"
 
-	"github.com/jenkins-x/jx-helpers/v3/pkg/files"
-	"github.com/jenkins-x/jx-helpers/v3/pkg/kube/jxenv"
-	"github.com/jenkins-x/jx-helpers/v3/pkg/termcolor"
-	"github.com/jenkins-x/jx-project/pkg/gitresolver"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-
 	v1 "github.com/jenkins-x/jx-api/v3/pkg/apis/jenkins.io/v1"
+	reqcfg "github.com/jenkins-x/jx-api/v3/pkg/config"
+	"github.com/jenkins-x/jx-helpers/v3/pkg/files"
+	"github.com/jenkins-x/jx-helpers/v3/pkg/gitclient"
+	"github.com/jenkins-x/jx-helpers/v3/pkg/termcolor"
+	"github.com/jenkins-x/jx-helpers/v3/pkg/yamls"
+	"github.com/jenkins-x/jx-project/pkg/apis/project/v1alpha1"
+	"github.com/jenkins-x/jx-project/pkg/config"
+	"github.com/jenkins-x/jx-project/pkg/gitresolver"
 
 	"github.com/pkg/errors"
 
 	"github.com/jenkins-x/jx-logging/v3/pkg/log"
-	"github.com/jenkins-x/jx-project/pkg/config"
 	jxdraft "github.com/jenkins-x/jx-project/pkg/draft"
 	"github.com/jenkins-x/jx-project/pkg/jenkinsfile"
-	apierrors "k8s.io/apimachinery/pkg/api/errors"
 )
 
 // InvokeDraftPack used to pass arguments into the draft pack invocation
@@ -39,7 +38,7 @@ type InvokeDraftPack struct {
 
 // InitBuildPacks initialise the build packs
 func (o *ImportOptions) InitBuildPacks(i *InvokeDraftPack) (string, *v1.TeamSettings, error) {
-	bp, settings, err := o.PickBuildPackLibrary(i)
+	bp, settings, err := o.PickPipelineCatalog(i)
 	if err != nil {
 		return "", settings, err
 	}
@@ -48,75 +47,102 @@ func (o *ImportOptions) InitBuildPacks(i *InvokeDraftPack) (string, *v1.TeamSett
 		log.Logger().Infof("using the pipeline catalog dir %s", termcolor.ColorInfo(o.PipelineCatalogDir))
 		return o.PipelineCatalogDir, settings, err
 	}
-	dir, err := gitresolver.InitBuildPack(o.Git(), bp.Spec.GitURL, bp.Spec.GitRef)
+	dir, err := gitresolver.InitBuildPack(o.Git(), bp.GitURL, bp.GitRef)
 	return dir, settings, err
 }
 
-// PickBuildPackLibrary lets you pick a build pack
-func (o *ImportOptions) PickBuildPackLibrary(i *InvokeDraftPack) (*v1.BuildPack, *v1.TeamSettings, error) {
-	jxClient := o.JXClient
-	ns := o.Namespace
-	settings, err := jxenv.GetDevEnvTeamSettings(jxClient, ns)
+// PickPipelineCatalog lets you pick a build pack
+func (o *ImportOptions) PickPipelineCatalog(i *InvokeDraftPack) (*v1alpha1.PipelineCatalogSource, *v1.TeamSettings, error) {
+	if o.DevEnv == nil {
+		return nil, nil, errors.Errorf("no Dev Environment")
+	}
+	settings := &o.DevEnv.Spec.TeamSettings
+	devEnvGitURL := o.DevEnv.Spec.Source.URL
+
+	if devEnvGitURL == "" {
+		return nil, settings, errors.Errorf("no spec.source.url for dev environment so cannot clone the version stream")
+	}
+	devEnvCloneDir, err := gitclient.CloneToDir(o.Git(), devEnvGitURL, "")
 	if err != nil {
-		return nil, nil, errors.Wrapf(err, "failed to load the team settings")
+		return nil, settings, errors.Wrapf(err, "failed to clone dev environment git repository %s", devEnvGitURL)
 	}
 
-	list, err := jxClient.JenkinsV1().BuildPacks(ns).List(context.TODO(), metav1.ListOptions{})
-	if err != nil && !apierrors.IsNotFound(err) {
-		return nil, settings, err
-	}
-	if len(list.Items) == 0 {
-		list.Items = createDefaultBuildBacks()
+	requirements, _, err := reqcfg.LoadRequirementsConfig(devEnvCloneDir, true)
+	if err != nil {
+		return nil, settings, errors.Wrapf(err, "failed to load requirements file in dir %s from dev Environment git URL %s", devEnvCloneDir, devEnvGitURL)
 	}
 
-	buildPackURL := settings.BuildPackURL
-	if i != nil && i.ProjectConfig != nil && i.ProjectConfig.BuildPackGitURL != "" {
-		buildPackURL = i.ProjectConfig.BuildPackGitURL
+	pipelineCatalogsFile := filepath.Join(devEnvCloneDir, "extensions", v1alpha1.PipelineCatalogFileName)
+	exists, err := files.FileExists(pipelineCatalogsFile)
+	if err != nil {
+		return nil, settings, errors.Wrapf(err, "failed to check if file exists %s", pipelineCatalogsFile)
 	}
-	ref := settings.BuildPackRef
 
-	defaultName := ""
-	found := false
-	m := map[string]*v1.BuildPack{}
-	names := []string{}
-	for _, r := range list.Items {
-		copy := r
-		n := copy.Spec.Label
-		if copy.Spec.GitURL == buildPackURL {
-			defaultName = n
-			found = true
-			if ref != "" {
-				copy.Spec.GitRef = ref
+	pipelineCatalog := &v1alpha1.PipelineCatalog{}
+
+	if exists {
+		err = yamls.LoadFile(pipelineCatalogsFile, pipelineCatalog)
+		if err != nil {
+			return nil, settings, errors.Wrapf(err, "failed to load PipelineCatalog file %s", pipelineCatalogsFile)
+		}
+	}
+
+	if len(pipelineCatalog.Spec.Repositories) == 0 {
+		// lets add the default pipeline catalog
+
+		defaultCatalog := v1alpha1.PipelineCatalogSource{
+			ID:     "default-pipeline-catalog",
+			Label:  "Cluster Pipeline Catalog",
+			GitURL: "",
+			GitRef: "",
+		}
+		bp := requirements.BuildPacks
+		if bp != nil {
+			bpl := bp.BuildPackLibrary
+			if bpl != nil {
+				if bpl.Name != "" {
+					defaultCatalog.ID = bpl.Name
+					defaultCatalog.Label = bpl.Name
+				}
+				defaultCatalog.GitURL = bpl.GitURL
+				defaultCatalog.GitRef = bpl.GitRef
 			}
 		}
-		m[n] = &copy
-		if n != "" {
-			names = append(names, n)
+		if defaultCatalog.GitURL == "" {
+			defaultCatalog.GitURL = "https://github.com/jenkins-x/jx3-pipeline-catalog"
 		}
-	}
-	if buildPackURL == "" {
-		buildPackURL = "https://github.com/jenkins-x/jx3-pipeline-catalog"
-	}
-	if !found {
-		defaultName = "Team Build Pack"
-		bp := &v1.BuildPack{}
-		bp.Name = "team-build-pack"
-		bp.Spec.GitURL = buildPackURL
-		bp.Spec.GitRef = ref
-		bp.Spec.Label = defaultName
-		names = append(names, bp.Spec.Label)
-		m[defaultName] = bp
+		pipelineCatalog.Spec.Repositories = append(pipelineCatalog.Spec.Repositories, defaultCatalog)
 	}
 
+	m := map[string]*v1alpha1.PipelineCatalogSource{}
+	names := []string{}
+	defaultValue := ""
+	for i := range pipelineCatalog.Spec.Repositories {
+		pc := &pipelineCatalog.Spec.Repositories[i]
+		if pc.Label == "" {
+			pc.Label = pc.ID
+			if pc.Label == "" {
+				pc.Label = pc.GitURL
+			}
+		}
+		label := pc.Label
+		if defaultValue == "" {
+			defaultValue = label
+		}
+		names = append(names, label)
+		m[label] = pc
+	}
 	sort.Strings(names)
 
-	name := defaultName
-	if !o.BatchMode {
-		name, err = o.Input.PickNameWithDefault(names, "Pick the pipeline catalog folder you would like to use", defaultName,
-			"the pipeline catalog folder contains the tekton pipelines and associated files")
-		if err != nil {
-			return nil, settings, errors.Wrap(err, "failed to pick the build pack name")
-		}
+	if o.BatchMode {
+		pc := &pipelineCatalog.Spec.Repositories[0]
+		return pc, settings, nil
+	}
+
+	name, err := o.Input.PickNameWithDefault(names, "Pick the pipeline catalog you would like to use", defaultValue,
+		"the pipeline catalog folder contains the tekton pipelines and associated files")
+	if err != nil {
+		return nil, settings, errors.Wrap(err, "failed to pick the build pack name")
 	}
 	return m[name], settings, err
 }

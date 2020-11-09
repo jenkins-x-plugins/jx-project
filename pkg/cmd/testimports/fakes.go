@@ -37,7 +37,7 @@ func SetFakeClients(t *testing.T, o *importcmd.ImportOptions) *fakescm.Data {
 	ns := "jx"
 	devEnv := jxenv.CreateDefaultDevEnvironment(ns)
 	devEnv.Namespace = ns
-	devEnv.Spec.Source.URL = "https://fake.git/jx3-gitops-repositories/jx3-gke-terraform-vault"
+	devEnv.Spec.Source.URL = "https://fake.git/jx3-gitops-repositories/jx3-gke-gsm"
 	devEnv.Spec.TeamSettings.PipelineUsername = PipelineUsername
 
 	o.KubeClient = fake.NewSimpleClientset(

@@ -1,0 +1,18 @@
+apiVersion: project.jenkins-x.io/v1alpha1
+kind: Quickstarts
+spec:
+  defaultOwner: myorg
+
+  # custom quickstarts
+  quickstarts:
+  - name: cheese
+    language: JavaScript
+    downloadZipURL: https://codeload.github.com/jenkins-x-quickstarts/cheese/zip/master
+
+  # shared quickstarts from the version stream
+  imports:
+  - file: versionStream/quickstarts.yaml
+    includes:
+    - ".*"
+    excludes:
+    - ".*/node.*"
