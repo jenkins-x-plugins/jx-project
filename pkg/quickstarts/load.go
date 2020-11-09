@@ -2,6 +2,7 @@ package quickstarts
 
 import (
 	"fmt"
+	"path/filepath"
 
 	"github.com/jenkins-x/go-scm/scm"
 	v1 "github.com/jenkins-x/jx-api/v3/pkg/apis/jenkins.io/v1"
@@ -45,14 +46,20 @@ func (o *Options) LoadQuickStartsModel(gitHubOrganisations []string, ignoreTeam 
 	if err != nil {
 		return nil, fmt.Errorf("failed to load qs: %s", err)
 	}
-	qs, err := versionstream.GetQuickStarts(o.VersionsDir)
-	if err != nil {
-		return nil, errors.Wrapf(err, "loading qs from version stream in dir %s", o.VersionsDir)
-	}
-	qs.DefaultMissingValues()
-	err = model.LoadQuickStarts(qs)
-	if err != nil {
-		return nil, errors.Wrapf(err, "loading qs: %v", qs)
+
+	localQuickStarts := filepath.Join(o.VersionsDir, "..", "extensions")
+
+	dirs := []string{o.VersionsDir, localQuickStarts}
+	for _, dir := range dirs {
+		qs, err := versionstream.GetQuickStarts(dir)
+		if err != nil {
+			return nil, errors.Wrapf(err, "loading qs from version stream in dir %s", dir)
+		}
+		qs.DefaultMissingValues()
+		err = model.LoadQuickStarts(qs)
+		if err != nil {
+			return nil, errors.Wrapf(err, "loading qs: %v", qs)
+		}
 	}
 	return model, nil
 }
