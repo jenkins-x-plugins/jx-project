@@ -1,0 +1,13 @@
+apiVersion: project.jenkins-x.io/v1alpha1
+kind: Quickstarts
+spec:
+  defaultOwner: jenkins-x-quickstarts
+
+  # custom quickstarts
+  quickstarts:
+  - name: node-http
+    language: JavaScript
+    downloadZipURL: https://codeload.github.com/jenkins-x-quickstarts/node-http/zip/master
+  - name: golang-http
+    language: Go
+    downloadZipURL: https://codeload.github.com/jenkins-x-quickstarts/golang-http/zip/master

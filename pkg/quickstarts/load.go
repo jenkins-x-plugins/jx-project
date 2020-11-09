@@ -7,9 +7,11 @@ import (
 	"github.com/jenkins-x/go-scm/scm"
 	v1 "github.com/jenkins-x/jx-api/v3/pkg/apis/jenkins.io/v1"
 	"github.com/jenkins-x/jx-api/v3/pkg/client/clientset/versioned"
+	"github.com/jenkins-x/jx-helpers/v3/pkg/files"
 	"github.com/jenkins-x/jx-helpers/v3/pkg/gitclient/giturl"
 	"github.com/jenkins-x/jx-helpers/v3/pkg/kube/jxclient"
-	"github.com/jenkins-x/jx-helpers/v3/pkg/versionstream"
+	"github.com/jenkins-x/jx-helpers/v3/pkg/yamls"
+	"github.com/jenkins-x/jx-project/pkg/apis/project/v1alpha1"
 	"github.com/pkg/errors"
 )
 
@@ -47,19 +49,35 @@ func (o *Options) LoadQuickStartsModel(gitHubOrganisations []string, ignoreTeam 
 		return nil, fmt.Errorf("failed to load qs: %s", err)
 	}
 
-	localQuickStarts := filepath.Join(o.VersionsDir, "..", "extensions")
+	devGitDir := filepath.Join(o.VersionsDir, "..")
+	quickstartsFile := filepath.Join(devGitDir, "extensions", v1alpha1.QuickstartsFileName)
+	exists, err := files.FileExists(quickstartsFile)
+	if err != nil {
+		return model, errors.Wrapf(err, "failed to check if file exists %s", quickstartsFile)
+	}
+	if !exists {
+		// lets default to using the version stream file
+		versionStreamFile := filepath.Join(o.VersionsDir, v1alpha1.QuickstartsFileName)
+		exists, err = files.FileExists(versionStreamFile)
+		if err != nil {
+			return model, errors.Wrapf(err, "failed to check if file exists %s", versionStreamFile)
+		}
 
-	dirs := []string{o.VersionsDir, localQuickStarts}
-	for _, dir := range dirs {
-		qs, err := versionstream.GetQuickStarts(dir)
-		if err != nil {
-			return nil, errors.Wrapf(err, "loading qs from version stream in dir %s", dir)
+		if !exists {
+			return model, errors.Errorf("development git repository does not contain quickstarts file %s", versionStreamFile)
 		}
-		qs.DefaultMissingValues()
-		err = model.LoadQuickStarts(qs)
-		if err != nil {
-			return nil, errors.Wrapf(err, "loading qs: %v", qs)
-		}
+		quickstartsFile = versionStreamFile
+	}
+
+	quickstarts := &v1alpha1.Quickstarts{}
+	err = yamls.LoadFile(quickstartsFile, quickstarts)
+	if err != nil {
+		return model, errors.Wrapf(err, "failed to parse %s", quickstartsFile)
+	}
+
+	err = model.LoadQuickStarts(&quickstarts.Spec, devGitDir, quickstartsFile)
+	if err != nil {
+		return model, errors.Wrapf(err, "loading quickstarts from %s", quickstartsFile)
 	}
 	return model, nil
 }

@@ -8,8 +8,8 @@ import (
 	"github.com/jenkins-x/jx-helpers/v3/pkg/input"
 	"github.com/jenkins-x/jx-helpers/v3/pkg/options"
 	"github.com/jenkins-x/jx-helpers/v3/pkg/stringhelpers"
-	"github.com/jenkins-x/jx-helpers/v3/pkg/versionstream"
 	"github.com/jenkins-x/jx-logging/v3/pkg/log"
+	"github.com/jenkins-x/jx-project/pkg/apis/project/v1alpha1"
 	"github.com/pkg/errors"
 )
 
@@ -205,8 +205,28 @@ func (model *QuickstartModel) Languages() []string {
 	return stringhelpers.SortedMapKeys(m)
 }
 
-func (model *QuickstartModel) LoadQuickStarts(qs *versionstream.QuickStarts) error {
-	for _, from := range qs.QuickStarts {
+func (model *QuickstartModel) LoadQuickStarts(qs *v1alpha1.QuickstartsSpec, dir, fileName string) error {
+	var quickstarts []v1alpha1.QuickstartSource
+
+	// now lets load any imports
+	for i := range qs.Imports {
+		ip := &qs.Imports[i]
+		matcher, err := ip.Matcher()
+		if err != nil {
+			return errors.Wrapf(err, "failed to create matcher for import with file %s", ip.File)
+		}
+		imported, err := qs.LoadImports(ip, matcher, dir)
+		if err != nil {
+			return errors.Wrapf(err, "failed to import quickstarts from file %s", fileName)
+		}
+		quickstarts = append(quickstarts, imported...)
+	}
+
+	quickstarts = append(quickstarts, qs.Quickstarts...)
+	for i := range quickstarts {
+		from := &quickstarts[i]
+		qs.DefaultValues(from)
+
 		id := from.ID
 		if id == "" {
 			log.Logger().Warnf("no ID available for quickstart in version stream %#v", from)
@@ -222,10 +242,11 @@ func (model *QuickstartModel) LoadQuickStarts(qs *versionstream.QuickStarts) err
 		}
 		model.Quickstarts[id] = to
 	}
+
 	return nil
 }
 
-func (model *QuickstartModel) convertToQuickStart(from *versionstream.QuickStart, to *Quickstart) error {
+func (model *QuickstartModel) convertToQuickStart(from *v1alpha1.QuickstartSource, to *Quickstart) error {
 	s := func(text string, override string) string {
 		if override != "" {
 			return override
