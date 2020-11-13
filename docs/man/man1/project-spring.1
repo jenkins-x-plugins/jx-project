@@ -61,16 +61,8 @@ jx create project :
     Spring Boot version
 
 .PP
-\fB\-\-branches\fP=""
-    The branch pattern for branches to trigger CI/CD pipelines on
-
-.PP
 \fB\-\-canary\fP[=false]
     should we use canary rollouts (progressive delivery) by default for this application. e.g. using a Canary deployment via flagger. Requires the installation of flagger and istio/gloo in your cluster
-
-.PP
-\fB\-\-credentials\fP=""
-    The Jenkins credentials name used by the job
 
 .PP
 \fB\-d\fP, \fB\-\-dep\fP=[]
@@ -83,10 +75,6 @@ jx create project :
 .PP
 \fB\-\-dir\fP="."
     Specify the directory to import
-
-.PP
-\fB\-\-disable\-updatebot\fP[=false]
-    disable updatebot\-maven\-plugin from attempting to fix/update the maven pom.xml
 
 .PP
 \fB\-\-docker\-registry\-org\fP=""
@@ -141,18 +129,6 @@ jx create project :
     Java version
 
 .PP
-\fB\-\-jenkinsfile\fP=""
-    The name of the Jenkinsfile to use. If not specified then 'Jenkinsfile' will be used
-
-.PP
-\fB\-\-jenkinsfilerunner\fP=""
-    if you want to import into Jenkins X with Jenkinsfilerunner this argument lets you specify the container image to use
-
-.PP
-\fB\-\-jx\fP[=false]
-    if you want to default to importing this project into Jenkins X instead of a Jenkins server if you have a mixed Jenkins X and Jenkins cluster
-
-.PP
 \fB\-k\fP, \fB\-\-kind\fP=[Core,Web,Template Engines,SQL,I/O,Ops,Spring Cloud GCP,Azure,Cloud Contract,Cloud AWS,Cloud Messaging,Cloud Tracing]
     Default dependency kinds to choose from
 
@@ -170,7 +146,7 @@ jx create project :
 
 .PP
 \fB\-\-no\-dev\-pr\fP[=false]
-    disables generating a Pull Request on the development git repository
+    disables generating a Pull Request on the cluster git repository
 
 .PP
 \fB\-\-no\-import\fP[=false]
@@ -178,11 +154,11 @@ jx create project :
 
 .PP
 \fB\-\-no\-pack\fP[=false]
-    Disable trying to default a Dockerfile and Helm Chart from the build pack
+    Disable trying to default a Dockerfile and Helm Chart from the pipeline catalog pack
 
 .PP
 \fB\-\-no\-start\fP[=false]
-    disables starting a release pipeline when imprting/creating a new project
+    disables starting a release pipeline when importing/creating a new project
 
 .PP
 \fB\-\-operator\-namespace\fP="jx\-git\-operator"
@@ -198,7 +174,7 @@ jx create project :
 
 .PP
 \fB\-\-pack\fP=""
-    The name of the build pack to use. If none is specified it will be chosen based on matching the source code languages
+    The name of the pipeline catalog pack to use. If none is specified it will be chosen based on matching the source code languages
 
 .PP
 \fB\-p\fP, \fB\-\-packaging\fP=""
@@ -210,15 +186,11 @@ jx create project :
 
 .PP
 \fB\-\-pr\-poll\-period\fP=20s
-    the time between polls of the Pull Request on the development environment git repository
+    the time between polls of the Pull Request on the cluster environment git repository
 
 .PP
 \fB\-\-pr\-poll\-timeout\fP=20m0s
-    the maximum amount of time we wait for the Pull Request on the development environment git repository
-
-.PP
-\fB\-\-scheduler\fP=""
-    The name of the Scheduler configuration to use for ChatOps when using Prow
+    the maximum amount of time we wait for the Pull Request on the cluster environment git repository
 
 .PP
 \fB\-\-service\-account\fP="tekton\-bot"
@@ -238,7 +210,7 @@ jx create project :
 
 .PP
 \fB\-\-wait\-for\-pr\fP[=true]
-    waits for the Pull Request generated on the development envirionment git repository to merge
+    waits for the Pull Request generated on the cluster environment git repository to merge
 
 
 .SH EXAMPLE
