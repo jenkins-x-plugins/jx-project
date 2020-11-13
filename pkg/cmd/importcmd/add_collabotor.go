@@ -68,7 +68,13 @@ func (o *ImportOptions) AddAndAcceptCollaborator(newRepository bool) error {
 			return errors.Wrapf(err, "failed to add %s as a collaborator to %s", pipelineUserName, fullRepoName)
 		}
 
-		bootSecret, err := boot.LoadBootSecret(o.KubeClient, o.Namespace, o.OperatorNamespace, o.BootSecretName, pipelineUserName)
+		if o.OperatorNamespace == "" {
+			o.OperatorNamespace = boot.GitOperatorNamespace
+		}
+		if o.BootSecretName == "" {
+			o.BootSecretName = boot.SecretName
+		}
+		bootSecret, err := boot.LoadBootSecret(o.KubeClient, o.OperatorNamespace, o.OperatorNamespace, o.BootSecretName, pipelineUserName)
 		if err != nil {
 			return errors.Wrapf(err, "failed to load the boot secret")
 		}
