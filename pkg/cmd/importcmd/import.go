@@ -272,7 +272,7 @@ func (o *ImportOptions) Validate() error {
 	if o.DevEnv == nil {
 		extraMessage := ""
 		if o.Namespace != "jx" {
-			extraMessage = " Please run 'jx ns jx' to switch to the development namespace and retry this command"
+			extraMessage = " Please run 'kubectl config set-context --current --namespace=jx' to switch to the development namespace and retry this command"
 		}
 		return errors.Errorf("could not find the dev Environment in the namespace %s.%s", o.Namespace, extraMessage)
 	}
