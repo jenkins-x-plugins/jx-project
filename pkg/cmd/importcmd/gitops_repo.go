@@ -14,7 +14,7 @@ import (
 // IsGitOpsRepositoryWithPipeline returns true if we have detected a GitOps repository for Jenkins X 3.x
 func IsGitOpsRepositoryWithPipeline(dir string) (bool, error) {
 	fileNames := []string{
-		filepath.Join(dir, "jenkins-x.yml"),
+		filepath.Join(dir, ".lighthouse", "jenkins-x", "triggers.yaml"),
 		filepath.Join(dir, "versionStream", "git-operator", "job.yaml"),
 	}
 
