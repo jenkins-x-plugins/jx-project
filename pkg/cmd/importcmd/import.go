@@ -50,17 +50,17 @@ type CallbackFn func() error
 type ImportOptions struct {
 	options.BaseOptions
 
-	Args                               []string
-	RepoURL                            string
-	GitProviderURL                     string
-	DiscoveredGitURL                   string
-	Dir                                string
-	Organisation                       string
-	Repository                         string
+	Args             []string
+	RepoURL          string
+	GitProviderURL   string
+	DiscoveredGitURL string
+	Dir              string
+	Organisation     string
+	Repository       string
 	//Credentials                        string
-	AppName                            string
-	SelectFilter                       string
-	Jenkinsfile                        string
+	AppName      string
+	SelectFilter string
+	Jenkinsfile  string
 	//BranchPattern                      string
 	ImportGitCommitMessage             string
 	Pack                               string
@@ -1444,8 +1444,15 @@ func (o *ImportOptions) waitForSourceRepositoryPullRequest(pullRequestInfo *scm.
 	end := start.Add(o.PullRequestPollTimeout)
 	durationString := o.PullRequestPollTimeout.String()
 
+	if o.PullRequestPollPeriod == 0 {
+		o.PullRequestPollPeriod = time.Second * 20
+	}
+	count := 0
 	if pullRequestInfo != nil {
-		log.Logger().Infof("Waiting up to %s for the pull request %s to merge....", durationString, termcolor.ColorInfo(pullRequestInfo.Link))
+		log.Logger().Infof("Waiting up to %s for the pull request %s to merge with poll period %v....", durationString, termcolor.ColorInfo(pullRequestInfo.Link), o.PullRequestPollPeriod.String())
+		count++
+		defer log.Logger().Infof("pull request poll count: %d", count)
+
 		ctx := context.Background()
 		fullName := pullRequestInfo.Repository().FullName
 		prNumber := pullRequestInfo.Number
