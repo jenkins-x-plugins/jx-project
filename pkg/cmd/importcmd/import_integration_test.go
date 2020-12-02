@@ -19,7 +19,7 @@ import (
 	"github.com/jenkins-x/jx-project/pkg/config"
 	"github.com/jenkins-x/jx-project/pkg/constants"
 
-	v1 "github.com/jenkins-x/jx-api/v3/pkg/apis/jenkins.io/v1"
+	v1 "github.com/jenkins-x/jx-api/v4/pkg/apis/jenkins.io/v1"
 	"github.com/jenkins-x/jx-logging/v3/pkg/log"
 	"github.com/jenkins-x/jx-project/pkg/jenkinsfile"
 	"github.com/stretchr/testify/require"
@@ -120,10 +120,6 @@ func assertImport(t *testing.T, testDir string, testcase string, importToJenkins
 	if importToJenkinsX {
 		o.Destination.JenkinsX.Enabled = true
 		callback := func(env *v1.Environment) error {
-			env.Spec.TeamSettings.ImportMode = v1.ImportModeTypeYAML
-			if buildPackURL != "" {
-				env.Spec.TeamSettings.BuildPackURL = buildPackURL
-			}
 			return nil
 		}
 		err := jxenv.ModifyDevEnvironment(o.KubeClient, o.JXClient, o.Namespace, callback)
