@@ -7,8 +7,8 @@ import (
 	"path/filepath"
 	"sort"
 
-	v1 "github.com/jenkins-x/jx-api/v3/pkg/apis/jenkins.io/v1"
-	reqcfg "github.com/jenkins-x/jx-api/v3/pkg/config"
+	v1 "github.com/jenkins-x/jx-api/v4/pkg/apis/jenkins.io/v1"
+
 	"github.com/jenkins-x/jx-helpers/v3/pkg/files"
 	"github.com/jenkins-x/jx-helpers/v3/pkg/gitclient"
 	"github.com/jenkins-x/jx-helpers/v3/pkg/termcolor"
@@ -67,11 +67,6 @@ func (o *ImportOptions) PickPipelineCatalog(i *InvokeDraftPack) (*v1alpha1.Pipel
 		return nil, settings, errors.Wrapf(err, "failed to clone dev environment git repository %s", devEnvGitURL)
 	}
 
-	requirements, _, err := reqcfg.LoadRequirementsConfig(devEnvCloneDir, true)
-	if err != nil {
-		return nil, settings, errors.Wrapf(err, "failed to load requirements file in dir %s from dev Environment git URL %s", devEnvCloneDir, devEnvGitURL)
-	}
-
 	pipelineCatalogsFile := filepath.Join(devEnvCloneDir, "extensions", v1alpha1.PipelineCatalogFileName)
 	exists, err := files.FileExists(pipelineCatalogsFile)
 	if err != nil {
@@ -95,18 +90,6 @@ func (o *ImportOptions) PickPipelineCatalog(i *InvokeDraftPack) (*v1alpha1.Pipel
 			Label:  "Cluster Pipeline Catalog",
 			GitURL: "",
 			GitRef: "",
-		}
-		bp := requirements.BuildPacks
-		if bp != nil {
-			bpl := bp.BuildPackLibrary
-			if bpl != nil {
-				if bpl.Name != "" {
-					defaultCatalog.ID = bpl.Name
-					defaultCatalog.Label = bpl.Name
-				}
-				defaultCatalog.GitURL = bpl.GitURL
-				defaultCatalog.GitRef = bpl.GitRef
-			}
 		}
 		if defaultCatalog.GitURL == "" {
 			defaultCatalog.GitURL = "https://github.com/jenkins-x/jx3-pipeline-catalog"
@@ -147,33 +130,6 @@ func (o *ImportOptions) PickPipelineCatalog(i *InvokeDraftPack) (*v1alpha1.Pipel
 	return m[name], settings, err
 }
 
-// createDefaultBuildBacks creates the default build packs if there are no BuildPack CRDs registered in a cluster
-func createDefaultBuildBacks() []v1.BuildPack {
-	return []v1.BuildPack{
-		/* TODO
-		{
-			ObjectMeta: metav1.ObjectMeta{
-				Name: "kubernetes-workloads",
-			},
-			Spec: v1.BuildPackSpec{
-				Label:  "Kubernetes Workloads: Automated CI+CD with GitOps Promotion",
-				GitURL: v1.KubernetesWorkloadBuildPackURL,
-				GitRef: v1.KubernetesWorkloadBuildPackRef,
-			},
-		},
-		{
-			ObjectMeta: metav1.ObjectMeta{
-				Name: "classic-workloads",
-			},
-			Spec: v1.BuildPackSpec{
-				Label:  "Library Workloads: CI+Release but no CD",
-				GitURL: v1.ClassicWorkloadBuildPackURL,
-				GitRef: v1.ClassicWorkloadBuildPackRef,
-			},
-		},
-		*/
-	}
-}
 
 // InvokeDraftPack invokes a draft pack copying in a Jenkinsfile if required
 func (o *ImportOptions) InvokeDraftPack(i *InvokeDraftPack) (string, error) {

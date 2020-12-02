@@ -10,7 +10,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	v1 "github.com/jenkins-x/jx-api/v3/pkg/apis/jenkins.io/v1"
+	v1 "github.com/jenkins-x/jx-api/v4/pkg/apis/jenkins.io/v1"
 	"github.com/jenkins-x/jx-helpers/v3/pkg/files"
 	"github.com/jenkins-x/jx-helpers/v3/pkg/kube/jxenv"
 	"github.com/jenkins-x/jx-helpers/v3/pkg/kube/naming"
@@ -32,8 +32,6 @@ func TestImportTektonCatalogProject(t *testing.T) {
 	srcDir := filepath.Join(testData, name)
 	assert.DirExists(t, srcDir, "source dir does not exist")
 
-	buildPackURL := "https://github.com/jenkins-x/jx3-pipeline-catalog.git"
-
 	testDir := tempDir
 
 	files.CopyDir(srcDir, testDir, true)
@@ -50,10 +48,6 @@ func TestImportTektonCatalogProject(t *testing.T) {
 
 	o.Destination.JenkinsX.Enabled = true
 	callback := func(env *v1.Environment) error {
-		env.Spec.TeamSettings.ImportMode = v1.ImportModeTypeYAML
-		if buildPackURL != "" {
-			env.Spec.TeamSettings.BuildPackURL = buildPackURL
-		}
 		return nil
 	}
 	err = jxenv.ModifyDevEnvironment(o.KubeClient, o.JXClient, o.Namespace, callback)
