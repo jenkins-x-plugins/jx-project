@@ -13,7 +13,7 @@ import (
 	"github.com/jenkins-x/jx-helpers/v3/pkg/gitclient"
 	"github.com/jenkins-x/jx-helpers/v3/pkg/termcolor"
 	"github.com/jenkins-x/jx-helpers/v3/pkg/yamls"
-	"github.com/jenkins-x/jx-project/pkg/apis/project/v1alpha1"
+	"github.com/jenkins-x/jx-gitops/pkg/apis/gitops/v1alpha1"
 	"github.com/jenkins-x/jx-project/pkg/config"
 	"github.com/jenkins-x/jx-project/pkg/gitresolver"
 
