@@ -12,7 +12,7 @@ require (
 	github.com/google/uuid v1.1.1
 	github.com/jbrukh/bayesian v0.0.0-20200318221351-d726b684ca4a // indirect
 	github.com/jenkins-x/go-scm v1.5.197
-	github.com/jenkins-x/jx-api/v4 v4.0.12
+	github.com/jenkins-x/jx-api/v4 v4.0.14
 	github.com/jenkins-x/jx-gitops v0.0.471
 	github.com/jenkins-x/jx-helpers/v3 v3.0.31
 	github.com/jenkins-x/jx-logging/v3 v3.0.2
