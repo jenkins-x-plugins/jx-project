@@ -75,7 +75,7 @@ func (o *ImportOptions) getOwners(userName string) ([]string, error) {
 		Size: 500,
 	})
 	if err != nil {
-		return nil, errors.Wrapf(err, "failed to list git organisations for user %s", userName)
+		return nil, errors.Wrapf(err, "failed to list git organisations for user %s. Please update '$HOME/git/credentials' file with format 'https://<Username>:<Personal Access Token>@github.com'", userName)
 	}
 	for _, org := range orgs {
 		names = append(names, org.Name)
