@@ -75,6 +75,7 @@ func (o *ImportOptions) getOwners(userName string) ([]string, error) {
 		Size: 500,
 	})
 	if err != nil {
+		log.Logger().Warn("Please make sure that the file '$HOME/git/credentials' containes a valid API token in the format 'https://<Username>:<Personal Access Token>@github.com'")
 		return nil, errors.Wrapf(err, "failed to list git organisations for user %s", userName)
 	}
 	for _, org := range orgs {
