@@ -6,7 +6,9 @@ import (
 	"strings"
 
 	"github.com/jenkins-x/jx-gitops/pkg/sourceconfigs"
+	"github.com/jenkins-x/jx-helpers/v3/pkg/kube/naming"
 	"github.com/jenkins-x/jx-helpers/v3/pkg/stringhelpers"
+	"github.com/jenkins-x/jx-logging/v3/pkg/log"
 	"github.com/pkg/errors"
 )
 
@@ -72,11 +74,6 @@ func (o *ImportOptions) PickImportDestination(devEnvCloneDir, jenkinsfile string
 	}
 	sort.Strings(names)
 
-	if len(names) == 0 {
-		o.Destination.JenkinsX.Enabled = true
-		return o.Destination, nil
-	}
-
 	if o.BatchMode {
 		if o.Destination.JenkinsfileRunner.Enabled {
 			o.Destination.JenkinsfileRunner = JenkinsfileRunnerDestination{Enabled: true}
@@ -91,6 +88,31 @@ func (o *ImportOptions) PickImportDestination(devEnvCloneDir, jenkinsfile string
 		}
 		return o.Destination, fmt.Errorf("no import destination specified in batch mode. Please specify --jenkins or --jx")
 	}
+
+	log.Logger().Infof("this project has a Jenkinfiles so lets pick how you want to setup CI")
+
+	if len(names) == 0 {
+		log.Logger().Infof("there are currently no Jenkins servers configured in your cluster git repository")
+
+		flag, err := o.Input.Confirm("Would you like to add a Jenkins server?: ", true, "There is configured jenkins server. Please confirm if you would like to add a new server otherwise we will use the Jenkinsfile runner")
+		if err != nil {
+			return o.Destination, errors.Wrapf(err, "failed to get the confirm flag")
+		}
+		if flag {
+			name, err := o.Input.PickValue("Name of the new jenkins server: ", "myjenkins", true, "please enter the name of the new jenkins server. Should be usable inside a DNS name so be lowercase starting with a letter")
+			if err != nil {
+				return o.Destination, errors.Wrapf(err, "failed to enter the name of the jenkins server")
+			}
+			name = strings.TrimSpace(name)
+			if name == "" {
+				return o.Destination, errors.Errorf("no jenkins server name entered")
+			}
+			o.Destination.Jenkins.Server = naming.ToValidName(name)
+			o.Destination.Jenkins.Enabled = true
+			return o.Destination, nil
+		}
+	}
+
 	// lets add a list of choices...
 	actionChoices := []string{jenkinsXDestination}
 	actions := map[string]ImportDestination{
@@ -107,11 +129,10 @@ func (o *ImportOptions) PickImportDestination(devEnvCloneDir, jenkinsfile string
 		}
 	}
 
-	if jenkinsfile != "" {
-		text := "Jenkinsfile runner"
-		actionChoices = append(actionChoices, text)
-		actions[text] = ImportDestination{JenkinsX: JenkinsXDestination{Enabled: true}, JenkinsfileRunner: JenkinsfileRunnerDestination{Enabled: true}}
-	}
+	// add jenkinsfile runner as an option
+	text := "Jenkinsfile runner"
+	actionChoices = append(actionChoices, text)
+	actions[text] = ImportDestination{JenkinsX: JenkinsXDestination{Enabled: true}, JenkinsfileRunner: JenkinsfileRunnerDestination{Enabled: true}}
 
 	name, err := o.Input.PickNameWithDefault(actionChoices, "Where would you like to import this project to?",
 		"", "you can import into Jenkins X and use cloud native pipelines with Tekton or import in a Jenkins server")
