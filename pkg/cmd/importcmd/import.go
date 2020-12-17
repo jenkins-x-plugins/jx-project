@@ -245,11 +245,14 @@ func (o *ImportOptions) AddImportFlags(cmd *cobra.Command, createProject bool) {
 
 // Validate validates the command line options
 func (o *ImportOptions) Validate() error {
+	err := o.BaseOptions.Validate()
+	if err != nil {
+		return errors.Wrapf(err, "failed to validate base options")
+	}
 	if o.Input == nil {
 		o.Input = inputfactory.NewInput(&o.BaseOptions)
 	}
 
-	var err error
 	o.KubeClient, o.Namespace, err = kube.LazyCreateKubeClientAndNamespace(o.KubeClient, o.Namespace)
 	if err != nil {
 		return errors.Wrapf(err, "failed to create the kube client")
