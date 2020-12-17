@@ -160,7 +160,7 @@ func TestCreateProwOwnersAliasesFileCreateWhenDoesNotExistAndNoGitUserSet(t *tes
 		Dir: path,
 	}
 
-	fakeScmData := testimports.SetFakeClients(t, cmd)
+	fakeScmData, _ := testimports.SetFakeClients(t, cmd)
 	fakeScmData.CurrentUser = scm.User{}
 
 	err = cmd.CreateProwOwnersAliasesFile()

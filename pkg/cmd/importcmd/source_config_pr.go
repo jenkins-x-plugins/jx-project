@@ -65,6 +65,7 @@ func (o *ImportOptions) addSourceConfigPullRequest(gitURL string, gitKind string
 		ao.JXClient = o.JXClient
 		ao.Namespace = o.Namespace
 		ao.Scheduler = o.SchedulerName
+		ao.Jenkins = o.Destination.Jenkins.Server
 		err := ao.Run()
 		if err != nil {
 			return errors.Wrapf(err, "failed to add git URL %s to the source-config.yaml file", safeGitURL)

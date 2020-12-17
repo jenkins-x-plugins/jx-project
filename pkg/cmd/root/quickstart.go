@@ -50,6 +50,7 @@ type CreateQuickstartOptions struct {
 	GitHubOrganisations []string
 	Filter              quickstarts.QuickstartFilter
 	GitHost             string
+	QuickstartAuth      string
 	IgnoreTeam          bool
 }
 
@@ -73,6 +74,7 @@ func NewCmdCreateQuickstart() (*cobra.Command, *CreateQuickstartOptions) {
 
 	cmd.Flags().StringArrayVarP(&o.GitHubOrganisations, "organisations", "g", []string{}, "The GitHub organisations to query for quickstarts")
 	cmd.Flags().StringArrayVarP(&o.Filter.Tags, "tag", "t", []string{}, "The tags on the quickstarts to filter")
+	cmd.Flags().StringVarP(&o.QuickstartAuth, "quickstart-auth", "", "", "The auth mechanism used to authenticate with the git token to download the quickstarts. If not specified defaults to Basic but could be Bearer for bearer token auth")
 	cmd.Flags().StringVarP(&o.Filter.Owner, "owner", "", "", "The owner to filter on")
 	cmd.Flags().StringVarP(&o.Filter.Language, "language", "l", "", "The language to filter on")
 	cmd.Flags().StringVarP(&o.Filter.Framework, "framework", "", "", "The framework to filter on")
@@ -278,10 +280,21 @@ func (o *CreateQuickstartOptions) createQuickstart(f *quickstarts.QuickstartForm
 		return answer, err
 	}
 
-	if token != "" && username != "" {
-		log.Logger().Debugf("Downloading Quickstart source zip from %s with basic auth for user: %s", u, username)
-		req.SetBasicAuth(username, token)
+	if token != "" {
+		auth := o.QuickstartAuth
+		lowerAuth := strings.ToLower(auth)
+		if lowerAuth == "" || lowerAuth == "basic" {
+			if username != "" {
+				log.Logger().Debugf("Downloading Quickstart source zip from %s with basic auth for user: %s", u, username)
+				req.SetBasicAuth(username, token)
+			}
+		} else {
+			log.Logger().Debugf("Downloading Quickstart source zip from %s with auth: %s", u, auth)
+			header := auth + " " + token
+			req.Header.Add("Authorization", header)
+		}
 	}
+
 	res, err := client.Do(req)
 	if err != nil {
 		return answer, err
