@@ -62,14 +62,14 @@ type ImportOptions struct {
 	SelectFilter string
 	Jenkinsfile  string
 	//BranchPattern                      string
-	ImportGitCommitMessage             string
-	Pack                               string
-	DockerRegistryOrg                  string
-	DeployKind                         string
-	SchedulerName                      string
-	GitConfDir                         string
-	PipelineUserName                   string
-	PipelineServer                     string
+	ImportGitCommitMessage string
+	Pack                   string
+	DockerRegistryOrg      string
+	DeployKind             string
+	SchedulerName          string
+	GitConfDir             string
+	PipelineUserName       string
+	PipelineServer         string
 	//ImportMode                         string
 	ServiceAccount                     string
 	Namespace                          string
@@ -194,8 +194,8 @@ func NewCmdImportAndOptions() (*cobra.Command, *ImportOptions) {
 	cmd.Flags().BoolVarP(&options.GitHub, "github", "", false, "If you wish to pick the repositories from GitHub to import")
 	cmd.Flags().BoolVarP(&options.SelectAll, "all", "", false, "If selecting projects to import from a Git provider this defaults to selecting them all")
 	//cmd.Flags().StringVarP(&options.SelectFilter, "filter", "", "", "If selecting projects to import from a Git provider this filters the list of repositories")
+
 	options.AddImportFlags(cmd, false)
-	//options.Destination.Jenkins.JenkinsSelectorOptions.AddFlags(cmd)
 	return cmd, options
 }
 
@@ -222,16 +222,13 @@ func (o *ImportOptions) AddImportFlags(cmd *cobra.Command, createProject bool) {
 	cmd.Flags().StringVarP(&o.DockerRegistryOrg, "docker-registry-org", "", "", "The name of the docker registry organisation to use. If not specified then the Git provider organisation will be used")
 	cmd.Flags().StringVarP(&o.OperatorNamespace, "operator-namespace", "", boot.GitOperatorNamespace, "The namespace where the git operator is installed")
 	cmd.Flags().StringVarP(&o.BootSecretName, "boot-secret-name", "", boot.SecretName, "The name of the boot secret")
-	// TODO
-	//cmd.Flags().StringVarP(&o.ExternalJenkinsBaseURL, "external-jenkins-url", "", "", "The jenkins url that an external git provider needs to use")
 	//cmd.Flags().BoolVarP(&o.DisableMaven, "disable-updatebot", "", false, "disable updatebot-maven-plugin from attempting to fix/update the maven pom.xml")
-	//cmd.Flags().StringVarP(&o.ImportMode, "import-mode", "m", "", fmt.Sprintf("The import mode to use. Should be one of %s", strings.Join(v1.ImportModeStrings, ", ")))
 	cmd.Flags().BoolVarP(&o.UseDefaultGit, "use-default-git", "", false, "use default git account")
 	cmd.Flags().StringVarP(&o.DeployKind, "deploy-kind", "", "", fmt.Sprintf("The kind of deployment to use for the project. Should be one of %s", strings.Join(deployKinds, ", ")))
 	cmd.Flags().BoolVarP(&o.DeployOptions.Canary, constants.OptionCanary, "", false, "should we use canary rollouts (progressive delivery) by default for this application. e.g. using a Canary deployment via flagger. Requires the installation of flagger and istio/gloo in your cluster")
 	cmd.Flags().BoolVarP(&o.DeployOptions.HPA, constants.OptionHPA, "", false, "should we enable the Horizontal Pod Autoscaler for this application.")
-	//cmd.Flags().BoolVarP(&o.Destination.JenkinsX.Enabled, "jx", "", false, "if you want to default to importing this project into Jenkins X instead of a Jenkins server if you have a mixed Jenkins X and Jenkins cluster")
-	//cmd.Flags().StringVarP(&o.Destination.JenkinsfileRunner.Image, "jenkinsfilerunner", "", "", "if you want to import into Jenkins X with Jenkinsfilerunner this argument lets you specify the container image to use")
+	cmd.Flags().BoolVarP(&o.Destination.JenkinsX.Enabled, "jx", "", false, "if you want to default to importing this project into Jenkins X instead of a Jenkins server if you have a mixed Jenkins X and Jenkins cluster")
+	cmd.Flags().StringVarP(&o.Destination.JenkinsfileRunner.Image, "jenkinsfilerunner", "", "", "if you want to import into Jenkins X with Jenkinsfilerunner this argument lets you specify the container image to use")
 	cmd.Flags().StringVar(&o.ServiceAccount, "service-account", "tekton-bot", "The Kubernetes ServiceAccount to use to run the initial pipeline")
 
 	cmd.Flags().BoolVarP(&o.WaitForSourceRepositoryPullRequest, "wait-for-pr", "", true, "waits for the Pull Request generated on the cluster environment git repository to merge")
@@ -242,6 +239,8 @@ func (o *ImportOptions) AddImportFlags(cmd *cobra.Command, createProject bool) {
 
 	o.BaseOptions.AddBaseFlags(cmd)
 	o.ScmFactory.AddFlags(cmd)
+
+	cmd.Flags().StringVarP(&o.Destination.Jenkins.Server, "jenkins", "", "", "The name of the Jenkins server to import the project into")
 }
 
 // Validate validates the command line options
@@ -393,25 +392,22 @@ func (o *ImportOptions) Run() error {
 		return err
 	}
 
-	/*  TODO support immporting into jenkins servers
-	o.jenkinsClientFactory, err = factory.NewClientFactoryFromFactory(o.GetJXFactory())
+	devEnvCloneDir, err := o.CloneDevEnvironment()
 	if err != nil {
-		return errors.Wrapf(err, "failed to create the Jenkins ClientFactory")
-	}
-
-	// lets pick the import destination
-	o.Destination, err = o.PickImportDestination(o.jenkinsClientFactory, jenkinsfile)
-	if err != nil {
-		return err
+		return errors.Wrapf(err, "failed to clone dev env git repository")
 	}
 
 	if jenkinsfile != "" {
-		if o.Destination.Jenkins.JenkinsName != "" || o.Destination.JenkinsfileRunner.Enabled {
+		// lets pick the import destination for the jenkinsfile
+		o.Destination, err = o.PickImportDestination(devEnvCloneDir, jenkinsfile)
+		if err != nil {
+			return err
+		}
+		if o.Destination.Jenkins.Server != "" || o.Destination.JenkinsfileRunner.Enabled {
 			// lets not run the Jenkins X build packs
 			o.DisableBuildPack = true
 		}
 	}
-	*/
 
 	// lets disable the build pack if we have a jenkins-x.yml or a .lighthouse/*/triggers.yaml file
 	jxProjectFile := filepath.Join(o.Dir, config.ProjectConfigFileName)
@@ -447,7 +443,7 @@ func (o *ImportOptions) Run() error {
 	}
 
 	if !o.DisableBuildPack {
-		err = o.EvaluateBuildPack(jenkinsfile)
+		err = o.EvaluateBuildPack(devEnvCloneDir, jenkinsfile)
 		if err != nil {
 			return err
 		}

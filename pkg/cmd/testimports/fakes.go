@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	fakescm "github.com/jenkins-x/go-scm/scm/driver/fake"
+	v1 "github.com/jenkins-x/jx-api/v4/pkg/apis/jenkins.io/v1"
 	fakejx "github.com/jenkins-x/jx-api/v4/pkg/client/clientset/versioned/fake"
 	"github.com/jenkins-x/jx-helpers/v3/pkg/boot"
 	"github.com/jenkins-x/jx-helpers/v3/pkg/cmdrunner"
@@ -23,7 +24,7 @@ const (
 )
 
 // SetFakeClients sets the fake clients on the options
-func SetFakeClients(t *testing.T, o *importcmd.ImportOptions) *fakescm.Data {
+func SetFakeClients(t *testing.T, o *importcmd.ImportOptions) (*fakescm.Data, *v1.Environment) {
 	fakeInput := &fakeinput.FakeInput{
 		Values: map[string]string{},
 	}
@@ -58,7 +59,7 @@ func SetFakeClients(t *testing.T, o *importcmd.ImportOptions) *fakescm.Data {
 
 	runner := NewFakeRunnerWithoutGitPush(t)
 	o.CommandRunner = runner.Run
-	return fakeScmData
+	return fakeScmData, devEnv
 }
 
 // NewFakeRunnerWithoutGitPush create a fake command runner that fakes out git push

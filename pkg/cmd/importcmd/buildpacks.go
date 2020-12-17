@@ -9,11 +9,11 @@ import (
 
 	v1 "github.com/jenkins-x/jx-api/v4/pkg/apis/jenkins.io/v1"
 
+	"github.com/jenkins-x/jx-gitops/pkg/apis/gitops/v1alpha1"
 	"github.com/jenkins-x/jx-helpers/v3/pkg/files"
 	"github.com/jenkins-x/jx-helpers/v3/pkg/gitclient"
 	"github.com/jenkins-x/jx-helpers/v3/pkg/termcolor"
 	"github.com/jenkins-x/jx-helpers/v3/pkg/yamls"
-	"github.com/jenkins-x/jx-gitops/pkg/apis/gitops/v1alpha1"
 	"github.com/jenkins-x/jx-project/pkg/config"
 	"github.com/jenkins-x/jx-project/pkg/gitresolver"
 
@@ -27,6 +27,7 @@ import (
 // InvokeDraftPack used to pass arguments into the draft pack invocation
 type InvokeDraftPack struct {
 	Dir                         string
+	DevEnvCloneDir              string
 	CustomDraftPack             string
 	Jenkinsfile                 string
 	InitialisedGit              bool
@@ -51,22 +52,32 @@ func (o *ImportOptions) InitBuildPacks(i *InvokeDraftPack) (string, *v1.TeamSett
 	return dir, settings, err
 }
 
+// CloneDevEnvironment clones the development environment to a directory
+func (o *ImportOptions) CloneDevEnvironment() (string, error) {
+	if o.DevEnv == nil {
+		return "", errors.Errorf("no Dev Environment")
+	}
+	devEnvGitURL := o.DevEnv.Spec.Source.URL
+	if devEnvGitURL == "" {
+		return "", errors.Errorf("no spec.source.url for dev environment so cannot clone the version stream")
+	}
+	devEnvCloneDir, err := gitclient.CloneToDir(o.Git(), devEnvGitURL, "")
+	if err != nil {
+		return "", errors.Wrapf(err, "failed to clone dev environment git repository %s", devEnvGitURL)
+	}
+	return devEnvCloneDir, nil
+}
+
 // PickPipelineCatalog lets you pick a build pack
 func (o *ImportOptions) PickPipelineCatalog(i *InvokeDraftPack) (*v1alpha1.PipelineCatalogSource, *v1.TeamSettings, error) {
 	if o.DevEnv == nil {
 		return nil, nil, errors.Errorf("no Dev Environment")
 	}
+	devEnvCloneDir := i.DevEnvCloneDir
+	if devEnvCloneDir == "" {
+		return nil, nil, errors.Errorf("no Dev Environment git clone dir")
+	}
 	settings := &o.DevEnv.Spec.TeamSettings
-	devEnvGitURL := o.DevEnv.Spec.Source.URL
-
-	if devEnvGitURL == "" {
-		return nil, settings, errors.Errorf("no spec.source.url for dev environment so cannot clone the version stream")
-	}
-	devEnvCloneDir, err := gitclient.CloneToDir(o.Git(), devEnvGitURL, "")
-	if err != nil {
-		return nil, settings, errors.Wrapf(err, "failed to clone dev environment git repository %s", devEnvGitURL)
-	}
-
 	pipelineCatalogsFile := filepath.Join(devEnvCloneDir, "extensions", v1alpha1.PipelineCatalogFileName)
 	exists, err := files.FileExists(pipelineCatalogsFile)
 	if err != nil {
@@ -129,7 +140,6 @@ func (o *ImportOptions) PickPipelineCatalog(i *InvokeDraftPack) (*v1alpha1.Pipel
 	}
 	return m[name], settings, err
 }
-
 
 // InvokeDraftPack invokes a draft pack copying in a Jenkinsfile if required
 func (o *ImportOptions) InvokeDraftPack(i *InvokeDraftPack) (string, error) {

@@ -126,8 +126,7 @@ func assertImport(t *testing.T, testDir string, testcase string, importToJenkins
 		require.NoError(t, err, "failed to modify Dev Environment")
 	} else {
 		o.Destination.Jenkins.Enabled = true
-		o.Destination.Jenkins.JenkinsName = "myjenkins"
-		o.Destination.Jenkins.JenkinsServiceNames = []string{"myjenkins"}
+		o.Destination.Jenkins.Server = "myjenkins"
 
 		// lets generate a dummy Jenkinsfile so that we know we don't run the build packs
 		jenkinsfile := filepath.Join(testDir, "Jenkinsfile")
