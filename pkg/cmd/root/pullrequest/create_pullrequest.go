@@ -89,7 +89,6 @@ func NewCmdCreatePullRequest() *cobra.Command {
 		},
 	}
 
-	//cmd.Flags().StringVarP(&options.Dir, "dir", "", "", "The source directory used to detect the Git repository. Defaults to the current directory")
 	cmd.Flags().StringVarP(&options.Title, optionTitle, "t", "", "The title of the pullrequest to create")
 	cmd.Flags().StringVarP(&options.Body, "body", "", "", "The body of the pullrequest")
 	cmd.Flags().StringVarP(&options.Base, "base", "", "master", "The base branch to create the pull request into")
@@ -99,6 +98,7 @@ func NewCmdCreatePullRequest() *cobra.Command {
 
 	cmd.Flags().BoolVarP(&options.BatchMode, "batch-mode", "b", false, "Enables batch mode which avoids prompting for user input")
 
+	options.Options.DiscoverFromGit = true
 	options.Options.AddFlags(cmd)
 	return cmd
 }
