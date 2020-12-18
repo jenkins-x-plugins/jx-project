@@ -37,7 +37,7 @@ type JenkinsfileRunnerDestination struct {
 }
 
 const (
-	jenkinsXDestination = "Jenkins X"
+	jenkinsXDestination = "Jenkins X automated cloud native pipelines via Tekton"
 )
 
 // PickImportDestination picks where to import the project to
@@ -89,10 +89,12 @@ func (o *ImportOptions) PickImportDestination(devEnvCloneDir, jenkinsfile string
 		return o.Destination, fmt.Errorf("no import destination specified in batch mode. Please specify --jenkins or --jx")
 	}
 
-	log.Logger().Infof("this project has a Jenkinfiles so lets pick how you want to setup CI")
+	log.Logger().Info("")
+	log.Logger().Info("this project has a Jenkinfiles so lets pick how you want to setup CI")
 
 	if len(names) == 0 {
-		log.Logger().Infof("there are currently no Jenkins servers configured in your cluster git repository")
+		log.Logger().Info("there are currently no Jenkins servers configured in your cluster git repository")
+		log.Logger().Info("")
 
 		flag, err := o.Input.Confirm("Would you like to add a Jenkins server?: ", true, "There is configured jenkins server. Please confirm if you would like to add a new server otherwise we will use the Jenkinsfile runner")
 		if err != nil {
@@ -119,7 +121,7 @@ func (o *ImportOptions) PickImportDestination(devEnvCloneDir, jenkinsfile string
 		jenkinsXDestination: {JenkinsX: JenkinsXDestination{Enabled: true}},
 	}
 	for _, name := range names {
-		text := fmt.Sprintf("Jenkins: %s", strings.TrimPrefix(name, "jenkins-operator-http-"))
+		text := fmt.Sprintf("Jenkins pipelines on server: %s", strings.TrimPrefix(name, "jenkins-operator-http-"))
 		actionChoices = append(actionChoices, text)
 		actions[text] = ImportDestination{
 			Jenkins: JenkinsDestination{
@@ -134,7 +136,7 @@ func (o *ImportOptions) PickImportDestination(devEnvCloneDir, jenkinsfile string
 	actionChoices = append(actionChoices, text)
 	actions[text] = ImportDestination{JenkinsX: JenkinsXDestination{Enabled: true}, JenkinsfileRunner: JenkinsfileRunnerDestination{Enabled: true}}
 
-	name, err := o.Input.PickNameWithDefault(actionChoices, "Where would you like to import this project to?",
+	name, err := o.Input.PickNameWithDefault(actionChoices, "How would you like to import this project?",
 		"", "you can import into Jenkins X and use cloud native pipelines with Tekton or import in a Jenkins server")
 	if err != nil {
 		return o.Destination, err

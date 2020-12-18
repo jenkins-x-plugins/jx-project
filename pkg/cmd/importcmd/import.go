@@ -808,15 +808,18 @@ func (o *ImportOptions) doImport() error {
 	}
 
 	repoFullName := scm.Join(o.Organisation, o.AppName)
-	c := &cmdrunner.Command{
-		Name: "jx",
-		Args: []string{"pipeline", "wait", "--owner", o.Organisation, "--repo", o.AppName},
-		Out:  os.Stdout,
-		Err:  os.Stderr,
-	}
-	_, err = o.CommandRunner(c)
-	if err != nil {
-		return errors.Wrapf(err, "failed to wait for the pipeline to be setup %s", repoFullName)
+
+	if !o.Destination.Jenkins.Enabled {
+		c := &cmdrunner.Command{
+			Name: "jx",
+			Args: []string{"pipeline", "wait", "--owner", o.Organisation, "--repo", o.AppName},
+			Out:  os.Stdout,
+			Err:  os.Stderr,
+		}
+		_, err = o.CommandRunner(c)
+		if err != nil {
+			return errors.Wrapf(err, "failed to wait for the pipeline to be setup %s", repoFullName)
+		}
 	}
 
 	// lets git push the build pack changes now to trigger a release
@@ -827,6 +830,10 @@ func (o *ImportOptions) doImport() error {
 		if err != nil {
 			return errors.Wrapf(err, "failed to push git changes")
 		}
+	}
+
+	if o.Destination.Jenkins.Enabled {
+		return nil
 	}
 
 	log.Logger().Infof("Pipeline should start soon for: %s", info(repoFullName))
