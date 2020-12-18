@@ -8,6 +8,7 @@ import (
 	"github.com/jenkins-x/jx-gitops/pkg/cmd/repository/add"
 	"github.com/jenkins-x/jx-helpers/v3/pkg/kube/jxenv"
 	"github.com/jenkins-x/jx-helpers/v3/pkg/stringhelpers"
+	"github.com/jenkins-x/jx-logging/v3/pkg/log"
 	"github.com/jenkins-x/jx-promote/pkg/environments"
 	"github.com/pkg/errors"
 )
@@ -20,6 +21,10 @@ func (o *ImportOptions) addSourceConfigPullRequest(gitURL string, gitKind string
 	if err != nil {
 		return errors.Wrapf(err, "failed to find the dev Environment")
 	}
+
+	log.Logger().Info("")
+	log.Logger().Info("we are now going to create a Pull Request on the development cluster git repository to setup CI/CD via GitOps")
+	log.Logger().Info("")
 
 	safeGitURL := stringhelpers.SanitizeURL(gitURL)
 

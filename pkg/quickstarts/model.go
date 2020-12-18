@@ -5,11 +5,11 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/jenkins-x/jx-gitops/pkg/apis/gitops/v1alpha1"
 	"github.com/jenkins-x/jx-helpers/v3/pkg/input"
 	"github.com/jenkins-x/jx-helpers/v3/pkg/options"
 	"github.com/jenkins-x/jx-helpers/v3/pkg/stringhelpers"
 	"github.com/jenkins-x/jx-logging/v3/pkg/log"
-	"github.com/jenkins-x/jx-project/pkg/apis/project/v1alpha1"
 	"github.com/pkg/errors"
 )
 
