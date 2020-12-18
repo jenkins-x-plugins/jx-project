@@ -11,8 +11,8 @@ import (
 	"github.com/jenkins-x/jx-helpers/v3/pkg/cobras/helper"
 	"github.com/jenkins-x/jx-helpers/v3/pkg/files"
 	"github.com/jenkins-x/jx-helpers/v3/pkg/gitclient"
-	"github.com/jenkins-x/jx-helpers/v3/pkg/gitclient/giturl"
 	"github.com/jenkins-x/jx-helpers/v3/pkg/options"
+	"github.com/jenkins-x/jx-helpers/v3/pkg/termcolor"
 	"github.com/jenkins-x/jx-project/pkg/cmd/common"
 	"github.com/jenkins-x/jx-project/pkg/cmd/importcmd"
 	"github.com/jenkins-x/jx-project/pkg/quickstarts"
@@ -25,6 +25,8 @@ import (
 )
 
 var (
+	info = termcolor.ColorInfo
+
 	createQuickstartLong = templates.LongDesc(`
 		Create a new project from a sample/starter (found in https://github.com/jenkins-x-quickstarts)
 
@@ -205,10 +207,6 @@ func (o *CreateQuickstartOptions) CreateQuickStart(q *quickstarts.QuickstartForm
 	// Prevent accidental attempts to use ML Project Sets in create quickstart
 	gitToken := o.ScmFactory.GitToken
 
-	// lets not pass in a token if we are not using github
-	if !strings.HasPrefix(o.ScmFactory.GitServerURL, giturl.GitHubURL) {
-		gitToken = ""
-	}
 	if isMLProjectSet(q.Quickstart, currentUser, gitToken) {
 		return fmt.Errorf("you have tried to select a machine-learning quickstart projectset please try again using jx create mlquickstart instead")
 	}
@@ -278,6 +276,17 @@ func (o *CreateQuickstartOptions) createQuickstart(f *quickstarts.QuickstartForm
 	req, err := http.NewRequest(http.MethodGet, u, strings.NewReader(""))
 	if err != nil {
 		return answer, err
+	}
+
+	// lets not pass in a token if we are not using a similar service (e.g. github.com or mygitserver.com)
+	sameDomain, err := SameRootDomain(o.ScmFactory.GitServerURL, u)
+	if err != nil {
+		return answer, errors.Wrapf(err, "failed to compare domains")
+	}
+
+	if !sameDomain {
+		log.Logger().Infof("not sending git token to download quickstart from %s as its using a different domain to the git token", info(u))
+		token = ""
 	}
 
 	if token != "" {
