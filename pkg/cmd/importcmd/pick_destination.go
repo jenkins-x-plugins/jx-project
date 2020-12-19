@@ -90,7 +90,8 @@ func (o *ImportOptions) PickImportDestination(devEnvCloneDir, jenkinsfile string
 	}
 
 	log.Logger().Info("")
-	log.Logger().Info("this project has a Jenkinfiles so lets pick how you want to setup CI")
+	log.Logger().Infof("this project has a %s so lets choose how you want to setup CI", info("Jenkinsfile"))
+	log.Logger().Info("")
 
 	if len(names) == 0 {
 		log.Logger().Info("there are currently no Jenkins servers configured in your cluster git repository")

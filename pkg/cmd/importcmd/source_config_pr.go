@@ -99,6 +99,11 @@ func (o *ImportOptions) addSourceConfigPullRequest(gitURL string, gitKind string
 	if pr != nil {
 		prURL = pr.Link
 		if o.WaitForSourceRepositoryPullRequest {
+
+			log.Logger().Info("")
+			log.Logger().Info("we now need to wait for the Pull Request to merge so that CI/CD can be setup via GitOps")
+			log.Logger().Info("")
+
 			err = o.waitForSourceRepositoryPullRequest(pr, devGitURL)
 			if err != nil {
 				return errors.Wrapf(err, "failed to wait for the Pull Request %s to merge", prURL)
