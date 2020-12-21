@@ -836,6 +836,7 @@ func (o *ImportOptions) doImport() error {
 		return nil
 	}
 
+	log.Logger().Info("")
 	log.Logger().Infof("Pipeline should start soon for: %s", info(repoFullName))
 	log.Logger().Info("")
 	log.Logger().Infof("Watch pipeline activity via:    %s", info(fmt.Sprintf("jx get activity -f %s -w", repoFullName)))
@@ -1457,7 +1458,7 @@ func (o *ImportOptions) waitForSourceRepositoryPullRequest(pullRequestInfo *scm.
 	if pullRequestInfo != nil {
 		log.Logger().Infof("Waiting up to %s for the pull request %s to merge with poll period %v....", durationString, termcolor.ColorInfo(pullRequestInfo.Link), o.PullRequestPollPeriod.String())
 		count++
-		defer log.Logger().Infof("pull request poll count: %d", count)
+		defer log.Logger().Debugf("pull request poll count: %d", count)
 
 		ctx := context.Background()
 		fullName := pullRequestInfo.Repository().FullName
