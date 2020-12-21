@@ -34,12 +34,12 @@ type LogImportReporter struct {
 
 // Trace report generic trace message
 func (r *LogImportReporter) Trace(message string, args ...interface{}) {
-	log.Logger().Infof(message, args...)
+	log.Logger().Debugf(message, args...)
 }
 
 // CreatedDevRepoPullRequest report progress
 func (r *LogImportReporter) CreatedDevRepoPullRequest(prURL string, devGitURL string) {
-	log.Logger().Infof("created pull request %s on the development git repository %s", info(prURL), info(devGitURL))
+	log.Logger().Debugf("Created pull request %s on the development git repository %s", info(prURL), info(devGitURL))
 }
 
 // GitRepositoryCreated report progress
@@ -54,6 +54,7 @@ func (r *LogImportReporter) UsingGitUserName(username string) {
 
 // PushedGitRepository report progress
 func (r *LogImportReporter) PushedGitRepository(repoURL string) {
+	log.Logger().Info()
 	log.Logger().Infof("Pushed Git repository to %s\n", info(repoURL))
 }
 
