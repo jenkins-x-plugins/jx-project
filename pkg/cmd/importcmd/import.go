@@ -406,9 +406,12 @@ func (o *ImportOptions) Run() error {
 		if err != nil {
 			return err
 		}
-		if o.Destination.Jenkins.Server != "" || o.Destination.JenkinsfileRunner.Enabled {
+		if o.Destination.Jenkins.Server != "" {
 			// lets not run the Jenkins X build packs
 			o.DisableBuildPack = true
+		} else if o.Destination.JenkinsfileRunner.Enabled {
+			o.DisableBuildPack = false
+			o.Pack = "jenkinsfilerunner"
 		}
 	}
 
