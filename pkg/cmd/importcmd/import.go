@@ -863,7 +863,7 @@ func (o *ImportOptions) ensureDockerRepositoryExists() error {
 		return nil
 	}
 
-	/* TODO
+	
 	kubeClient, curNs, err := o.KubeClientAndNamespace()
 	if err != nil {
 		return err
@@ -887,7 +887,7 @@ func (o *ImportOptions) ensureDockerRepositoryExists() error {
 		}
 	}
 
-	*/
+	
 	return nil
 }
 
