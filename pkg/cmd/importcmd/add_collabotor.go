@@ -95,6 +95,11 @@ func (o *ImportOptions) AddAndAcceptCollaborator(newRepository bool) error {
 		}
 		o.BootScmClient = bootScmClient
 
+		if o.ScmFactory.GitKind == "gitea" {
+			// AddCollaborator doesn't use invitations
+			return nil
+		}
+
 		// Get all invitations for the pipeline user
 		invites, _, err := bootScmClient.Users.ListInvitations(ctx)
 		if err != nil {
