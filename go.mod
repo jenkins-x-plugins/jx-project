@@ -11,10 +11,10 @@ require (
 	github.com/denormal/go-gitignore v0.0.0-20180713143441-75ce8f3e513c
 	github.com/google/uuid v1.1.1
 	github.com/jbrukh/bayesian v0.0.0-20200318221351-d726b684ca4a // indirect
-	github.com/jenkins-x/go-scm v1.5.199
-	github.com/jenkins-x/jx-api/v4 v4.0.14
-	github.com/jenkins-x/jx-gitops v0.0.497
-	github.com/jenkins-x/jx-helpers/v3 v3.0.41
+	github.com/jenkins-x/go-scm v1.5.202
+	github.com/jenkins-x/jx-api/v4 v4.0.16
+	github.com/jenkins-x/jx-gitops v0.0.510
+	github.com/jenkins-x/jx-helpers/v3 v3.0.48
 	github.com/jenkins-x/jx-logging/v3 v3.0.2
 	github.com/jenkins-x/jx-promote v0.0.159
 	github.com/pkg/errors v0.9.1
