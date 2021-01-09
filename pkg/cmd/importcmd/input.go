@@ -239,11 +239,11 @@ func (o *ImportOptions) PickNewOrExistingGitRepository() (*CreateRepoData, error
 func (o *ImportOptions) ValidateRepositoryName(owner string, name string) error {
 	fullName := scm.Join(owner, name)
 	ctx := context.Background()
-	_, _, err := o.ScmFactory.ScmClient.Repositories.Find(ctx, fullName)
+	_, res, err := o.ScmFactory.ScmClient.Repositories.Find(ctx, fullName)
 	if err == nil {
 		return errors.Errorf("repository %s already exists", fullName)
 	}
-	if scmhelpers.IsScmNotFound(err) {
+	if scmhelpers.IsScmResponseNotFound(res) {
 		return nil
 	}
 	return errors.Wrapf(err, "failed to check if repository %s exists", fullName)
