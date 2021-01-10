@@ -23,18 +23,19 @@ func (m *MockRepositoryService) Find(ctx context.Context, repo string) (*scm.Rep
 func TestShouldReturnErrorWhenNoErrorReturnedIndicatingSuccessResponseAndRepositoryExists(t *testing.T) {
 	t.Parallel()
 	m := new(MockRepositoryService)
+	c := scm.Client{
+		Repositories: m,
+	}
 	cmd := &importcmd.ImportOptions{
 		ScmFactory: scmhelpers.Factory{
-			ScmClient: &scm.Client{
-				Repositories: m,
-			},
+			ScmClient: &c,
 		},
 	}
 	o := "proj"
 	r := "test"
 	res := new(scm.Response)
 	rep := new(scm.Repository)
-	m.On("Find", mock.Anything, o+"/"+r).Return(&rep, &res, nil)
+	m.On("Find", mock.Anything, o+"/"+r).Return(rep, res, nil)
 
 	result := cmd.ValidateRepositoryName(o, r)
 
@@ -44,11 +45,12 @@ func TestShouldReturnErrorWhenNoErrorReturnedIndicatingSuccessResponseAndReposit
 func TestShouldReturnErrorWhenErrorReturnedAndResponseIsSuccessful(t *testing.T) {
 	t.Parallel()
 	m := new(MockRepositoryService)
+	c := scm.Client{
+		Repositories: m,
+	}
 	cmd := &importcmd.ImportOptions{
 		ScmFactory: scmhelpers.Factory{
-			ScmClient: &scm.Client{
-				Repositories: m,
-			},
+			ScmClient: &c,
 		},
 	}
 	o := "proj"
@@ -56,7 +58,8 @@ func TestShouldReturnErrorWhenErrorReturnedAndResponseIsSuccessful(t *testing.T)
 	res := new(scm.Response)
 	res.Status = 200
 	rep := new(scm.Repository)
-	m.On("Find", mock.Anything, o+"/"+r).Return(&rep, &res, nil)
+	err := scm.ErrNotAuthorized
+	m.On("Find", mock.Anything, o+"/"+r).Return(rep, res, err)
 
 	result := cmd.ValidateRepositoryName(o, r)
 
@@ -66,11 +69,12 @@ func TestShouldReturnErrorWhenErrorReturnedAndResponseIsSuccessful(t *testing.T)
 func TestShouldReturnNilWhenErrorReturnedAndResponseIsNotFound(t *testing.T) {
 	t.Parallel()
 	m := new(MockRepositoryService)
+	c := scm.Client{
+		Repositories: m,
+	}
 	cmd := &importcmd.ImportOptions{
 		ScmFactory: scmhelpers.Factory{
-			ScmClient: &scm.Client{
-				Repositories: m,
-			},
+			ScmClient: &c,
 		},
 	}
 	o := "proj"
@@ -78,8 +82,8 @@ func TestShouldReturnNilWhenErrorReturnedAndResponseIsNotFound(t *testing.T) {
 	res := new(scm.Response)
 	res.Status = 404
 	rep := new(scm.Repository)
-	err := new(error)
-	m.On("Find", mock.Anything, o+"/"+r).Return(&rep, &res, err)
+	err := scm.ErrNotFound
+	m.On("Find", mock.Anything, o+"/"+r).Return(rep, res, err)
 
 	result := cmd.ValidateRepositoryName(o, r)
 

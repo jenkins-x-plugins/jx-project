@@ -795,11 +795,8 @@ github.com/jbrukh/bayesian v0.0.0-20200318221351-d726b684ca4a/go.mod h1:SELxwZQq
 github.com/jcmturner/gofork v0.0.0-20190328161633-dc7c13fece03/go.mod h1:MK8+TM0La+2rjBD4jE12Kj1pCCxK7d2LK/UM3ncEo0o=
 github.com/jcmturner/gofork v1.0.0/go.mod h1:MK8+TM0La+2rjBD4jE12Kj1pCCxK7d2LK/UM3ncEo0o=
 github.com/jehiah/go-strftime v0.0.0-20171201141054-1d33003b3869/go.mod h1:cJ6Cj7dQo+O6GJNiMx+Pa94qKj+TG8ONdKHgMNIyyag=
-github.com/jenkins-x/go-scm v1.5.203 h1:Z1/YwKgLmoR6nn4TDhN0KvQrTJ8h0eG97GL0AVIDU1w=
-github.com/jenkins-x/go-scm v1.5.203/go.mod h1:pTp8HHrCEVGs24H/8Cy+X/CDXFlKv9VC6zmrXBYNkfE=
-github.com/jenkins-x/go-scm v1.5.204 h1:BdV5TEaUqCR0roImbz9qh2qFdQ7mmg86zAih3rweN5s=
-github.com/jenkins-x/go-scm v1.5.204/go.mod h1:pTp8HHrCEVGs24H/8Cy+X/CDXFlKv9VC6zmrXBYNkfE=
-github.com/jenkins-x/jx-api/v4 v4.0.11/go.mod h1:3n+xwDoSuALVUSlIUj8nK105k7hqP5HoTh7cch/FScc=
+github.com/jenkins-x/go-scm v1.5.205 h1:z6cZLjY4/oVvYOShuouR8ZMiHA+19UCm21KrvauXHMs=
+github.com/jenkins-x/go-scm v1.5.205/go.mod h1:pTp8HHrCEVGs24H/8Cy+X/CDXFlKv9VC6zmrXBYNkfE=
 github.com/jenkins-x/jx-api/v4 v4.0.14/go.mod h1:3n+xwDoSuALVUSlIUj8nK105k7hqP5HoTh7cch/FScc=
 github.com/jenkins-x/jx-api/v4 v4.0.16/go.mod h1:e98SpJGhOodGShusrGhMqSzRsyZbVsPjWGpEQ2hC0Mk=
 github.com/jenkins-x/jx-api/v4 v4.0.17 h1:YGgViLwqTDQ8VNKMtxrZTTo7gRsx8ZlV+q6Ks5e1KLU=
