@@ -59,7 +59,7 @@ func (o *ImportOptions) addSourceConfigPullRequest(gitURL string, gitKind string
 		BatchMode:         o.BatchMode,
 		UseGitHubOAuth:    false,
 		Fork:              false,
-		Labels:            []string{"env/dev"},
+		//Labels:            []string{"env/dev"},
 	}
 
 	pro.Function = func() error {
@@ -89,7 +89,13 @@ func (o *ImportOptions) addSourceConfigPullRequest(gitURL string, gitKind string
 		log.Logger().Infof("defaulting the user name to %s so we can create a PullRequest", pro.Username)
 	}
 	*/
-	prDetails := &scm.PullRequest{}
+	prDetails := &scm.PullRequest{
+		Labels: []*scm.Label{
+			{
+				Name: "env/dev",
+			},
+		},
+	}
 
 	pr, err := pro.Create(devGitURL, "", prDetails, false)
 	if err != nil {
