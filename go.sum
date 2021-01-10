@@ -797,11 +797,16 @@ github.com/jcmturner/gofork v1.0.0/go.mod h1:MK8+TM0La+2rjBD4jE12Kj1pCCxK7d2LK/U
 github.com/jehiah/go-strftime v0.0.0-20171201141054-1d33003b3869/go.mod h1:cJ6Cj7dQo+O6GJNiMx+Pa94qKj+TG8ONdKHgMNIyyag=
 github.com/jenkins-x/go-scm v1.5.203 h1:Z1/YwKgLmoR6nn4TDhN0KvQrTJ8h0eG97GL0AVIDU1w=
 github.com/jenkins-x/go-scm v1.5.203/go.mod h1:pTp8HHrCEVGs24H/8Cy+X/CDXFlKv9VC6zmrXBYNkfE=
+github.com/jenkins-x/go-scm v1.5.204 h1:BdV5TEaUqCR0roImbz9qh2qFdQ7mmg86zAih3rweN5s=
+github.com/jenkins-x/go-scm v1.5.204/go.mod h1:pTp8HHrCEVGs24H/8Cy+X/CDXFlKv9VC6zmrXBYNkfE=
+github.com/jenkins-x/jx-api/v4 v4.0.11/go.mod h1:3n+xwDoSuALVUSlIUj8nK105k7hqP5HoTh7cch/FScc=
 github.com/jenkins-x/jx-api/v4 v4.0.14/go.mod h1:3n+xwDoSuALVUSlIUj8nK105k7hqP5HoTh7cch/FScc=
 github.com/jenkins-x/jx-api/v4 v4.0.16/go.mod h1:e98SpJGhOodGShusrGhMqSzRsyZbVsPjWGpEQ2hC0Mk=
 github.com/jenkins-x/jx-api/v4 v4.0.17 h1:YGgViLwqTDQ8VNKMtxrZTTo7gRsx8ZlV+q6Ks5e1KLU=
 github.com/jenkins-x/jx-api/v4 v4.0.17/go.mod h1:e98SpJGhOodGShusrGhMqSzRsyZbVsPjWGpEQ2hC0Mk=
 github.com/jenkins-x/jx-gitops v0.0.508/go.mod h1:bRaDoaK5x2g78qFYpfdx8TCW/3tk0COo6bXW5kUSe54=
+github.com/jenkins-x/jx-gitops v0.0.511 h1:F/Ldno2ibM3ZdTQucfAeuiHLAvBGGmTMXOv0CEwOm1M=
+github.com/jenkins-x/jx-gitops v0.0.511/go.mod h1:/l2olTb/QOjKptMqdbHneULn1J2yJNS/Jp//lnNRP8M=
 github.com/jenkins-x/jx-gitops v0.0.512 h1:RycuF2rDW4aVf5cKLF48uKgiUjEXal+HdI4lAoeEhhs=
 github.com/jenkins-x/jx-gitops v0.0.512/go.mod h1:/l2olTb/QOjKptMqdbHneULn1J2yJNS/Jp//lnNRP8M=
 github.com/jenkins-x/jx-helpers/v3 v3.0.50 h1:cAv7hW8b06m7OpLg2dOzSH4plVF6l2r7RzCCrfvJkbg=
