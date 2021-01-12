@@ -795,12 +795,9 @@ github.com/jbrukh/bayesian v0.0.0-20200318221351-d726b684ca4a/go.mod h1:SELxwZQq
 github.com/jcmturner/gofork v0.0.0-20190328161633-dc7c13fece03/go.mod h1:MK8+TM0La+2rjBD4jE12Kj1pCCxK7d2LK/UM3ncEo0o=
 github.com/jcmturner/gofork v1.0.0/go.mod h1:MK8+TM0La+2rjBD4jE12Kj1pCCxK7d2LK/UM3ncEo0o=
 github.com/jehiah/go-strftime v0.0.0-20171201141054-1d33003b3869/go.mod h1:cJ6Cj7dQo+O6GJNiMx+Pa94qKj+TG8ONdKHgMNIyyag=
-github.com/jenkins-x/go-scm v1.5.205 h1:z6cZLjY4/oVvYOShuouR8ZMiHA+19UCm21KrvauXHMs=
-github.com/jenkins-x/go-scm v1.5.205/go.mod h1:pTp8HHrCEVGs24H/8Cy+X/CDXFlKv9VC6zmrXBYNkfE=
-github.com/jenkins-x/go-scm v1.5.206 h1:2cO/QmQYnrNM4WOTyr/Slwew0smlji2PRyZTO9TSThE=
-github.com/jenkins-x/go-scm v1.5.206/go.mod h1:pTp8HHrCEVGs24H/8Cy+X/CDXFlKv9VC6zmrXBYNkfE=
+github.com/jenkins-x/go-scm v1.5.207 h1:T1bZGp0ABm9h5/zDT/flzSVga1LAVKqwIWrMoXYnmik=
+github.com/jenkins-x/go-scm v1.5.207/go.mod h1:pTp8HHrCEVGs24H/8Cy+X/CDXFlKv9VC6zmrXBYNkfE=
 github.com/jenkins-x/jx-api/v4 v4.0.14/go.mod h1:3n+xwDoSuALVUSlIUj8nK105k7hqP5HoTh7cch/FScc=
-github.com/jenkins-x/jx-api/v4 v4.0.16/go.mod h1:e98SpJGhOodGShusrGhMqSzRsyZbVsPjWGpEQ2hC0Mk=
 github.com/jenkins-x/jx-api/v4 v4.0.17 h1:YGgViLwqTDQ8VNKMtxrZTTo7gRsx8ZlV+q6Ks5e1KLU=
 github.com/jenkins-x/jx-api/v4 v4.0.17/go.mod h1:e98SpJGhOodGShusrGhMqSzRsyZbVsPjWGpEQ2hC0Mk=
 github.com/jenkins-x/jx-api/v4 v4.0.18 h1:Mw5HaJwYwd+UwstwF98sqfbxwJvYaNYuhue1rjfVTdI=
@@ -808,8 +805,6 @@ github.com/jenkins-x/jx-api/v4 v4.0.18/go.mod h1:e98SpJGhOodGShusrGhMqSzRsyZbVsP
 github.com/jenkins-x/jx-gitops v0.0.508/go.mod h1:bRaDoaK5x2g78qFYpfdx8TCW/3tk0COo6bXW5kUSe54=
 github.com/jenkins-x/jx-gitops v0.0.516 h1:TTYV/PzawdUeg/C+cO0mrGTyAYUEpXrv+vk2LD0VvnQ=
 github.com/jenkins-x/jx-gitops v0.0.516/go.mod h1:cI8jtp4MXA96F0oqlwCb/DEkzKjXToQ8JyJE5MDxc5Q=
-github.com/jenkins-x/jx-helpers/v3 v3.0.50 h1:cAv7hW8b06m7OpLg2dOzSH4plVF6l2r7RzCCrfvJkbg=
-github.com/jenkins-x/jx-helpers/v3 v3.0.50/go.mod h1:tQnD9Ju73CaD6e+Cv/qVa+88TM+Gr9AvONmsHrc0FMo=
 github.com/jenkins-x/jx-helpers/v3 v3.0.54 h1:jsG21Ha2yxQewSr+6RYLz7zCVgop1Cd/ToCxyraBD3M=
 github.com/jenkins-x/jx-helpers/v3 v3.0.54/go.mod h1:1FY+lyjIFM1JteAP9GitvfsVxCjB8OMJdk/WKHOYqaw=
 github.com/jenkins-x/jx-kube-client/v3 v3.0.1 h1:zMnxoLRXJJ85PAd9OVPlgXT5T8xHgbmxSMhpYPTF5mw=

@@ -11,7 +11,7 @@ require (
 	github.com/denormal/go-gitignore v0.0.0-20180713143441-75ce8f3e513c
 	github.com/google/uuid v1.1.4
 	github.com/jbrukh/bayesian v0.0.0-20200318221351-d726b684ca4a // indirect
-	github.com/jenkins-x/go-scm v1.5.206
+	github.com/jenkins-x/go-scm v1.5.207
 	github.com/jenkins-x/jx-api/v4 v4.0.18
 	github.com/jenkins-x/jx-gitops v0.0.516
 	github.com/jenkins-x/jx-helpers/v3 v3.0.54
@@ -32,7 +32,7 @@ require (
 )
 
 replace (
-	github.com/jenkins-x/go-scm => github.com/jenkins-x/go-scm v1.5.206
+	github.com/jenkins-x/go-scm => github.com/jenkins-x/go-scm v1.5.207
 	github.com/jenkins-x/jx-helpers/v3 => github.com/jenkins-x/jx-helpers/v3 v3.0.54
 	github.com/tektoncd/pipeline => github.com/jenkins-x/pipeline v0.3.2-0.20201002150609-ca0741e5d19a
 	k8s.io/api => k8s.io/api v0.19.4
