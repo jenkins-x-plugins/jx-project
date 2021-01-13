@@ -811,6 +811,7 @@ github.com/jenkins-x/jx-gitops v0.0.517 h1:pL1MXi1vkFNoomFZF5QTjglyGGsFa5v9yVS1J
 github.com/jenkins-x/jx-gitops v0.0.517/go.mod h1:FTK2FhUOcOLZQS06K4Sa50+Ku4HpOkU51Wy2Wxo5NGs=
 github.com/jenkins-x/jx-gitops v0.0.518 h1:fc5yJPNEGeoy1sjO2KKMNWEr5/Poeu05QOpuEOY9A0o=
 github.com/jenkins-x/jx-gitops v0.0.518/go.mod h1:Sjw9eDfka3QRLBznrF+3eXsJHpbAOfIuexkivIngixM=
+github.com/jenkins-x/jx-gitops v0.0.519/go.mod h1:Sjw9eDfka3QRLBznrF+3eXsJHpbAOfIuexkivIngixM=
 github.com/jenkins-x/jx-helpers/v3 v3.0.54 h1:jsG21Ha2yxQewSr+6RYLz7zCVgop1Cd/ToCxyraBD3M=
 github.com/jenkins-x/jx-helpers/v3 v3.0.54/go.mod h1:1FY+lyjIFM1JteAP9GitvfsVxCjB8OMJdk/WKHOYqaw=
 github.com/jenkins-x/jx-kube-client/v3 v3.0.1 h1:zMnxoLRXJJ85PAd9OVPlgXT5T8xHgbmxSMhpYPTF5mw=
