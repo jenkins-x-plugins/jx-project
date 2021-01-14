@@ -24,7 +24,7 @@ require (
 	github.com/tektoncd/pipeline v0.14.2
 	gopkg.in/AlecAivazis/survey.v1 v1.8.8
 	k8s.io/api v0.20.1
-	k8s.io/apimachinery v0.20.1
+	k8s.io/apimachinery v0.20.2
 	k8s.io/client-go v11.0.1-0.20190805182717-6502b5e7b1b5+incompatible
 	k8s.io/helm v2.16.10+incompatible
 	knative.dev/pkg v0.0.0-20201002052829-735a38c03260
