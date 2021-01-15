@@ -806,6 +806,7 @@ github.com/jenkins-x/jx-api/v4 v4.0.18 h1:Mw5HaJwYwd+UwstwF98sqfbxwJvYaNYuhue1rj
 github.com/jenkins-x/jx-api/v4 v4.0.18/go.mod h1:e98SpJGhOodGShusrGhMqSzRsyZbVsPjWGpEQ2hC0Mk=
 github.com/jenkins-x/jx-api/v4 v4.0.19 h1:PQ6Og4pdxIaxBD/g7jg8JE1Ajm/WBDeZO0K457fSAAM=
 github.com/jenkins-x/jx-api/v4 v4.0.19/go.mod h1:e98SpJGhOodGShusrGhMqSzRsyZbVsPjWGpEQ2hC0Mk=
+github.com/jenkins-x/jx-api/v4 v4.0.20/go.mod h1:e98SpJGhOodGShusrGhMqSzRsyZbVsPjWGpEQ2hC0Mk=
 github.com/jenkins-x/jx-gitops v0.0.508/go.mod h1:bRaDoaK5x2g78qFYpfdx8TCW/3tk0COo6bXW5kUSe54=
 github.com/jenkins-x/jx-gitops v0.0.517 h1:pL1MXi1vkFNoomFZF5QTjglyGGsFa5v9yVS1JkxbJNg=
 github.com/jenkins-x/jx-gitops v0.0.517/go.mod h1:FTK2FhUOcOLZQS06K4Sa50+Ku4HpOkU51Wy2Wxo5NGs=
