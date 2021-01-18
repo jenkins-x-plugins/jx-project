@@ -193,7 +193,7 @@ func (o *CreatePullRequestOptions) Run() error {
 	}
 
 	log.Logger().Debugf("creating pull request on %s in dir %s", o.SourceURL, dir)
-	o.Results, err = po.CreatePullRequest(scmClient, o.SourceURL, fullName, o.Dir, true)
+	o.Results, err = po.CreatePullRequest(scmClient, o.SourceURL, fullName, o.Dir, true, nil)
 	if err != nil {
 		return errors.Wrapf(err, "failed to create PR")
 	}
