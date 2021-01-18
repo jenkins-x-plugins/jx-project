@@ -775,6 +775,7 @@ github.com/jenkins-x/jx-logging/v3 v3.0.3 h1:sVACbwiKuaDFYPfJeVAU10MJI4DA6LcH1Rq
 github.com/jenkins-x/jx-logging/v3 v3.0.3/go.mod h1:Vp2ER2SYgGhAgEEHlLwfi2ZB54tz6ya1qExq0A4CKMI=
 github.com/jenkins-x/jx-promote v0.0.175 h1:ZC40VJ5UwMFgHBP1OvJSjlumVd7bn1sSk0w2d70qj8E=
 github.com/jenkins-x/jx-promote v0.0.175/go.mod h1:dDYfVnnrOALQt6l9OoeykbHtcmBWAbk+cGLyzO0hFCg=
+github.com/jenkins-x/jx-promote v0.0.176 h1:Vwm44/VWpWNGuPyNJ8uzOAWdo+KoMkoqQ9ZiflV+5iY=
 github.com/jenkins-x/jx-promote v0.0.176/go.mod h1:6yLHIewejyBqUEBFfWzMBnoWg9l/drjlG5d+yJ+aYUg=
 github.com/jenkins-x/lighthouse v0.0.907/go.mod h1:prVMqvrE328izXLmSG09Cnlg/Ukn04PdNs3Xh2pRqjE=
 github.com/jenkins-x/lighthouse-client v0.0.0-20210118141307-27a29c02a663/go.mod h1:/WznhRHiNIYjfd647yPuPnrQZ9z0lEGM5ipR7E+eYG0=
@@ -1923,6 +1924,7 @@ sigs.k8s.io/kustomize/api v0.4.1/go.mod h1:NqxqT+wbYHrD0P19Uu4dXiMsVwI1IwQs+MJHl
 sigs.k8s.io/kustomize/kyaml v0.1.11/go.mod h1:72/rLkSi+L/pHM1oCjwrf3ClU+tH5kZQvvdLSqIHwWU=
 sigs.k8s.io/kustomize/kyaml v0.10.5 h1:PbJcsZsEM7O3hHtUWTR+4WkHVbQRW9crSy75or1gRbI=
 sigs.k8s.io/kustomize/kyaml v0.10.5/go.mod h1:P6Oy/ah/GZMKzJMIJA2a3/bc8YrBkuL5kJji13PSIzY=
+sigs.k8s.io/structured-merge-diff v0.0.0-20190525122527-15d366b2352e h1:4Z09Hglb792X0kfOBBJUPFEyvVfQWrYT/l8h5EKA6JQ=
 sigs.k8s.io/structured-merge-diff v0.0.0-20190525122527-15d366b2352e/go.mod h1:wWxsB5ozmmv/SG7nM11ayaAW51xMvak/t1r0CSlcokI=
 sigs.k8s.io/structured-merge-diff v1.0.1-0.20191108220359-b1b620dd3f06 h1:zD2IemQ4LmOcAumeiyDWXKUI2SO0NYDe3H6QGvPOVgU=
 sigs.k8s.io/structured-merge-diff v1.0.1-0.20191108220359-b1b620dd3f06/go.mod h1:/ULNhyfzRopfcjskuui0cTITekDduZ7ycKN3oUT9R18=
