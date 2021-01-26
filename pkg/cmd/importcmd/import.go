@@ -1476,14 +1476,14 @@ func (o *ImportOptions) waitForSourceRepositoryPullRequest(pullRequestInfo *scm.
 					if pr.MergeSha == "" {
 						if !logNoMergeCommitSha {
 							logNoMergeCommitSha = true
-							log.Logger().Infof("Pull Request %s is merged but we don't yet have a merge SHA after waiting %s", termcolor.ColorInfo(pr.Link), elaspedString)
+							log.Logger().Infof("Pull Request %s was merged but we didn't yet have a merge SHA after waiting %s", termcolor.ColorInfo(pr.Link), elaspedString)
 							return nil
 						}
 					} else {
 						mergeSha := pr.MergeSha
 						if !logHasMergeSha {
 							logHasMergeSha = true
-							log.Logger().Infof("Pull Request %s is merged at sha %s after waiting %s", termcolor.ColorInfo(pr.Link), termcolor.ColorInfo(mergeSha), elaspedString)
+							log.Logger().Infof("Pull Request %s was merged at sha %s after waiting %s", termcolor.ColorInfo(pr.Link), termcolor.ColorInfo(mergeSha), elaspedString)
 							return nil
 						}
 					}
