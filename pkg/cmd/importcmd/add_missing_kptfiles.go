@@ -83,7 +83,7 @@ func (o *ImportOptions) createMissingLighthouseKptFiles(lighthouseDir, packName 
 			return errors.Wrapf(err, "failed to discover latest git commit for dir %s", lighthouseDir)
 		}
 
-		gitURL, err := gitdiscovery.FindGitURLFromDir(lighthouseDir)
+		gitURL, err := gitdiscovery.FindGitURLFromDir(lighthouseDir, true)
 		if err != nil {
 			return errors.Wrapf(err, "failed to discover git URL in dir %s", lighthouseDir)
 		}

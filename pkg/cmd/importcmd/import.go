@@ -338,7 +338,7 @@ func (o *ImportOptions) Run() error {
 			return err
 		}
 
-		o.DiscoveredGitURL, err = gitdiscovery.FindGitURLFromDir(o.Dir)
+		o.DiscoveredGitURL, err = gitdiscovery.FindGitURLFromDir(o.Dir, true)
 		if err != nil {
 			return errors.Wrapf(err, "failed to discover the git URL")
 		}

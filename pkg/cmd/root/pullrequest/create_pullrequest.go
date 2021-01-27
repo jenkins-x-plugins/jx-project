@@ -235,7 +235,7 @@ func (o *CreatePullRequestOptions) findLastCommitTitle() (string, string, error)
 	title := ""
 	body := ""
 	dir := o.Dir
-	_, err := gitdiscovery.FindGitURLFromDir(dir)
+	_, err := gitdiscovery.FindGitURLFromDir(dir, true)
 	if err != nil {
 		return title, body, errors.Wrapf(err, "Failed to find git config in dir %s", dir)
 	}
