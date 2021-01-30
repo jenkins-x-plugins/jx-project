@@ -90,6 +90,7 @@ type ImportOptions struct {
 	WaitForSourceRepositoryPullRequest bool
 	NoDevPullRequest                   bool
 	IgnoreExistingRepository           bool
+	IgnoreJenkinsXFile                 bool
 	PullRequestPollPeriod              time.Duration
 	PullRequestPollTimeout             time.Duration
 	DeployOptions                      v1.DeployOptions
@@ -108,6 +109,7 @@ type ImportOptions struct {
 	gitInfo               *giturl.GitRepository
 	Destination           ImportDestination
 	reporter              ImportReporter
+	PackFilter            func(*Pack)
 
 	/*
 		TODO jenkins support
@@ -421,7 +423,7 @@ func (o *ImportOptions) Run() error {
 	if err != nil {
 		return errors.Wrapf(err, "failed to check if dir contains a %s file", jxProjectFile)
 	}
-	if jxProjectFileExists {
+	if jxProjectFileExists && !o.IgnoreJenkinsXFile {
 		o.DisableBuildPack = true
 
 		// we may need to add a custom build pack to handle the old jenkins-x.yml build packs
