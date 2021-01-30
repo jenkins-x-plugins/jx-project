@@ -291,7 +291,7 @@ func (o *ImportOptions) InvokeDraftPack(i *InvokeDraftPack) (string, error) {
 		return pack, err
 	}
 
-	err = copyBuildPack(dir, lpack)
+	err = copyBuildPack(dir, lpack, o.PackFilter)
 	if err != nil {
 		log.Logger().Warnf("Failed to apply the build pack in %s due to %s", dir, err)
 	}
@@ -370,7 +370,7 @@ func (o *ImportOptions) DiscoverBuildPack(dir string, projectConfig *config.Proj
 
 // Refactor: taken from jx so we can also bring in the draft pack and not fail when copying buildpacks without a charts dir
 // CopyBuildPack copies the build pack from the source dir to the destination dir
-func copyBuildPack(dest, src string) error {
+func copyBuildPack(dest, src string, filter func(*Pack)) error {
 	// first do some validation that we are copying from a valid pack directory
 	p, err := FromDir(src)
 	if err != nil {
@@ -381,6 +381,11 @@ func copyBuildPack(dest, src string) error {
 	for _, file := range []string{jenkinsfile.PipelineConfigFileName, jenkinsfile.PipelineTemplateFileName} {
 		delete(p.Files, file)
 	}
+
+	if filter != nil {
+		filter(p)
+	}
+
 	_, packName := filepath.Split(src)
 	return p.SaveDir(dest, packName)
 }
