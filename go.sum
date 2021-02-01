@@ -835,6 +835,7 @@ github.com/jenkins-x/jx-pipeline v0.0.92 h1:tLN4/WAY1eUnk3R9TfvKD+ymAptAJWZAvDnL
 github.com/jenkins-x/jx-pipeline v0.0.92/go.mod h1:fZtK/a/oQh4asi4SFD/W9Efmo3vwkAuCnprLsqYzYhM=
 github.com/jenkins-x/jx-promote v0.0.231 h1:D8GrtMgGR1GXTOwiNKxM4TR0d/EnpYWrMALSteylXXY=
 github.com/jenkins-x/jx-promote v0.0.231/go.mod h1:zSgba2CKBgQOVpvNqdH3+RCyE9iYqkrrDqJ2p3uL9ms=
+github.com/jenkins-x/jx-promote v0.0.232/go.mod h1:zSgba2CKBgQOVpvNqdH3+RCyE9iYqkrrDqJ2p3uL9ms=
 github.com/jenkins-x/lighthouse-client v0.0.14 h1:a/v/U9LITOCG5wf8b2hZli7cMt37Xsx1234PfDx3PaU=
 github.com/jenkins-x/lighthouse-client v0.0.14/go.mod h1:xr0nj9xyh1BfU3MaIpRq42IFKdVRaLuSKNPSx2F9dm0=
 github.com/jenkins-x/lighthouse-client v0.0.16/go.mod h1:xr0nj9xyh1BfU3MaIpRq42IFKdVRaLuSKNPSx2F9dm0=
