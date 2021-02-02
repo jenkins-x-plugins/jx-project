@@ -5,6 +5,7 @@ go 1.15
 require (
 	github.com/Azure/draft v0.15.0
 	github.com/alexflint/go-filemutex v0.0.0-20171028004239-d358565f3c3f
+	github.com/aws/aws-sdk-go v1.36.1 // indirect
 	github.com/blang/semver v3.5.1+incompatible
 	github.com/cpuguy83/go-md2man v1.0.10
 	github.com/danwakefield/fnmatch v0.0.0-20160403171240-cbb64ac3d964 // indirect
@@ -16,14 +17,16 @@ require (
 	github.com/jenkins-x/jx-gitops v0.0.541
 	github.com/jenkins-x/jx-helpers/v3 v3.0.73
 	github.com/jenkins-x/jx-logging/v3 v3.0.3
-	github.com/jenkins-x/jx-pipeline v0.0.92
-	github.com/jenkins-x/jx-promote v0.0.231
-	github.com/jenkins-x/lighthouse-client v0.0.17
+	github.com/jenkins-x/jx-promote v0.0.232
+	github.com/jenkins-x/lighthouse-client v0.0.19
 	github.com/pkg/errors v0.9.1
 	github.com/spf13/cobra v1.1.1
 	github.com/spf13/pflag v1.0.5
 	github.com/stretchr/testify v1.7.0
 	github.com/tektoncd/pipeline v0.20.0
+	golang.org/x/crypto v0.0.0-20201203163018-be400aefbc4c // indirect
+	golang.org/x/mod v0.4.0 // indirect
+	golang.org/x/sys v0.0.0-20201202213521-69691e467435 // indirect
 	gopkg.in/AlecAivazis/survey.v1 v1.8.8
 	k8s.io/api v0.20.2
 	k8s.io/apimachinery v0.20.2

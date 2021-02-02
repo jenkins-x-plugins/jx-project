@@ -424,18 +424,24 @@ func (o *ImportOptions) Run() error {
 		return errors.Wrapf(err, "failed to check if dir contains a %s file", jxProjectFile)
 	}
 	if jxProjectFileExists && !o.IgnoreJenkinsXFile {
-		o.DisableBuildPack = true
-
-		// we may need to add a custom build pack to handle the old jenkins-x.yml build packs
-		projectConfig, projectConfigFile, err := config.LoadProjectConfig(o.Dir)
+		converted, err := o.convertOldPipeline()
 		if err != nil {
-			return errors.Wrapf(err, "failed to load project oconfig file from %s", o.Dir)
+			return errors.Wrapf(err, "failed to convert old pipeline")
 		}
-		if projectConfig.BuildPackGitURef == "" || strings.HasPrefix(projectConfig.BuildPackGitURef, "https://github.com/jenkins-x/jx3-pipeline-catalog") {
-			projectConfig.BuildPackGitURef = "https://github.com/jenkins-x/jxr-packs-kubernetes"
-			err = projectConfig.SaveConfig(projectConfigFile)
+
+		o.DisableBuildPack = true
+		if !converted {
+			// we may need to add a custom build pack to handle the old jenkins-x.yml build packs
+			projectConfig, projectConfigFile, err := config.LoadProjectConfig(o.Dir)
 			if err != nil {
-				return errors.Wrapf(err, "failed to save config file %s", projectConfigFile)
+				return errors.Wrapf(err, "failed to load project oconfig file from %s", o.Dir)
+			}
+			if projectConfig.BuildPackGitURef == "" || strings.HasPrefix(projectConfig.BuildPackGitURef, "https://github.com/jenkins-x/jx3-pipeline-catalog") {
+				projectConfig.BuildPackGitURef = "https://github.com/jenkins-x/jxr-packs-kubernetes"
+				err = projectConfig.SaveConfig(projectConfigFile)
+				if err != nil {
+					return errors.Wrapf(err, "failed to save config file %s", projectConfigFile)
+				}
 			}
 		}
 	}

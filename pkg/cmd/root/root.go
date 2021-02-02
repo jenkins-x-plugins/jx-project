@@ -2,8 +2,9 @@ package root
 
 import (
 	"fmt"
-	"github.com/jenkins-x/jx-project/pkg/cmd/root/enable"
 	"os"
+
+	"github.com/jenkins-x/jx-project/pkg/cmd/root/enable"
 
 	"github.com/jenkins-x/jx-helpers/v3/pkg/cobras"
 	"github.com/jenkins-x/jx-helpers/v3/pkg/cobras/helper"

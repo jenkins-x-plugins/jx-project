@@ -4,12 +4,13 @@ package importcmd_test
 
 import (
 	"context"
-	"github.com/jenkins-x/go-scm/scm"
 	"io/ioutil"
 	"os"
 	"path"
 	"path/filepath"
 	"testing"
+
+	"github.com/jenkins-x/go-scm/scm"
 
 	v1 "github.com/jenkins-x/jx-api/v4/pkg/apis/jenkins.io/v1"
 	"github.com/jenkins-x/jx-helpers/v3/pkg/files"
@@ -40,7 +41,7 @@ func TestImportTektonCatalogProject(t *testing.T) {
 	dirName = naming.ToValidName(dirName)
 	_, o := importcmd.NewCmdImportAndOptions()
 
-	testimports.SetFakeClients(t, o)
+	testimports.SetFakeClients(t, o, false)
 
 	o.Dir = testDir
 	o.DisableMaven = true

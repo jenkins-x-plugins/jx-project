@@ -108,7 +108,7 @@ func assertImport(t *testing.T, testDir string, testcase string, importToJenkins
 	dirName = naming.ToValidName(dirName)
 	_, o := importcmd.NewCmdImportAndOptions()
 
-	testimports.SetFakeClients(t, o)
+	testimports.SetFakeClients(t, o, false)
 	o.Dir = testDir
 	o.DisableMaven = true
 	o.UseDefaultGit = true

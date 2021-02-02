@@ -39,7 +39,7 @@ func TestImportJenkinsfileProject(t *testing.T) {
 	dirName = naming.ToValidName(dirName)
 	_, o := importcmd.NewCmdImportAndOptions()
 
-	testimports.SetFakeClients(t, o)
+	testimports.SetFakeClients(t, o, false)
 
 	o.BatchMode = true
 	o.Dir = testDir
