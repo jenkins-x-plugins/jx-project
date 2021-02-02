@@ -24,7 +24,7 @@ const (
 )
 
 // SetFakeClients sets the fake clients on the options
-func SetFakeClients(t *testing.T, o *importcmd.ImportOptions) (*fakescm.Data, *v1.Environment) {
+func SetFakeClients(t *testing.T, o *importcmd.ImportOptions, realJXConvert bool) (*fakescm.Data, *v1.Environment) {
 	fakeInput := &fakeinput.FakeInput{
 		Values: map[string]string{},
 	}
@@ -57,13 +57,13 @@ func SetFakeClients(t *testing.T, o *importcmd.ImportOptions) (*fakescm.Data, *v
 	o.JXClient = fakejx.NewSimpleClientset(devEnv)
 	o.Namespace = ns
 
-	runner := NewFakeRunnerWithoutGitPush(t)
+	runner := NewFakeRunnerWithoutGitPush(t, realJXConvert)
 	o.CommandRunner = runner.Run
 	return fakeScmData, devEnv
 }
 
 // NewFakeRunnerWithoutGitPush create a fake command runner that fakes out git push
-func NewFakeRunnerWithoutGitPush(t *testing.T) *fakerunner.FakeRunner {
+func NewFakeRunnerWithoutGitPush(t *testing.T, realJXConvert bool) *fakerunner.FakeRunner {
 	runner := &fakerunner.FakeRunner{}
 	runner.CommandRunner = func(c *cmdrunner.Command) (string, error) {
 		if c.Name == "git" && len(c.Args) > 0 {
@@ -88,9 +88,11 @@ func NewFakeRunnerWithoutGitPush(t *testing.T) *fakerunner.FakeRunner {
 		}
 
 		if c.Name == "jx" && len(c.Args) > 0 && c.Args[0] == "pipeline" {
-			// lets fake out starting pipelines
-			t.Logf("faking command: %s\n", c.CLI())
-			return "", nil
+			if !realJXConvert || len(c.Args) < 2 || c.Args[1] != "convert" {
+				// lets fake out starting pipelines
+				t.Logf("faking command: %s\n", c.CLI())
+				return "", nil
+			}
 		}
 
 		// otherwise lets do it for real

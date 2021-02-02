@@ -2,12 +2,13 @@ package importcmd_test
 
 import (
 	"context"
+	"testing"
+
 	"github.com/jenkins-x/go-scm/scm"
 	"github.com/jenkins-x/jx-helpers/v3/pkg/scmhelpers"
 	"github.com/jenkins-x/jx-project/pkg/cmd/importcmd"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
-	"testing"
 )
 
 type MockRepositoryService struct {

@@ -1,9 +1,12 @@
 package enable
 
 import (
+	"io"
+
 	"github.com/jenkins-x/jx-helpers/v3/pkg/gitclient"
 	"github.com/pkg/errors"
-	"io"
+
+	"strings"
 
 	"github.com/jenkins-x/jx-helpers/v3/pkg/cobras/helper"
 	"github.com/jenkins-x/jx-helpers/v3/pkg/cobras/templates"
@@ -12,7 +15,6 @@ import (
 	"github.com/jenkins-x/lighthouse-client/pkg/triggerconfig"
 	"github.com/spf13/cobra"
 	tektonv1beta1 "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1beta1"
-	"strings"
 )
 
 // Options contains the command line options

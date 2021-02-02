@@ -43,7 +43,7 @@ func TestImportGitHubActionProject(t *testing.T) {
 	dirName = naming.ToValidName(dirName)
 	o := &importcmd.ImportOptions{}
 
-	testimports.SetFakeClients(t, o)
+	testimports.SetFakeClients(t, o, false)
 	o.Dir = testDir
 	o.DisableMaven = true
 	o.UseDefaultGit = true

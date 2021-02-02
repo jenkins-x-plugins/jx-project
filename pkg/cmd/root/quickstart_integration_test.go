@@ -22,7 +22,7 @@ func TestCreateQuickstartProjects(t *testing.T) {
 	o.Filter.Text = "node-http"
 	o.Filter.ProjectName = appName
 
-	testimports.SetFakeClients(t, &o.Options.ImportOptions)
+	testimports.SetFakeClients(t, &o.Options.ImportOptions, false)
 
 	o.Dir = testDir
 	o.OutDir = testDir
