@@ -87,6 +87,8 @@ github.com/Azure/go-autorest/autorest/adal v0.9.5 h1:Y3bBUV4rTuxenJJs41HU3qmqsb+
 github.com/Azure/go-autorest/autorest/adal v0.9.5/go.mod h1:B7KF7jKIeC9Mct5spmyCB/A8CG/sEz1vwIRGv/bbw7A=
 github.com/Azure/go-autorest/autorest/adal v0.9.10 h1:r6fZHMaHD8B6LDCn0o5vyBFHIHrM6Ywwx7mb49lPItI=
 github.com/Azure/go-autorest/autorest/adal v0.9.10/go.mod h1:B7KF7jKIeC9Mct5spmyCB/A8CG/sEz1vwIRGv/bbw7A=
+github.com/Azure/go-autorest/autorest/adal v0.9.11 h1:L4/pmq7poLdsy41Bj1FayKvBhayuWRYkx9HU5i4Ybl0=
+github.com/Azure/go-autorest/autorest/adal v0.9.11/go.mod h1:nBKAnTomx8gDtl+3ZCJv2v0KACFHWTB2drffI1B68Pk=
 github.com/Azure/go-autorest/autorest/azure/auth v0.1.0/go.mod h1:Gf7/i2FUpyb/sGBLIFxTBzrNzBo7aPXXE3ZVeDRwdpM=
 github.com/Azure/go-autorest/autorest/azure/auth v0.4.0/go.mod h1:Oo5cRhLvZteXzI2itUm5ziqsoIxRkzrt3t61FeZaS18=
 github.com/Azure/go-autorest/autorest/azure/auth v0.4.2/go.mod h1:90gmfKdlmKgfjUpnCEpOJzsUEjrWDSLwHIG73tSXddM=
@@ -635,6 +637,8 @@ github.com/googleapis/gnostic v0.5.1 h1:A8Yhf6EtqTv9RMsU6MQTyrtV1TjWlR6xU9BsZIwu
 github.com/googleapis/gnostic v0.5.1/go.mod h1:6U4PtQXGIEt/Z3h5MAT7FNofLnw9vXk2cUuW7uA/OeU=
 github.com/googleapis/gnostic v0.5.3 h1:2qsuRm+bzgwSIKikigPASa2GhW8H2Dn4Qq7UxD8K/48=
 github.com/googleapis/gnostic v0.5.3/go.mod h1:TRWw1s4gxBGjSe301Dai3c7wXJAZy57+/6tawkOvqHQ=
+github.com/googleapis/gnostic v0.5.4 h1:ynbQIWjLw7iv6HAFdixb30U7Uvcmx+f4KlLJpmhkTK0=
+github.com/googleapis/gnostic v0.5.4/go.mod h1:TRWw1s4gxBGjSe301Dai3c7wXJAZy57+/6tawkOvqHQ=
 github.com/gophercloud/gophercloud v0.1.0/go.mod h1:vxM41WHh5uqHVBMZHzuwNOHh8XEoIEcSTewFxm1c5g8=
 github.com/gopherjs/gopherjs v0.0.0-20181017120253-0766667cb4d1/go.mod h1:wJfORRmW1u3UXTncJ5qlYoELFm8eSnnEO6hX4iZ3EWY=
 github.com/gopherjs/gopherjs v0.0.0-20181103185306-d547d1d9531e/go.mod h1:wJfORRmW1u3UXTncJ5qlYoELFm8eSnnEO6hX4iZ3EWY=
@@ -764,9 +768,11 @@ github.com/jenkins-x/go-scm v1.5.216 h1:aQK0rthmvoEh6HqNmb4nPdr0Dj474Q7T6/lFgOrj
 github.com/jenkins-x/go-scm v1.5.216/go.mod h1:Iuk0V0mt0QGIt50TZyChHqRIiXTnp1ink9RyNoe7o7c=
 github.com/jenkins-x/jx-api/v4 v4.0.23 h1:GpgytvBXbHVGaeqsRLGl9f1v8vpxMsTWlZNPyhaXgF0=
 github.com/jenkins-x/jx-api/v4 v4.0.23/go.mod h1:IC88X+24Nmexuj7lRNRgzfrchzlo0qysfwkICpqDmMQ=
+github.com/jenkins-x/jx-api/v4 v4.0.24 h1:REuDkac0UCB/rAlbLt/Jd8LpaGGnGctr5dee8mKVHng=
+github.com/jenkins-x/jx-api/v4 v4.0.24/go.mod h1:IC88X+24Nmexuj7lRNRgzfrchzlo0qysfwkICpqDmMQ=
 github.com/jenkins-x/jx-gitops v0.0.537/go.mod h1:dH9vrfUqk/ObYeEtsdDw52x8PC01bFNXng6BcDHf1DM=
-github.com/jenkins-x/jx-gitops v0.0.541 h1:ovW9bkY2e4m/ZXng+tR+2eLAM472IO3LfjQJwcdNxWw=
-github.com/jenkins-x/jx-gitops v0.0.541/go.mod h1:C6VBk7uQ0vuTH+vsK2Eo49UF04xhjc1zqwRmYcu8nf4=
+github.com/jenkins-x/jx-gitops v0.0.548 h1:mKMThbM+Mic6pfAbgNWC6gY2AA/648hOtqJ9fbHcKo0=
+github.com/jenkins-x/jx-gitops v0.0.548/go.mod h1:s/JXKW2ehWXrHvTrZ60txlni8vzHuQKdoIbJdlp2RJk=
 github.com/jenkins-x/jx-helpers/v3 v3.0.72 h1:H2ZtaAgbApDxO0qN9hPG51wcQr02QtV5DTF+STEHJL0=
 github.com/jenkins-x/jx-helpers/v3 v3.0.72/go.mod h1:Q7L5HjVuaIsog3ZC731wOiTaK79cmFcQ/e7jOyTc5yE=
 github.com/jenkins-x/jx-helpers/v3 v3.0.73 h1:MdobaXNE4MyihIhXvzYoSTRKhEDlJ9loZo9uOzWKOQ4=
@@ -779,9 +785,10 @@ github.com/jenkins-x/jx-promote v0.0.232 h1:3pa7+suoUpg04y1W8ihQtWHlUYBYt8/Bl4gh
 github.com/jenkins-x/jx-promote v0.0.232/go.mod h1:zSgba2CKBgQOVpvNqdH3+RCyE9iYqkrrDqJ2p3uL9ms=
 github.com/jenkins-x/lighthouse-client v0.0.14 h1:a/v/U9LITOCG5wf8b2hZli7cMt37Xsx1234PfDx3PaU=
 github.com/jenkins-x/lighthouse-client v0.0.14/go.mod h1:xr0nj9xyh1BfU3MaIpRq42IFKdVRaLuSKNPSx2F9dm0=
-github.com/jenkins-x/lighthouse-client v0.0.16/go.mod h1:xr0nj9xyh1BfU3MaIpRq42IFKdVRaLuSKNPSx2F9dm0=
-github.com/jenkins-x/lighthouse-client v0.0.19 h1:BiIg5hrP/qlClQSb9qWtxXVAumaoTWynABlAvaBFz1A=
-github.com/jenkins-x/lighthouse-client v0.0.19/go.mod h1:xr0nj9xyh1BfU3MaIpRq42IFKdVRaLuSKNPSx2F9dm0=
+github.com/jenkins-x/lighthouse-client v0.0.23 h1:/QZo3j9pxLimt6bLlpP1udEKPPdJsIfzcOPkGqc3ERg=
+github.com/jenkins-x/lighthouse-client v0.0.23/go.mod h1:quluenATb3XRkW/2gf/wUY1DBhKN2m0nZ0MEpiGsGnA=
+github.com/jenkins-x/lighthouse-client v0.0.24 h1:i92PKoylA7Pa1clXSIRHsyZy/8ttPcT17ciabKQ9hgY=
+github.com/jenkins-x/lighthouse-client v0.0.24/go.mod h1:quluenATb3XRkW/2gf/wUY1DBhKN2m0nZ0MEpiGsGnA=
 github.com/jenkins-x/logrus-stackdriver-formatter v0.2.3 h1:NuRWKUPCEX1wKlXA8ZYSG28qGKd41R7BK11YDQkPwqo=
 github.com/jenkins-x/logrus-stackdriver-formatter v0.2.3/go.mod h1:litPp7VZWDRCl8LvXuqGngy+65kkg/+T23TgFnDmfTk=
 github.com/jenkins-x/pipeline v0.3.2-0.20210118090417-1e821d85abf6 h1:P/UwaE7LPLOZNIsaNkUGW2QU+4HZSgxkrHLa572zL+8=
