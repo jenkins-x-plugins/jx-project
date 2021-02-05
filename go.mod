@@ -4,7 +4,7 @@ go 1.15
 
 require (
 	cloud.google.com/go v0.76.0 // indirect
-	github.com/Azure/draft v0.15.0
+	github.com/Azure/draft v0.16.0
 	github.com/alexflint/go-filemutex v0.0.0-20171028004239-d358565f3c3f
 	github.com/aws/aws-sdk-go v1.36.1 // indirect
 	github.com/blang/semver v3.5.1+incompatible

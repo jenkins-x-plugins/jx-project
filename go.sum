@@ -64,6 +64,7 @@ github.com/Azure/azure-sdk-for-go v38.0.0+incompatible/go.mod h1:9XXNKU+eRnpl9mo
 github.com/Azure/azure-sdk-for-go v42.3.0+incompatible/go.mod h1:9XXNKU+eRnpl9moKnB4QOLf1HestfXbmab5FXxiDBjc=
 github.com/Azure/draft v0.15.0 h1:9GVmAwNxusaU1FIsoIBFWYT9ivnHwOYD2Q6O5cJjl7E=
 github.com/Azure/draft v0.15.0/go.mod h1:zz7LXil5dfY7p0jR0+BFjSwYz8aIigRjYR4GQwaNGE0=
+github.com/Azure/draft v0.16.0/go.mod h1:zz7LXil5dfY7p0jR0+BFjSwYz8aIigRjYR4GQwaNGE0=
 github.com/Azure/go-ansiterm v0.0.0-20170929234023-d6e3b3328b78/go.mod h1:LmzpDX56iTiv29bbRTIsUNlaFfuhWRQBWjQdVyAevI8=
 github.com/Azure/go-autorest v10.8.1+incompatible/go.mod h1:r+4oMnoxhatjLLJ6zxSWATqVooLgysK6ZNox3g/xq24=
 github.com/Azure/go-autorest v14.2.0+incompatible h1:V5VMDjClD3GiElqLWO7mz2MxNAK/vTfRHdAubSIPRgs=
