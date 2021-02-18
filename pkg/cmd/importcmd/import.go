@@ -90,6 +90,7 @@ type ImportOptions struct {
 	WaitForSourceRepositoryPullRequest bool
 	NoDevPullRequest                   bool
 	IgnoreExistingRepository           bool
+	IgnoreCollaborator                 bool
 	IgnoreJenkinsXFile                 bool
 	PullRequestPollPeriod              time.Duration
 	PullRequestPollTimeout             time.Duration
@@ -236,6 +237,7 @@ func (o *ImportOptions) AddImportFlags(cmd *cobra.Command, createProject bool) {
 	cmd.Flags().BoolVarP(&o.WaitForSourceRepositoryPullRequest, "wait-for-pr", "", true, "waits for the Pull Request generated on the cluster environment git repository to merge")
 	cmd.Flags().BoolVarP(&o.NoDevPullRequest, "no-dev-pr", "", false, "disables generating a Pull Request on the cluster git repository")
 	cmd.Flags().BoolVarP(&o.DisableStartPipeline, "no-start", "", false, "disables starting a release pipeline when importing/creating a new project")
+	cmd.Flags().BoolVarP(&o.IgnoreCollaborator, "no-collaborator", "", false, "disables checking if the bot user is a collaborator. Only used if you have an issue with your git provider and this functionality in go-scm")
 	cmd.Flags().DurationVarP(&o.PullRequestPollPeriod, "pr-poll-period", "", time.Second*20, "the time between polls of the Pull Request on the cluster environment git repository")
 	cmd.Flags().DurationVarP(&o.PullRequestPollTimeout, "pr-poll-timeout", "", time.Minute*20, "the maximum amount of time we wait for the Pull Request on the cluster environment git repository")
 
@@ -514,9 +516,11 @@ func (o *ImportOptions) Run() error {
 		return nil
 	}
 
-	err = o.AddAndAcceptCollaborator(newRepository)
-	if err != nil {
-		return errors.Wrapf(err, "failed to add and accept collaborator")
+	if !o.IgnoreCollaborator {
+		err = o.AddAndAcceptCollaborator(newRepository)
+		if err != nil {
+			return errors.Wrapf(err, "failed to add and accept collaborator")
+		}
 	}
 
 	gitURL := ""
