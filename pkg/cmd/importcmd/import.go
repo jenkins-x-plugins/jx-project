@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"io/ioutil"
+	"net/url"
 	"os"
 	"path/filepath"
 	"strings"
@@ -642,6 +643,20 @@ func (o *ImportOptions) CreateNewRemoteRepository() error {
 	if repo.Clone == "" {
 		repo.Clone = repo.Link
 	}
+
+	// lets allow a BDD test to switch the git host to push to
+	// e.g. if using kind and gitea and running tests inside k8s without public access to the gitea server
+	gitPushHost := os.Getenv("JX_GIT_PUSH_HOST")
+	if repo.Clone != "" && gitPushHost != "" {
+		u, err := url.Parse(repo.Clone)
+		if err != nil {
+			return errors.Wrapf(err, "failed to parse repository clone URL %s", repo.Clone)
+		}
+		u.Host = gitPushHost
+		repo.Clone = u.String()
+		log.Logger().Infof("switching to the git clone URL %s", info(repo.Clone))
+	}
+
 	o.DiscoveredGitURL = repo.Clone
 	pushGitURL, err := o.ScmFactory.CreateAuthenticatedURL(repo.Clone)
 	if err != nil {
