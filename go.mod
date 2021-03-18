@@ -12,13 +12,13 @@ require (
 	github.com/denormal/go-gitignore v0.0.0-20180713143441-75ce8f3e513c
 	github.com/google/uuid v1.1.4
 	github.com/jbrukh/bayesian v0.0.0-20200318221351-d726b684ca4a // indirect
-	github.com/jenkins-x/go-scm v1.5.229
+	github.com/jenkins-x/go-scm v1.6.2
 	github.com/jenkins-x/jx-api/v4 v4.0.25
-	github.com/jenkins-x/jx-gitops v0.2.18
-	github.com/jenkins-x/jx-helpers/v3 v3.0.88
+	github.com/jenkins-x/jx-gitops v0.2.27
+	github.com/jenkins-x/jx-helpers/v3 v3.0.90
 	github.com/jenkins-x/jx-logging/v3 v3.0.3
-	github.com/jenkins-x/jx-promote v0.0.240
-	github.com/jenkins-x/lighthouse-client v0.0.64
+	github.com/jenkins-x/jx-promote v0.0.242
+	github.com/jenkins-x/lighthouse-client v0.0.71
 	github.com/pkg/errors v0.9.1
 	github.com/spf13/cobra v1.1.1
 	github.com/spf13/pflag v1.0.5
@@ -35,7 +35,7 @@ require (
 
 replace (
 	// override the go-scm from tekton
-	github.com/jenkins-x/go-scm => github.com/jenkins-x/go-scm v1.5.223
+	github.com/jenkins-x/go-scm => github.com/jenkins-x/go-scm v1.6.2
 	github.com/tektoncd/pipeline => github.com/jenkins-x/pipeline v0.3.2-0.20210118090417-1e821d85abf6
 	k8s.io/api => k8s.io/api v0.20.2
 	k8s.io/apimachinery => k8s.io/apimachinery v0.20.2
