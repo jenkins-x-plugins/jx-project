@@ -210,6 +210,8 @@ func (o *ImportOptions) AddImportFlags(cmd *cobra.Command, createProject bool) {
 		}
 		return text
 	}
+	cmd.Flags().BoolVarP(&o.GitRepositoryOptions.Private, "private", "", false, "if the repository should be private")
+
 	cmd.Flags().StringVarP(&o.GitProviderURL, "git-provider-url", "", "", "Deprecated: please use --git-server")
 	cmd.Flags().StringVarP(&o.Organisation, "org", "", "", "Specify the Git provider organisation to import the project into (if it is not already in one)")
 	cmd.Flags().StringVarP(&o.Dir, "dir", "", ".", "Specify the directory to import")

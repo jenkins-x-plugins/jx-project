@@ -35,7 +35,8 @@ require (
 
 replace (
 	// override the go-scm from tekton
-	github.com/jenkins-x/go-scm => github.com/jenkins-x/go-scm v1.6.2
+	// github.com/jenkins-x/go-scm => github.com/jenkins-x/go-scm v1.6.2
+	github.com/jenkins-x/go-scm => /root/go-scm
 	github.com/tektoncd/pipeline => github.com/jenkins-x/pipeline v0.3.2-0.20210118090417-1e821d85abf6
 	k8s.io/api => k8s.io/api v0.20.2
 	k8s.io/apimachinery => k8s.io/apimachinery v0.20.2
