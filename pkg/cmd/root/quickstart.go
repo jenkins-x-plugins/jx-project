@@ -54,7 +54,6 @@ type CreateQuickstartOptions struct {
 	GitHost             string
 	QuickstartAuth      string
 	IgnoreTeam          bool
-	// Private     		bool
 }
 
 // NewCmdCreateQuickstart creates a command object for the "create" command
@@ -74,8 +73,6 @@ func NewCmdCreateQuickstart() (*cobra.Command, *CreateQuickstartOptions) {
 		},
 	}
 	o.addCreateAppFlags(cmd)
-
-	// cmd.Flags().BoolVarP(&o.Private, "private", "", false, "is a private BitBucket repo")
 
 	cmd.Flags().StringArrayVarP(&o.GitHubOrganisations, "organisations", "g", []string{}, "The GitHub organisations to query for quickstarts")
 	cmd.Flags().StringArrayVarP(&o.Filter.Tags, "tag", "t", []string{}, "The tags on the quickstarts to filter")
@@ -136,7 +133,6 @@ func (o *CreateQuickstartOptions) Run() error {
 	if err != nil {
 		return err
 	}
-	// Private = o.Private
 	return o.CreateQuickStart(q)
 }
 
