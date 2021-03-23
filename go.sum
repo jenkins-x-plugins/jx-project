@@ -770,6 +770,7 @@ github.com/jenkins-x/jx-promote v0.0.243 h1:Y2F1xiThx1SoyS3SgEcZDWKOEkOc/w/UCXRj
 github.com/jenkins-x/jx-promote v0.0.243/go.mod h1:K161uj30ARvN+cz1nNW6uzbJ9jCrHUtdAio2MUFzx6o=
 github.com/jenkins-x/lighthouse-client v0.0.73 h1:5T6bcpnyIN5XY3loGWh4R5Jh57caiaCuH79/TqtPfxQ=
 github.com/jenkins-x/lighthouse-client v0.0.73/go.mod h1:qyD37zKY0YDXAFjZ6QhdA8gHXMT2rGGP+twZQx/TS2A=
+github.com/jenkins-x/lighthouse-client v0.0.76/go.mod h1:qyD37zKY0YDXAFjZ6QhdA8gHXMT2rGGP+twZQx/TS2A=
 github.com/jenkins-x/logrus-stackdriver-formatter v0.2.3 h1:NuRWKUPCEX1wKlXA8ZYSG28qGKd41R7BK11YDQkPwqo=
 github.com/jenkins-x/logrus-stackdriver-formatter v0.2.3/go.mod h1:litPp7VZWDRCl8LvXuqGngy+65kkg/+T23TgFnDmfTk=
 github.com/jenkins-x/pipeline v0.3.2-0.20210118090417-1e821d85abf6 h1:P/UwaE7LPLOZNIsaNkUGW2QU+4HZSgxkrHLa572zL+8=
