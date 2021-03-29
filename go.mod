@@ -7,6 +7,7 @@ require (
 	github.com/alexflint/go-filemutex v0.0.0-20171028004239-d358565f3c3f
 	github.com/aws/aws-sdk-go v1.36.1 // indirect
 	github.com/blang/semver v3.5.1+incompatible
+	github.com/cenkalti/backoff v2.2.1+incompatible
 	github.com/cpuguy83/go-md2man v1.0.10
 	github.com/danwakefield/fnmatch v0.0.0-20160403171240-cbb64ac3d964 // indirect
 	github.com/denormal/go-gitignore v0.0.0-20180713143441-75ce8f3e513c
