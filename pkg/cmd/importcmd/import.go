@@ -10,6 +10,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/cenkalti/backoff"
+
 	"github.com/denormal/go-gitignore"
 	"github.com/jenkins-x/go-scm/scm"
 	v1 "github.com/jenkins-x/jx-api/v4/pkg/apis/jenkins.io/v1"
@@ -666,7 +668,17 @@ func (o *ImportOptions) CreateNewRemoteRepository() error {
 	if err != nil {
 		return err
 	}
-	err = gitclient.Push(o.Git(), dir, "origin", false, "master")
+
+	// lets use a retry loop to push in case the repository is not yet setup quite yet
+	f := func() error {
+		return gitclient.Push(o.Git(), dir, "origin", false, "master")
+	}
+
+	bo := backoff.NewExponentialBackOff()
+	bo.InitialInterval = 3 * time.Second
+	bo.MaxElapsedTime = time.Minute
+	bo.Reset()
+	err = backoff.Retry(f, bo)
 	if err != nil {
 		return err
 	}

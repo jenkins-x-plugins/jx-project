@@ -7,6 +7,7 @@ require (
 	github.com/alexflint/go-filemutex v0.0.0-20171028004239-d358565f3c3f
 	github.com/aws/aws-sdk-go v1.36.1 // indirect
 	github.com/blang/semver v3.5.1+incompatible
+	github.com/cenkalti/backoff v2.2.1+incompatible
 	github.com/cpuguy83/go-md2man v1.0.10
 	github.com/danwakefield/fnmatch v0.0.0-20160403171240-cbb64ac3d964 // indirect
 	github.com/denormal/go-gitignore v0.0.0-20180713143441-75ce8f3e513c
@@ -14,11 +15,11 @@ require (
 	github.com/jbrukh/bayesian v0.0.0-20200318221351-d726b684ca4a // indirect
 	github.com/jenkins-x/go-scm v1.6.7
 	github.com/jenkins-x/jx-api/v4 v4.0.25
-	github.com/jenkins-x/jx-gitops v0.2.33
-	github.com/jenkins-x/jx-helpers/v3 v3.0.91
+	github.com/jenkins-x/jx-gitops v0.2.36
+	github.com/jenkins-x/jx-helpers/v3 v3.0.93
 	github.com/jenkins-x/jx-logging/v3 v3.0.3
-	github.com/jenkins-x/jx-promote v0.0.244
-	github.com/jenkins-x/lighthouse-client v0.0.80
+	github.com/jenkins-x/jx-promote v0.0.247
+	github.com/jenkins-x/lighthouse-client v0.0.84
 	github.com/pkg/errors v0.9.1
 	github.com/spf13/cobra v1.1.1
 	github.com/spf13/pflag v1.0.5
