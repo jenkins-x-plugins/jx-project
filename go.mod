@@ -28,14 +28,14 @@ require (
 	k8s.io/api v0.20.4
 	k8s.io/apimachinery v0.20.4
 	k8s.io/client-go v11.0.1-0.20190805182717-6502b5e7b1b5+incompatible
-	k8s.io/helm v2.16.10+incompatible
+	k8s.io/helm v2.17.0+incompatible
 	knative.dev/pkg v0.0.0-20210107022335-51c72e24c179
 	sigs.k8s.io/yaml v1.2.0
 )
 
 replace (
 	// override the go-scm from tekton
-	github.com/jenkins-x/go-scm => github.com/jenkins-x/go-scm v1.6.2
+	github.com/jenkins-x/go-scm => /Users/gibsof/go/src/github.com/jenkins-x/go-scm
 	github.com/tektoncd/pipeline => github.com/jenkins-x/pipeline v0.3.2-0.20210118090417-1e821d85abf6
 	k8s.io/api => k8s.io/api v0.20.2
 	k8s.io/apimachinery => k8s.io/apimachinery v0.20.2
