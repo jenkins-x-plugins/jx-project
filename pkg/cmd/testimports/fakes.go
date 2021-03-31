@@ -12,7 +12,7 @@ import (
 	"github.com/jenkins-x/jx-helpers/v3/pkg/cmdrunner/fakerunner"
 	fakeinput "github.com/jenkins-x/jx-helpers/v3/pkg/input/fake"
 	"github.com/jenkins-x/jx-helpers/v3/pkg/kube/jxenv"
-	"github.com/jenkins-x/jx-project/pkg/cmd/importcmd"
+	"github.com/jenkins-x-plugins/jx-project/pkg/cmd/importcmd"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes/fake"

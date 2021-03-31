@@ -1,9 +1,9 @@
 # jx project
 
-[![Documentation](https://godoc.org/github.com/jenkins-x/jx-project?status.svg)](https://pkg.go.dev/mod/github.com/jenkins-x/jx-project)
-[![Go Report Card](https://goreportcard.com/badge/github.com/jenkins-x/jx-project)](https://goreportcard.com/report/github.com/jenkins-x/jx-project)
-[![Releases](https://img.shields.io/github/release-pre/jenkins-x/jx-project.svg)](https://github.com/jenkins-x/jx-project/releases)
-[![LICENSE](https://img.shields.io/github/license/jenkins-x/jx-project.svg)](https://github.com/jenkins-x/jx-project/blob/master/LICENSE)
+[![Documentation](https://godoc.org/github.com/jenkins-x-plugins/jx-project?status.svg)](https://pkg.go.dev/mod/github.com/jenkins-x-plugins/jx-project)
+[![Go Report Card](https://goreportcard.com/badge/github.com/jenkins-x-plugins/jx-project)](https://goreportcard.com/report/github.com/jenkins-x-plugins/jx-project)
+[![Releases](https://img.shields.io/github/release-pre/jenkins-x-plugins/jx-project.svg)](https://github.com/jenkins-x-plugins/jx-project/releases)
+[![LICENSE](https://img.shields.io/github/license/jenkins-x-plugins/jx-project.svg)](https://github.com/jenkins-x-plugins/jx-project/blob/master/LICENSE)
 [![Slack Status](https://img.shields.io/badge/slack-join_chat-white.svg?logo=slack&style=social)](https://slack.k8s.io/)
 
 `jx project` is an experimental binary plugin to allow quickstarts to be created and repositories to be imported into either [Jenkins](https://jenkins.io/) servers or [Jenkins X](https://jenkins-x.io/).
@@ -12,7 +12,7 @@ The idea is to provide a single developer UX around creating quickstarts and imp
 
 ## Getting Started
 
-Download the [jx-project binary](https://github.com/jenkins-x/jx-project/releases) for your operating system and add it to your `$PATH`.
+Download the [jx-project binary](https://github.com/jenkins-x-plugins/jx-project/releases) for your operating system and add it to your `$PATH`.
 
 There will be an `app` you can install soon too...
 

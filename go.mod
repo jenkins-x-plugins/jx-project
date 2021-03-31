@@ -1,4 +1,4 @@
-module github.com/jenkins-x/jx-project
+module github.com/jenkins-x-plugins/jx-project
 
 go 1.15
 
@@ -13,12 +13,12 @@ require (
 	github.com/denormal/go-gitignore v0.0.0-20180713143441-75ce8f3e513c
 	github.com/google/uuid v1.1.4
 	github.com/jbrukh/bayesian v0.0.0-20200318221351-d726b684ca4a // indirect
-	github.com/jenkins-x/go-scm v1.6.7
+	github.com/jenkins-x-plugins/jx-gitops v0.2.41
+	github.com/jenkins-x-plugins/jx-promote v0.0.249
+	github.com/jenkins-x/go-scm v1.6.9
 	github.com/jenkins-x/jx-api/v4 v4.0.25
-	github.com/jenkins-x/jx-gitops v0.2.36
 	github.com/jenkins-x/jx-helpers/v3 v3.0.93
 	github.com/jenkins-x/jx-logging/v3 v3.0.3
-	github.com/jenkins-x/jx-promote v0.0.247
 	github.com/jenkins-x/lighthouse-client v0.0.84
 	github.com/pkg/errors v0.9.1
 	github.com/spf13/cobra v1.1.1

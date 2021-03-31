@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/jenkins-x/jx-project/pkg/cmd/root"
+	"github.com/jenkins-x-plugins/jx-project/pkg/cmd/root"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )

@@ -8,15 +8,15 @@ import (
 	"github.com/jenkins-x/jx-helpers/v3/pkg/homedir"
 	"github.com/jenkins-x/jx-helpers/v3/pkg/stringhelpers"
 	"github.com/jenkins-x/jx-helpers/v3/pkg/termcolor"
-	"github.com/jenkins-x/jx-project/pkg/cmd/common"
-	"github.com/jenkins-x/jx-project/pkg/cmd/importcmd"
+	"github.com/jenkins-x-plugins/jx-project/pkg/cmd/common"
+	"github.com/jenkins-x-plugins/jx-project/pkg/cmd/importcmd"
 	"github.com/pkg/errors"
 
 	"github.com/spf13/cobra"
 
 	"github.com/jenkins-x/jx-helpers/v3/pkg/cobras/templates"
 	"github.com/jenkins-x/jx-logging/v3/pkg/log"
-	"github.com/jenkins-x/jx-project/pkg/spring"
+	"github.com/jenkins-x-plugins/jx-project/pkg/spring"
 )
 
 var (

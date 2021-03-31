@@ -6,8 +6,8 @@ import (
 
 	"github.com/jenkins-x/jx-helpers/v3/pkg/files"
 	"github.com/jenkins-x/jx-helpers/v3/pkg/yamls/validate"
-	"github.com/jenkins-x/jx-project/pkg/jenkinsfile"
-	"github.com/jenkins-x/jx-project/pkg/tekton/syntax"
+	"github.com/jenkins-x-plugins/jx-project/pkg/jenkinsfile"
+	"github.com/jenkins-x-plugins/jx-project/pkg/tekton/syntax"
 	"github.com/pkg/errors"
 	"sigs.k8s.io/yaml"
 
