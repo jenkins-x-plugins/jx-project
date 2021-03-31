@@ -12,9 +12,9 @@ import (
 	"github.com/jenkins-x/jx-helpers/v3/pkg/files"
 	"github.com/jenkins-x/jx-helpers/v3/pkg/kube/jxenv"
 	"github.com/jenkins-x/jx-helpers/v3/pkg/kube/naming"
-	"github.com/jenkins-x/jx-project/pkg/cmd/importcmd"
-	"github.com/jenkins-x/jx-project/pkg/cmd/testimports"
-	"github.com/jenkins-x/jx-project/pkg/config"
+	"github.com/jenkins-x-plugins/jx-project/pkg/cmd/importcmd"
+	"github.com/jenkins-x-plugins/jx-project/pkg/cmd/testimports"
+	"github.com/jenkins-x-plugins/jx-project/pkg/config"
 
 	v1 "github.com/jenkins-x/jx-api/v4/pkg/apis/jenkins.io/v1"
 	"github.com/stretchr/testify/assert"

@@ -7,7 +7,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/jenkins-x/jx-project/pkg/cmd/importcmd"
+	"github.com/jenkins-x-plugins/jx-project/pkg/cmd/importcmd"
 	"github.com/stretchr/testify/assert"
 )
 

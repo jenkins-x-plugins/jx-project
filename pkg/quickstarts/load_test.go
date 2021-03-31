@@ -8,7 +8,7 @@ import (
 	"testing"
 
 	fakejx "github.com/jenkins-x/jx-api/v4/pkg/client/clientset/versioned/fake"
-	"github.com/jenkins-x/jx-project/pkg/quickstarts"
+	"github.com/jenkins-x-plugins/jx-project/pkg/quickstarts"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )

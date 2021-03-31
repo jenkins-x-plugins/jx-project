@@ -7,8 +7,8 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/jenkins-x/jx-project/pkg/cmd/root"
-	"github.com/jenkins-x/jx-project/pkg/cmd/testimports"
+	"github.com/jenkins-x-plugins/jx-project/pkg/cmd/root"
+	"github.com/jenkins-x-plugins/jx-project/pkg/cmd/testimports"
 	"github.com/stretchr/testify/assert"
 )
 

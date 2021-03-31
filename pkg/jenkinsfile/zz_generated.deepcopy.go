@@ -5,7 +5,7 @@
 package jenkinsfile
 
 import (
-	syntax "github.com/jenkins-x/jx-project/pkg/tekton/syntax"
+	syntax "github.com/jenkins-x-plugins/jx-project/pkg/tekton/syntax"
 	v1 "k8s.io/api/core/v1"
 )
 

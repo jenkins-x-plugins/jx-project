@@ -6,7 +6,7 @@ import (
 
 	"github.com/jenkins-x/go-scm/scm"
 	"github.com/jenkins-x/jx-helpers/v3/pkg/scmhelpers"
-	"github.com/jenkins-x/jx-project/pkg/cmd/importcmd"
+	"github.com/jenkins-x-plugins/jx-project/pkg/cmd/importcmd"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 )

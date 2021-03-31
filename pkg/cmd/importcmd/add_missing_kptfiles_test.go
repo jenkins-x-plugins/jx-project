@@ -4,7 +4,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/jenkins-x/jx-project/pkg/cmd/importcmd"
+	"github.com/jenkins-x-plugins/jx-project/pkg/cmd/importcmd"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
