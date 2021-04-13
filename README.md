@@ -6,7 +6,7 @@
 [![LICENSE](https://img.shields.io/github/license/jenkins-x-plugins/jx-project.svg)](https://github.com/jenkins-x-plugins/jx-project/blob/master/LICENSE)
 [![Slack Status](https://img.shields.io/badge/slack-join_chat-white.svg?logo=slack&style=social)](https://slack.k8s.io/)
 
-`jx project` is an experimental binary plugin to allow quickstarts to be created and repositories to be imported into either [Jenkins](https://jenkins.io/) servers or [Jenkins X](https://jenkins-x.io/).
+`jx project` is a plugin to allow quickstarts to be created and repositories to be imported into either [Jenkins](https://jenkins.io/) servers or [Jenkins X](https://jenkins-x.io/).
 
 The idea is to provide a single developer UX around creating quickstarts and importing repositories whether you use just Jenkins or just Jenkins X or a combination of both.
 
