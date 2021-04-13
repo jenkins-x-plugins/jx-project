@@ -5,11 +5,11 @@ package config_test
 import (
 	"testing"
 
-	"github.com/jenkins-x/jx-helpers/v3/pkg/testhelpers"
-	"github.com/jenkins-x/jx-logging/v3/pkg/log"
 	"github.com/jenkins-x-plugins/jx-project/pkg/config"
 	"github.com/jenkins-x-plugins/jx-project/pkg/jenkinsfile"
 	"github.com/jenkins-x-plugins/jx-project/pkg/tekton/syntax"
+	"github.com/jenkins-x/jx-helpers/v3/pkg/testhelpers"
+	"github.com/jenkins-x/jx-logging/v3/pkg/log"
 	corev1 "k8s.io/api/core/v1"
 	"sigs.k8s.io/yaml"
 

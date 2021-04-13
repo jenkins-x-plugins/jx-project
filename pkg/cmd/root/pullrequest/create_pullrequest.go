@@ -6,6 +6,8 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/jenkins-x-plugins/jx-promote/pkg/envctx"
+	"github.com/jenkins-x-plugins/jx-promote/pkg/environments"
 	"github.com/jenkins-x/go-scm/scm"
 	"github.com/jenkins-x/jx-helpers/v3/pkg/cmdrunner"
 	"github.com/jenkins-x/jx-helpers/v3/pkg/gitclient"
@@ -15,8 +17,6 @@ import (
 	"github.com/jenkins-x/jx-helpers/v3/pkg/input/survey"
 	"github.com/jenkins-x/jx-helpers/v3/pkg/options"
 	"github.com/jenkins-x/jx-helpers/v3/pkg/scmhelpers"
-	"github.com/jenkins-x-plugins/jx-promote/pkg/envctx"
-	"github.com/jenkins-x-plugins/jx-promote/pkg/environments"
 
 	"github.com/jenkins-x/jx-helpers/v3/pkg/cobras/helper"
 

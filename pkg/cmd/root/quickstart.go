@@ -8,14 +8,14 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/jenkins-x-plugins/jx-project/pkg/cmd/common"
+	"github.com/jenkins-x-plugins/jx-project/pkg/cmd/importcmd"
+	"github.com/jenkins-x-plugins/jx-project/pkg/quickstarts"
 	"github.com/jenkins-x/jx-helpers/v3/pkg/cobras/helper"
 	"github.com/jenkins-x/jx-helpers/v3/pkg/files"
 	"github.com/jenkins-x/jx-helpers/v3/pkg/gitclient"
 	"github.com/jenkins-x/jx-helpers/v3/pkg/options"
 	"github.com/jenkins-x/jx-helpers/v3/pkg/termcolor"
-	"github.com/jenkins-x-plugins/jx-project/pkg/cmd/common"
-	"github.com/jenkins-x-plugins/jx-project/pkg/cmd/importcmd"
-	"github.com/jenkins-x-plugins/jx-project/pkg/quickstarts"
 	"github.com/pkg/errors"
 
 	"github.com/jenkins-x/jx-logging/v3/pkg/log"

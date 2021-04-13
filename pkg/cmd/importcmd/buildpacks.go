@@ -10,18 +10,18 @@ import (
 	v1 "github.com/jenkins-x/jx-api/v4/pkg/apis/jenkins.io/v1"
 
 	"github.com/jenkins-x-plugins/jx-gitops/pkg/apis/gitops/v1alpha1"
+	"github.com/jenkins-x-plugins/jx-project/pkg/config"
+	"github.com/jenkins-x-plugins/jx-project/pkg/gitresolver"
 	"github.com/jenkins-x/jx-helpers/v3/pkg/files"
 	"github.com/jenkins-x/jx-helpers/v3/pkg/gitclient"
 	"github.com/jenkins-x/jx-helpers/v3/pkg/termcolor"
 	"github.com/jenkins-x/jx-helpers/v3/pkg/yamls"
-	"github.com/jenkins-x-plugins/jx-project/pkg/config"
-	"github.com/jenkins-x-plugins/jx-project/pkg/gitresolver"
 
 	"github.com/pkg/errors"
 
-	"github.com/jenkins-x/jx-logging/v3/pkg/log"
 	jxdraft "github.com/jenkins-x-plugins/jx-project/pkg/draft"
 	"github.com/jenkins-x-plugins/jx-project/pkg/jenkinsfile"
+	"github.com/jenkins-x/jx-logging/v3/pkg/log"
 )
 
 // InvokeDraftPack used to pass arguments into the draft pack invocation

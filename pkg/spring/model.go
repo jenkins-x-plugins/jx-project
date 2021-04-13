@@ -11,12 +11,12 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/jenkins-x-plugins/jx-project/pkg/cache"
 	"github.com/jenkins-x/jx-helpers/v3/pkg/files"
 	"github.com/jenkins-x/jx-helpers/v3/pkg/options"
 	"github.com/jenkins-x/jx-helpers/v3/pkg/stringhelpers"
 	"github.com/jenkins-x/jx-helpers/v3/pkg/termcolor"
 	"github.com/jenkins-x/jx-logging/v3/pkg/log"
-	"github.com/jenkins-x-plugins/jx-project/pkg/cache"
 	"github.com/pkg/errors"
 
 	"github.com/jenkins-x-plugins/jx-project/pkg/cmd/root/version"
