@@ -14,16 +14,14 @@ The idea is to provide a single developer UX around creating quickstarts and imp
 
 Download the [jx-project binary](https://github.com/jenkins-x-plugins/jx-project/releases) for your operating system and add it to your `$PATH`.
 
-There will be an `app` you can install soon too...
-
 ## Importing Repositories and Creating Quickstarts
 
-Just run the `jx alpha project` command line and follow the instructions.
+Just run the `jx project` command line and follow the instructions.
 
 If you have ever seen [Jenkins X](https://jenkins-x.io/) or have used `jx import` or `jx create quickstart` you can try run those directly via:
 
-* `jx alpha project quickstart`
-* `jx alpha project import`
+* `jx project quickstart`
+* `jx project import`
  
 ## How it works
 
