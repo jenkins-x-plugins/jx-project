@@ -4,6 +4,7 @@ package importcmd_test
 
 import (
 	"io/ioutil"
+	"os"
 	"path"
 	"path/filepath"
 	"strings"
