@@ -1,11 +1,8 @@
 package testimports
 
 import (
-	"io/ioutil"
 	"strings"
 	"testing"
-
-	"github.com/stretchr/testify/require"
 
 	"github.com/jenkins-x-plugins/jx-project/pkg/cmd/importcmd"
 	fakescm "github.com/jenkins-x/go-scm/scm/driver/fake"
@@ -37,11 +34,7 @@ func SetFakeClients(t *testing.T, o *importcmd.ImportOptions, realJXConvert bool
 
 	// lets add a dummy token so we can create authenticated git URLs
 	o.ScmFactory.GitToken = "my.fake.token"
-
-	tmpCredFile, err := ioutil.TempFile("", "jx-git-cred-")
-	require.NoError(t, err, "failed to create temp file")
-
-	o.ScmFactory.GitCredentialFile = tmpCredFile.Name()
+	o.ScmFactory.NoWriteGitCredentialsFile = true
 
 	ns := "jx"
 	devEnv := jxenv.CreateDefaultDevEnvironment(ns)
