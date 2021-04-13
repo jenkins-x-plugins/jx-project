@@ -4,7 +4,6 @@ package importcmd_test
 
 import (
 	"io/ioutil"
-	"os"
 	"path"
 	"path/filepath"
 	"strings"
@@ -20,26 +19,21 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestImportGoLangProject(t *testing.T) {
-	tempDir, err := ioutil.TempDir("", "test-import-jx-gha-")
+func TestImportRemoteCluster(t *testing.T) {
+	tempDir, err := ioutil.TempDir("", "test-import-jx-remote-")
 	assert.NoError(t, err)
 
-	testData := path.Join("test_data", "import_projects")
-	_, err = os.Stat(testData)
-	assert.NoError(t, err)
-
-	name := "golang"
-	srcDir := filepath.Join(testData, name)
-	assert.DirExists(t, srcDir, "source dir does not exist")
+	srcDir := path.Join("test_data", "remote-cluster")
+	require.DirExists(t, srcDir)
 
 	testDir := tempDir
-
 	files.CopyDir(srcDir, testDir, true)
 	_, dirName := filepath.Split(testDir)
 	dirName = naming.ToValidName(dirName)
 	_, o := importcmd.NewCmdImportAndOptions()
 
 	_, _, runner := testimports.SetFakeClients(t, o, false)
+	o.RepoURL = "https://github.com/jx3-gitops-repositories/jx3-kubernetes-production"
 	o.Dir = testDir
 	o.DisableMaven = true
 	o.UseDefaultGit = true
@@ -49,20 +43,17 @@ func TestImportGoLangProject(t *testing.T) {
 	err = o.Run()
 	require.NoError(t, err, "Failed %s with %s", dirName, err)
 
-	assert.FileExists(t, filepath.Join(testDir, "Dockerfile"))
-	assert.FileExists(t, filepath.Join(testDir, "charts", dirName, "Chart.yaml"))
-	assert.FileExists(t, filepath.Join(testDir, "preview", "helmfile.yaml"))
+	assert.NoFileExists(t, filepath.Join(testDir, "Dockerfile"))
+	assert.NoFileExists(t, filepath.Join(testDir, "charts", dirName, "Chart.yaml"))
+	assert.NoFileExists(t, filepath.Join(testDir, "preview", "helmfile.yaml"))
 	assert.NoFileExists(t, filepath.Join(testDir, config.ProjectConfigFileName))
 	assert.FileExists(t, filepath.Join(testDir, ".lighthouse", "jenkins-x", "triggers.yaml"))
 
-	var commands []string
-	found := false
 	for _, c := range runner.OrderedCommands {
 		cli := c.CLI()
-		commands = append(commands, cli)
-		if strings.HasPrefix(cli, "jx pipeline wait ") {
-			found = true
-		}
+		found := strings.HasPrefix(cli, "jx pipeline wait ")
+		assert.False(t, found, "should not have command %s for remote repository")
+
+		//t.Logf("got command %s\n", c.CLI())
 	}
-	assert.True(t, found, "should have found a command but got %v", commands)
 }

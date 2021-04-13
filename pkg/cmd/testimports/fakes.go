@@ -4,6 +4,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/jenkins-x-plugins/jx-project/pkg/cmd/importcmd"
 	fakescm "github.com/jenkins-x/go-scm/scm/driver/fake"
 	v1 "github.com/jenkins-x/jx-api/v4/pkg/apis/jenkins.io/v1"
 	fakejx "github.com/jenkins-x/jx-api/v4/pkg/client/clientset/versioned/fake"
@@ -12,7 +13,6 @@ import (
 	"github.com/jenkins-x/jx-helpers/v3/pkg/cmdrunner/fakerunner"
 	fakeinput "github.com/jenkins-x/jx-helpers/v3/pkg/input/fake"
 	"github.com/jenkins-x/jx-helpers/v3/pkg/kube/jxenv"
-	"github.com/jenkins-x-plugins/jx-project/pkg/cmd/importcmd"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes/fake"
@@ -24,7 +24,7 @@ const (
 )
 
 // SetFakeClients sets the fake clients on the options
-func SetFakeClients(t *testing.T, o *importcmd.ImportOptions, realJXConvert bool) (*fakescm.Data, *v1.Environment) {
+func SetFakeClients(t *testing.T, o *importcmd.ImportOptions, realJXConvert bool) (*fakescm.Data, *v1.Environment, *fakerunner.FakeRunner) {
 	fakeInput := &fakeinput.FakeInput{
 		Values: map[string]string{},
 	}
@@ -59,7 +59,7 @@ func SetFakeClients(t *testing.T, o *importcmd.ImportOptions, realJXConvert bool
 
 	runner := NewFakeRunnerWithoutGitPush(t, realJXConvert)
 	o.CommandRunner = runner.Run
-	return fakeScmData, devEnv
+	return fakeScmData, devEnv, runner
 }
 
 // NewFakeRunnerWithoutGitPush create a fake command runner that fakes out git push

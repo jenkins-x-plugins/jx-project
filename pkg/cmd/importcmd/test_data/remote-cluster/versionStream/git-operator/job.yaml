@@ -1,0 +1,59 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  labels:
+    app: jx-boot
+    jenkins-x.io/kind: jx-git-operator
+spec:
+  backoffLimit: 4
+  completions: 1
+  parallelism: 1
+  template:
+    metadata:
+      labels:
+        app: jx-boot
+        jenkins-x.io/kind: jx-git-operator
+    spec:
+      initContainers:
+      - args:
+        - gitops
+        - git
+        - clone
+        command:
+        - jx
+        env:
+        - name: XDG_CONFIG_HOME
+          value: /workspace/xdg_config
+        image: ghcr.io/jenkins-x/jx-boot:3.1.353
+        name: git-clone
+        volumeMounts:
+        - mountPath: /workspace
+          name: workspace-volume
+        workingDir: /workspace
+      containers:
+      - args:
+        - apply
+        command:
+        - make
+        env:
+        - name: XDG_CONFIG_HOME
+          value: /workspace/xdg_config
+        envFrom:
+        - secretRef:
+            name: jx-boot-job-env-vars
+            optional: true
+        image: ghcr.io/jenkins-x/jx-boot:3.1.353
+        imagePullPolicy: Always
+        name: job
+        volumeMounts:
+        - mountPath: /workspace
+          name: workspace-volume
+        workingDir: /workspace/source
+      dnsPolicy: ClusterFirst
+      restartPolicy: Never
+      schedulerName: default-scheduler
+      serviceAccountName: jx-boot-job
+      terminationGracePeriodSeconds: 30
+      volumes:
+      - name: workspace-volume
+        emptyDir: {}

@@ -11,8 +11,8 @@ import (
 	"github.com/pkg/errors"
 )
 
-// IsGitOpsRepositoryWithPipeline returns true if we have detected a GitOps repository for Jenkins X 3.x
-func IsGitOpsRepositoryWithPipeline(dir string) (bool, error) {
+// IsRemoteClusterGitRepository returns true if we have detected a GitOps repository for Jenkins X 3.x
+func IsRemoteClusterGitRepository(dir string) (bool, error) {
 	fileNames := []string{
 		filepath.Join(dir, ".lighthouse", "jenkins-x", "triggers.yaml"),
 		filepath.Join(dir, "versionStream", "git-operator", "job.yaml"),
@@ -32,20 +32,20 @@ func IsGitOpsRepositoryWithPipeline(dir string) (bool, error) {
 
 // allows any extra changes to be proposed to the dev environment pull request if needed
 // e.g. if a new environment git repository is imported we should ensure we have an Environment created for the new environment
-func (o *ImportOptions) modifyDevEnvironmentSource(importDir, promoteDir string, gitInfo *giturl.GitRepository, gitURL string, gitKind string) error {
+func (o *ImportOptions) modifyDevEnvironmentSource(importDir, promoteDir string, gitInfo *giturl.GitRepository, gitURL string, gitKind string) (bool, error) {
 	log.Logger().Debugf("checking if the new repository is an Environment: %s", gitURL)
 
-	gitops, err := IsGitOpsRepositoryWithPipeline(importDir)
+	gitops, err := IsRemoteClusterGitRepository(importDir)
 	if err != nil {
-		return errors.Wrapf(err, "failed to detect gitops repository for repo %s", gitURL)
+		return false, errors.Wrapf(err, "failed to detect gitops repository for repo %s", gitURL)
 	}
 	if !gitops {
-		return nil
+		return false, nil
 	}
 
 	requirementsResource, requirementsFileName, err := jxcore.LoadRequirementsConfig(promoteDir, false)
 	if err != nil {
-		return errors.Wrapf(err, "failed to load requirements file in repository %s", gitURL)
+		return true, errors.Wrapf(err, "failed to load requirements file in repository %s", gitURL)
 	}
 	requirements := &requirementsResource.Spec
 	if requirements != nil && requirementsFileName != "" {
@@ -55,7 +55,7 @@ func (o *ImportOptions) modifyDevEnvironmentSource(importDir, promoteDir string,
 		for _, e := range requirements.Environments {
 			if e.Repository == repoName && e.Owner == repoOwner {
 				log.Logger().Infof("the dev repository already has the gitops environment repository %s configured", gitURL)
-				return nil
+				return true, nil
 			}
 		}
 
@@ -72,8 +72,8 @@ func (o *ImportOptions) modifyDevEnvironmentSource(importDir, promoteDir string,
 		})
 		err = requirementsResource.SaveConfig(requirementsFileName)
 		if err != nil {
-			return errors.Wrapf(err, "failed to save %s", requirementsFileName)
+			return true, errors.Wrapf(err, "failed to save %s", requirementsFileName)
 		}
 	}
-	return nil
+	return true, nil
 }

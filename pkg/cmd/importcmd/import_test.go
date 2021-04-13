@@ -8,12 +8,12 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/jenkins-x/go-scm/scm"
-	"github.com/jenkins-x/jx-helpers/v3/pkg/files"
-	"github.com/jenkins-x/jx-helpers/v3/pkg/scmhelpers"
 	"github.com/jenkins-x-plugins/jx-project/pkg/cmd/importcmd"
 	"github.com/jenkins-x-plugins/jx-project/pkg/cmd/testimports"
 	"github.com/jenkins-x-plugins/jx-project/pkg/prow"
+	"github.com/jenkins-x/go-scm/scm"
+	"github.com/jenkins-x/jx-helpers/v3/pkg/files"
+	"github.com/jenkins-x/jx-helpers/v3/pkg/scmhelpers"
 	"github.com/stretchr/testify/assert"
 	"sigs.k8s.io/yaml"
 )
@@ -160,7 +160,7 @@ func TestCreateProwOwnersAliasesFileCreateWhenDoesNotExistAndNoGitUserSet(t *tes
 		Dir: path,
 	}
 
-	fakeScmData, _ := testimports.SetFakeClients(t, cmd, false)
+	fakeScmData, _, _ := testimports.SetFakeClients(t, cmd, false)
 	fakeScmData.CurrentUser = scm.User{}
 
 	err = cmd.CreateProwOwnersAliasesFile()

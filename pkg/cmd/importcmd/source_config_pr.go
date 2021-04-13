@@ -4,22 +4,23 @@ import (
 	"fmt"
 	"path/filepath"
 
-	"github.com/jenkins-x/go-scm/scm"
 	"github.com/jenkins-x-plugins/jx-gitops/pkg/cmd/repository/add"
+	"github.com/jenkins-x-plugins/jx-promote/pkg/environments"
+	"github.com/jenkins-x/go-scm/scm"
 	"github.com/jenkins-x/jx-helpers/v3/pkg/kube/jxenv"
 	"github.com/jenkins-x/jx-helpers/v3/pkg/stringhelpers"
 	"github.com/jenkins-x/jx-logging/v3/pkg/log"
-	"github.com/jenkins-x-plugins/jx-promote/pkg/environments"
 	"github.com/pkg/errors"
 )
 
-func (o *ImportOptions) addSourceConfigPullRequest(gitURL string, gitKind string) error {
+func (o *ImportOptions) addSourceConfigPullRequest(gitURL string, gitKind string) (bool, error) {
+	remoteCluster := false
 	if o.NoDevPullRequest {
-		return nil
+		return remoteCluster, nil
 	}
 	devEnv, err := jxenv.GetDevEnvironment(o.JXClient, o.Namespace)
 	if err != nil {
-		return errors.Wrapf(err, "failed to find the dev Environment")
+		return remoteCluster, errors.Wrapf(err, "failed to find the dev Environment")
 	}
 
 	log.Logger().Info("")
@@ -30,7 +31,7 @@ func (o *ImportOptions) addSourceConfigPullRequest(gitURL string, gitKind string
 
 	devGitURL := devEnv.Spec.Source.URL
 	if devGitURL == "" {
-		return errors.Errorf("no git source URL for Environment %s", devEnv.Name)
+		return remoteCluster, errors.Errorf("no git source URL for Environment %s", devEnv.Name)
 	}
 
 	// lets generate a PR
@@ -38,7 +39,7 @@ func (o *ImportOptions) addSourceConfigPullRequest(gitURL string, gitKind string
 		g := filepath.Join(o.Dir, ".lighthouse", "*", "triggers.yaml")
 		matches, err := filepath.Glob(g)
 		if err != nil {
-			return errors.Wrapf(err, "failed to evaluate glob %s", g)
+			return remoteCluster, errors.Wrapf(err, "failed to evaluate glob %s", g)
 		}
 		if len(matches) > 0 {
 			o.SchedulerName = "in-repo"
@@ -76,7 +77,7 @@ func (o *ImportOptions) addSourceConfigPullRequest(gitURL string, gitKind string
 			return errors.Wrapf(err, "failed to add git URL %s to the source-config.yaml file", safeGitURL)
 		}
 
-		err = o.modifyDevEnvironmentSource(o.Dir, dir, o.gitInfo, safeGitURL, gitKind)
+		remoteCluster, err = o.modifyDevEnvironmentSource(o.Dir, dir, o.gitInfo, safeGitURL, gitKind)
 		if err != nil {
 			return errors.Wrapf(err, "failed to modify remote cluster")
 		}
@@ -99,7 +100,7 @@ func (o *ImportOptions) addSourceConfigPullRequest(gitURL string, gitKind string
 
 	pr, err := pro.Create(devGitURL, "", prDetails, false)
 	if err != nil {
-		return errors.Wrapf(err, "failed to create Pull Request on the development environment git repository %s", devGitURL)
+		return remoteCluster, errors.Wrapf(err, "failed to create Pull Request on the development environment git repository %s", devGitURL)
 	}
 	prURL := ""
 	if pr != nil {
@@ -112,10 +113,10 @@ func (o *ImportOptions) addSourceConfigPullRequest(gitURL string, gitKind string
 
 			err = o.waitForSourceRepositoryPullRequest(pr, devGitURL)
 			if err != nil {
-				return errors.Wrapf(err, "failed to wait for the Pull Request %s to merge", prURL)
+				return remoteCluster, errors.Wrapf(err, "failed to wait for the Pull Request %s to merge", prURL)
 			}
 		}
 	}
 	o.GetReporter().CreatedDevRepoPullRequest(prURL, devGitURL)
-	return nil
+	return remoteCluster, nil
 }
