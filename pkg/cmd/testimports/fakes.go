@@ -1,10 +1,11 @@
 package testimports
 
 import (
-	"github.com/stretchr/testify/require"
 	"io/ioutil"
 	"strings"
 	"testing"
+
+	"github.com/stretchr/testify/require"
 
 	"github.com/jenkins-x-plugins/jx-project/pkg/cmd/importcmd"
 	fakescm "github.com/jenkins-x/go-scm/scm/driver/fake"

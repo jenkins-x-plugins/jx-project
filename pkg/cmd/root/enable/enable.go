@@ -8,10 +8,10 @@ import (
 
 	"strings"
 
+	"github.com/jenkins-x-plugins/jx-project/pkg/cmd/importcmd"
 	"github.com/jenkins-x/jx-helpers/v3/pkg/cobras/helper"
 	"github.com/jenkins-x/jx-helpers/v3/pkg/cobras/templates"
 	"github.com/jenkins-x/jx-helpers/v3/pkg/termcolor"
-	"github.com/jenkins-x-plugins/jx-project/pkg/cmd/importcmd"
 	"github.com/jenkins-x/lighthouse-client/pkg/triggerconfig"
 	"github.com/spf13/cobra"
 	tektonv1beta1 "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1beta1"
