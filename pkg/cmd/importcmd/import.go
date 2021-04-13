@@ -13,6 +13,11 @@ import (
 	"github.com/cenkalti/backoff"
 
 	"github.com/denormal/go-gitignore"
+	"github.com/jenkins-x-plugins/jx-project/pkg/cmd/common"
+	"github.com/jenkins-x-plugins/jx-project/pkg/config"
+	"github.com/jenkins-x-plugins/jx-project/pkg/constants"
+	"github.com/jenkins-x-plugins/jx-project/pkg/maven"
+	"github.com/jenkins-x-plugins/jx-project/pkg/prow"
 	"github.com/jenkins-x/go-scm/scm"
 	v1 "github.com/jenkins-x/jx-api/v4/pkg/apis/jenkins.io/v1"
 	"github.com/jenkins-x/jx-api/v4/pkg/client/clientset/versioned"
@@ -35,11 +40,6 @@ import (
 	"github.com/jenkins-x/jx-helpers/v3/pkg/scmhelpers"
 	"github.com/jenkins-x/jx-helpers/v3/pkg/termcolor"
 	"github.com/jenkins-x/jx-logging/v3/pkg/log"
-	"github.com/jenkins-x-plugins/jx-project/pkg/cmd/common"
-	"github.com/jenkins-x-plugins/jx-project/pkg/config"
-	"github.com/jenkins-x-plugins/jx-project/pkg/constants"
-	"github.com/jenkins-x-plugins/jx-project/pkg/maven"
-	"github.com/jenkins-x-plugins/jx-project/pkg/prow"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"k8s.io/client-go/kubernetes"
@@ -840,7 +840,7 @@ func (o *ImportOptions) doImport() error {
 	// TODO should we prompt the user for the git kind if we can't detect / find it?
 	gitKind := o.ScmFactory.GitKind
 
-	err = o.addSourceConfigPullRequest(gitURL, gitKind)
+	remoteCluster, err := o.addSourceConfigPullRequest(gitURL, gitKind)
 	if err != nil {
 		return errors.Wrapf(err, "failed to create Pull Request on the cluster git repository")
 	}
@@ -851,7 +851,7 @@ func (o *ImportOptions) doImport() error {
 
 	repoFullName := scm.Join(o.Organisation, o.AppName)
 
-	if !o.Destination.Jenkins.Enabled {
+	if !o.Destination.Jenkins.Enabled && !remoteCluster {
 		c := &cmdrunner.Command{
 			Name: "jx",
 			Args: []string{"pipeline", "wait", "--owner", o.Organisation, "--repo", o.AppName},
