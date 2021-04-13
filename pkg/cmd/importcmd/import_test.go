@@ -36,6 +36,7 @@ func TestCreateProwOwnersFileExistsDoNothing(t *testing.T) {
 	cmd := &importcmd.ImportOptions{
 		Dir: path,
 	}
+	cmd.ScmFactory.NoWriteGitCredentialsFile = true
 
 	err = cmd.CreateProwOwnersFile()
 	assert.NoError(t, err, "There should be no error")
@@ -55,6 +56,7 @@ func TestCreateProwOwnersFileCreateWhenDoesNotExist(t *testing.T) {
 			GitUsername: testUsername,
 		},
 	}
+	cmd.ScmFactory.NoWriteGitCredentialsFile = true
 
 	err = cmd.CreateProwOwnersFile()
 	assert.NoError(t, err, "There should be no error")
@@ -87,6 +89,7 @@ func TestCreateProwOwnersFileCreateWhenDoesNotExistAndNoGitUserSet(t *testing.T)
 	cmd := &importcmd.ImportOptions{
 		Dir: path,
 	}
+	cmd.ScmFactory.NoWriteGitCredentialsFile = true
 
 	err = cmd.CreateProwOwnersFile()
 	assert.Error(t, err, "There should an error")
@@ -108,6 +111,7 @@ func TestCreateProwOwnersAliasesFileExistsDoNothing(t *testing.T) {
 	cmd := &importcmd.ImportOptions{
 		Dir: path,
 	}
+	cmd.ScmFactory.NoWriteGitCredentialsFile = true
 
 	err = cmd.CreateProwOwnersAliasesFile()
 	assert.NoError(t, err, "There should be no error")
@@ -126,6 +130,7 @@ func TestCreateProwOwnersAliasesFileCreateWhenDoesNotExist(t *testing.T) {
 			GitUsername: testUsername,
 		},
 	}
+	cmd.ScmFactory.NoWriteGitCredentialsFile = true
 
 	err = cmd.CreateProwOwnersAliasesFile()
 	assert.NoError(t, err, "There should be no error")
@@ -159,6 +164,7 @@ func TestCreateProwOwnersAliasesFileCreateWhenDoesNotExistAndNoGitUserSet(t *tes
 	cmd := &importcmd.ImportOptions{
 		Dir: path,
 	}
+	cmd.ScmFactory.NoWriteGitCredentialsFile = true
 
 	fakeScmData, _, _ := testimports.SetFakeClients(t, cmd, false)
 	fakeScmData.CurrentUser = scm.User{}
@@ -206,6 +212,7 @@ func TestImportOptions_GetOrganisation(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			tt.options.ScmFactory.NoWriteGitCredentialsFile = true
 			if got := tt.options.GetOrganisation(); got != tt.want {
 				t.Errorf("ImportOptions.GetOrganisation() = %v, want %v", got, tt.want)
 			}

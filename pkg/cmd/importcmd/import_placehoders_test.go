@@ -32,6 +32,7 @@ func TestReplacePlaceholders(t *testing.T) {
 	o.Dir = f
 	o.AppName = "bar"
 	o.Organisation = "foo"
+	o.ScmFactory.NoWriteGitCredentialsFile = true
 
 	o.ReplacePlaceholders("github.com", "registry-org")
 
