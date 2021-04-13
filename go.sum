@@ -758,6 +758,8 @@ github.com/jcmturner/gofork v1.0.0/go.mod h1:MK8+TM0La+2rjBD4jE12Kj1pCCxK7d2LK/U
 github.com/jehiah/go-strftime v0.0.0-20171201141054-1d33003b3869/go.mod h1:cJ6Cj7dQo+O6GJNiMx+Pa94qKj+TG8ONdKHgMNIyyag=
 github.com/jenkins-x-plugins/jx-gitops v0.2.50 h1:A1cgDMyEkM/P8witOLGTEiJVaLzGZwMtO4QMgmosZkc=
 github.com/jenkins-x-plugins/jx-gitops v0.2.50/go.mod h1:VhVaF3y5kG+B9Wav8ZO98zcTOjg3hWwE0H33+va96tY=
+github.com/jenkins-x-plugins/jx-gitops v0.2.52 h1:PRwB7X0dB6PQKjV41Ix2LBwoUrsTpb1mOjpuJlSNxJs=
+github.com/jenkins-x-plugins/jx-gitops v0.2.52/go.mod h1:VhVaF3y5kG+B9Wav8ZO98zcTOjg3hWwE0H33+va96tY=
 github.com/jenkins-x-plugins/jx-promote v0.0.255 h1:eXYclyiee8NIAnQsyK02tfiNBdbo5ZfMwQasFQwtuL4=
 github.com/jenkins-x-plugins/jx-promote v0.0.255/go.mod h1:lc8WSCnlzp2PKHt+VOg/Sf2z5LouxSKVDBHJKECUgJw=
 github.com/jenkins-x/go-scm v1.6.14 h1:yJ/HMOGpHGqHF2bwPB5qF6hUZ1xfsUoo6yuq7TfFqGM=
