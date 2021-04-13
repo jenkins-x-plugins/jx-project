@@ -32,6 +32,7 @@ func TestShouldReturnErrorWhenNoErrorReturnedIndicatingSuccessResponseAndReposit
 			ScmClient: &c,
 		},
 	}
+	cmd.ScmFactory.NoWriteGitCredentialsFile = true
 	o := "proj"
 	r := "test"
 	res := new(scm.Response)
@@ -54,6 +55,7 @@ func TestShouldReturnErrorWhenErrorReturnedAndResponseIsSuccessful(t *testing.T)
 			ScmClient: &c,
 		},
 	}
+	cmd.ScmFactory.NoWriteGitCredentialsFile = true
 	o := "proj"
 	r := "test"
 	res := new(scm.Response)
@@ -78,6 +80,7 @@ func TestShouldReturnNilWhenErrorReturnedAndResponseIsNotFound(t *testing.T) {
 			ScmClient: &c,
 		},
 	}
+	cmd.ScmFactory.NoWriteGitCredentialsFile = true
 	o := "proj"
 	r := "test"
 	res := new(scm.Response)
