@@ -105,9 +105,9 @@ test: ## Run tests with the "unit" build tag
 # lets use a tmp dir for HOME to avoid the tests breaking the actual git creds
 test-release: ## Run tests with the "unit" build tag
 	# lets reuse a tmp home dir to avoid modifying the real ~/.git-credentials
-	mkdir -p $(TMP_HOME)
-	HOME=$(TMP_HOME) git config --global --add user.name JenkinsXBot && git config --global --add user.email jenkins-x@googlegroups.com
-	KUBECONFIG=/cluster/connections/not/allowed HOME==$(TMP_HOME) CGO_ENABLED=$(CGO_ENABLED) $(GOTEST) --tags="integration unit" -failfast -short ./... $(TEST_BUILDFLAGS)
+	#mkdir -p $(TMP_HOME)
+	#HOME=$(TMP_HOME) git config --global --add user.name JenkinsXBot && git config --global --add user.email jenkins-x@googlegroups.com
+	#KUBECONFIG=/cluster/connections/not/allowed HOME==$(TMP_HOME) CGO_ENABLED=$(CGO_ENABLED) $(GOTEST) --tags="integration unit" -failfast -short ./... $(TEST_BUILDFLAGS)
 
 test-coverage : make-reports-dir ## Run tests and coverage for all tests with the "unit" build tag
 	CGO_ENABLED=$(CGO_ENABLED) $(GOTEST) --tags=unit $(COVERFLAGS) -failfast -short ./... $(TEST_BUILDFLAGS)
