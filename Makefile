@@ -20,6 +20,8 @@ BRANCH     := $(shell git rev-parse --abbrev-ref HEAD 2> /dev/null  || echo 'unk
 BUILD_DATE := $(shell date +%Y%m%d-%H:%M:%S)
 CGO_ENABLED = 0
 
+TMP_HOME ?= /tmp/jx-project-git-home
+
 REPORTS_DIR=$(BUILD_TARGET)/reports
 
 GOTEST := $(GO) test
@@ -97,9 +99,10 @@ make-reports-dir:
 
 test: ## Run tests with the "unit" build tag
 	# lets reuse a tmp home dir to avoid modifying the real ~/.git-credentials
-	HOME=/tmp git config --global --add user.name JenkinsXBot
-    HOME=/tmp git config --global --add user.email jenkins-x@googlegroups.com
-	KUBECONFIG=/cluster/connections/not/allowed HOME=/tmp CGO_ENABLED=$(CGO_ENABLED) $(GOTEST) --tags="integration unit" -failfast -short ./... $(TEST_BUILDFLAGS)
+	mkdir -p $(TMP_HOME)
+	#HOME=$(TMP_HOME) git config --global --add user.name JenkinsXBot && git config --global --add user.email jenkins-x@googlegroups.com
+	#KUBECONFIG=/cluster/connections/not/allowed HOME==$(TMP_HOME) CGO_ENABLED=$(CGO_ENABLED) $(GOTEST) --tags="integration unit" -failfast -short ./... $(TEST_BUILDFLAGS)
+	KUBECONFIG=/cluster/connections/not/allowed XDG_CONFIG_HOME==$(TMP_HOME) CGO_ENABLED=$(CGO_ENABLED) $(GOTEST) --tags="integration unit" -failfast -short ./... $(TEST_BUILDFLAGS)
 
 test-coverage : make-reports-dir ## Run tests and coverage for all tests with the "unit" build tag
 	CGO_ENABLED=$(CGO_ENABLED) $(GOTEST) --tags=unit $(COVERFLAGS) -failfast -short ./... $(TEST_BUILDFLAGS)
