@@ -19,16 +19,18 @@ import (
 )
 
 const (
-	createQuickstartName = "Create new application from a Quickstart"
-	createSpringName     = "Create new Spring Boot microservice"
-	importDirName        = "Import existing code from a directory"
-	importGitName        = "Import code from a git repository"
-	importGitHubName     = "Import code from a github repository"
+	createQuickstartName   = "Create new application from a Quickstart"
+	createMLQuickstartName = "Create new application from a Machine Learning Quickstart"
+	createSpringName       = "Create new Spring Boot microservice"
+	importDirName          = "Import existing code from a directory"
+	importGitName          = "Import code from a git repository"
+	importGitHubName       = "Import code from a github repository"
 )
 
 var (
 	createProjectNames = []string{
 		createQuickstartName,
+		createMLQuickstartName,
 		createSpringName,
 		importDirName,
 		importGitName,
@@ -77,6 +79,7 @@ func NewCmdMain() (*cobra.Command, *WizardOptions) {
 
 	cmd.AddCommand(cobras.SplitCommand(enable.NewCmdPipelineEnable()))
 	cmd.AddCommand(cobras.SplitCommand(NewCmdCreateQuickstart()))
+	cmd.AddCommand(cobras.SplitCommand(NewCmdCreateMLQuickstart()))
 	cmd.AddCommand(NewCmdCreateSpring())
 	cmd.AddCommand(importcmd.NewCmdImport())
 	cmd.AddCommand(pullrequest.NewCmdCreatePullRequest())
@@ -98,6 +101,8 @@ func (o *WizardOptions) Run() error {
 	switch name {
 	case createQuickstartName:
 		return o.createQuickstart()
+	case createMLQuickstartName:
+		return o.createMLQuickstart()
 	case createSpringName:
 		return o.createSpring()
 	case importDirName:
@@ -113,6 +118,11 @@ func (o *WizardOptions) Run() error {
 
 func (o *WizardOptions) createQuickstart() error {
 	w := &CreateQuickstartOptions{}
+	return w.Run()
+}
+
+func (o *WizardOptions) createMLQuickstart() error {
+	w := &CreateMLQuickstartOptions{}
 	return w.Run()
 }
 
