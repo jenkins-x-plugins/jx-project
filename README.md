@@ -21,6 +21,7 @@ Just run the `jx project` command line and follow the instructions.
 If you have ever seen [Jenkins X](https://jenkins-x.io/) or have used `jx import` or `jx create quickstart` you can try run those directly via:
 
 * `jx project quickstart`
+* `jx project mlquickstart`
 * `jx project import`
  
 ## How it works
@@ -52,6 +53,7 @@ For those of you who know [Jenkins X](https://jenkins-x.io/) and have used [jx i
 * the commands are a little different:
   * `jx create import` is now `jx project import`
   * `jx create quickstart` is now `jx project quickstart`
+  * `jx create mlquickstart` is now `jx project mlquickstart`
   * `jx create project` is now `jx project`
   * `jx create spring` is now `jx project spring`
 * when importing to Jenkins X we ask which build pack you wish to use (e.g. classic or kubernetes) so that you can import java libraries or node modules easily in addition to kubernetes native applications
