@@ -1,30 +1,38 @@
-## jx-project quickstart
+## jx-project mlquickstart
 
-Create a new app from a Quickstart and import the generated code into Git and Jenkins for CI/CD
+Create a new machine learning app from a set of quickstarts and import the generated code into Git and Jenkins for CI/CD
 
 ***Aliases**: arch*
 
 ### Usage
 
 ```
-jx-project quickstart
+jx-project mlquickstart
 ```
 
 ### Synopsis
 
-Create a new project from a sample/starter (found in https://github.com/jenkins-x-quickstarts) 
+Create a new machine learning project from a sample/starter (found in https://github.com/machine-learning-quickstarts)
+  
+      This will create two new projects for you from the selected template. One for training and one for deploying a model as a service.
+      It will exclude any work-in-progress repos (containing the "WIP-" pattern)
+  
+      For more documentation see: [https://jenkins-x.io/developing/create-mlquickstart/](https://jenkins-x.io/developing/create-mlquickstart/)
+  
+See Also: 
 
-This will create a new project for you from the selected template. It will exclude any work-in-progress repos (containing the "WIP-" pattern) 
-
-For more documentation see: https://jenkins-x.io/developing/create-quickstart/
+  * jx project : https://jenkins-x.io/commands/jx_project
 
 ### Examples
 
-  # create a new quickstart
-  jx-project quickstart
+  Create a new machine learning project from a sample/starter (found in https://github.com/machine-learning-quickstarts)
   
-  # creates a quickstart filtering on http based ones
-  jx-project quickstart -f http
+  This will create a new machine learning project for you from the selected template.
+  It will exclude any work-in-progress repos (containing the "WIP-" pattern)
+  
+  jx project mlquickstart
+  
+  jx project mlquickstart -f pytorch
 
 ### Options
 
@@ -44,7 +52,7 @@ For more documentation see: https://jenkins-x.io/developing/create-quickstart/
       --git-server string              the git server URL to create the scm client
       --git-token string               the git token used to operate on the git repository. If not specified it's loaded from the git credentials file
       --git-username string            the git username used to operate on the git repository. If not specified it's loaded from the git credentials file
-  -h, --help                           help for quickstart
+  -h, --help                           help for mlquickstart
       --hpa                            should we enable the Horizontal Pod Autoscaler for this application.
       --import-commit-message string   Specifies the initial commit message used when importing the project
       --jenkins string                 The name of the Jenkins server to import the project into
@@ -52,7 +60,6 @@ For more documentation see: https://jenkins-x.io/developing/create-quickstart/
       --jx                             if you want to default to importing this project into Jenkins X instead of a Jenkins server if you have a mixed Jenkins X and Jenkins cluster
   -l, --language string                The language to filter on
       --log-level string               Sets the logging level. If not specified defaults to $JX_LOG_LEVEL
-      --machine-learning               Allow machine-learning quickstarts in results
       --name string                    Specify the Git repository name to import the project into (if it is not already in one)
       --no-collaborator                disables checking if the bot user is a collaborator. Only used if you have an issue with your git provider and this functionality in go-scm
       --no-dev-pr                      disables generating a Pull Request on the cluster git repository
