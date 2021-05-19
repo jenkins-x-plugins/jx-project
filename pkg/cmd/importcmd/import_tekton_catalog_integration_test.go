@@ -78,7 +78,7 @@ func TestImportTektonCatalogProject(t *testing.T) {
 	require.NoError(t, err, "failed to check for collaborator for repo %s user %s", repoFullName, testimports.PipelineUsername)
 	assert.True(t, flag, "should be a collaborator for repo %s user %s", repoFullName, testimports.PipelineUsername)
 
-	envRepo := "jx3-gitops-repositories/jx3-gke-gsm"
+	envRepo := "jenkins-x-labs-bdd-tests/jx3-gke-gsm"
 	prs, _, err := o.ScmFactory.ScmClient.PullRequests.List(ctx, envRepo, scm.PullRequestListOptions{})
 	require.NoError(t, err, "failed to find dev env repo %s", envRepo)
 	require.Len(t, prs, 1, "should have found a Pull Request for dev env repo %s", envRepo)
