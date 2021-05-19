@@ -39,7 +39,7 @@ func SetFakeClients(t *testing.T, o *importcmd.ImportOptions, realJXConvert bool
 	ns := "jx"
 	devEnv := jxenv.CreateDefaultDevEnvironment(ns)
 	devEnv.Namespace = ns
-	devEnv.Spec.Source.URL = "https://fake.git/jx3-gitops-repositories/jx3-gke-gsm"
+	devEnv.Spec.Source.URL = "https://fake.git/jenkins-x-labs-bdd-tests/jx3-gke-gsm"
 	devEnv.Spec.TeamSettings.PipelineUsername = PipelineUsername
 
 	o.KubeClient = fake.NewSimpleClientset(
