@@ -185,7 +185,7 @@ func (o *Options) LoadMLProjectSetsModel(gitHubOrganisations []string, ignoreTea
 	if err != nil {
 		return nil, fmt.Errorf("failed to load qs: %s", err)
 	}
-	log.Logger().Debugf("Model: %s\n", model)
+	log.Logger().Debugf("Model: %#v\n", model)
 
 	devGitDir := filepath.Join(o.VersionsDir, "..")
 	log.Logger().Debugf("devGitDir: %s\n", devGitDir)
@@ -224,6 +224,6 @@ func (o *Options) LoadMLProjectSetsModel(gitHubOrganisations []string, ignoreTea
 	if err != nil {
 		return model, errors.Wrapf(err, "loading quickstarts from %s", quickstartsFile)
 	}
-	log.Logger().Debugf("Model: %s\n", model)
+	log.Logger().Debugf("Model: %#v\n", model)
 	return model, nil
 }
