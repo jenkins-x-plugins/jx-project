@@ -849,12 +849,16 @@ func (o *ImportOptions) doImport() error {
 		return nil
 	}
 
-	repoFullName := scm.Join(o.Organisation, o.AppName)
+	repoName := o.GitRepositoryOptions.Name
+	if repoName == "" {
+		repoName = o.AppName
+	}
+	repoFullName := scm.Join(o.Organisation, repoName)
 
 	if !o.Destination.Jenkins.Enabled && !remoteCluster {
 		c := &cmdrunner.Command{
 			Name: "jx",
-			Args: []string{"pipeline", "wait", "--owner", o.Organisation, "--repo", o.AppName},
+			Args: []string{"pipeline", "wait", "--owner", o.Organisation, "--repo", repoName},
 			Out:  os.Stdout,
 			Err:  os.Stderr,
 		}
