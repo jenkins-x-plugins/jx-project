@@ -2,6 +2,9 @@ package importcmd
 
 import (
 	"fmt"
+	"helm.sh/helm/v3/pkg/chart"
+	"helm.sh/helm/v3/pkg/chart/loader"
+	"helm.sh/helm/v3/pkg/chartutil"
 	"io"
 	"io/ioutil"
 	"os"
@@ -11,8 +14,6 @@ import (
 	"github.com/Azure/draft/pkg/osutil"
 	"github.com/jenkins-x/jx-helpers/v3/pkg/files"
 	"github.com/pkg/errors"
-	"k8s.io/helm/pkg/chartutil"
-	kchart "k8s.io/helm/pkg/proto/hapi/chart"
 )
 
 /**
@@ -29,7 +30,7 @@ const (
 // Pack defines a Draft Starter Pack.
 type Pack struct {
 	// Chart is the Helm chart to be installed with the Pack.
-	Charts []*kchart.Chart
+	Charts []*chart.Chart
 	// Files are the files inside the Pack that will be installed.
 	Files map[string]io.ReadCloser
 }
@@ -51,7 +52,7 @@ func (p *Pack) SaveDir(dest string, packName string) error {
 			chartName = chart.Metadata.Name
 		}
 		for _, f := range chart.Files {
-			path := f.TypeUrl
+			path := f.Name
 			if path != "" {
 				fullPath := filepath.Join(chartPath, chartName, path)
 				dir := filepath.Dir(fullPath)
@@ -100,7 +101,7 @@ func (p *Pack) SaveDir(dest string, packName string) error {
 }
 
 // SaveDir saves a chart as files in a directory.
-func SaveDir(c *kchart.Chart, dest string, packName string) error {
+func SaveDir(c *chart.Chart, dest string, packName string) error {
 	// Create the chart directory
 	outdir := filepath.Join(dest, packName)
 	if err := os.MkdirAll(outdir, 0755); err != nil {
@@ -113,10 +114,15 @@ func SaveDir(c *kchart.Chart, dest string, packName string) error {
 	}
 
 	// Save values.yaml
-	if c.Values != nil && len(c.Values.Raw) > 0 {
+	if c.Values != nil && len(c.Values) > 0 {
 		vf := filepath.Join(outdir, chartutil.ValuesfileName)
-		if err := ioutil.WriteFile(vf, []byte(c.Values.Raw), 0755); err != nil {
-			return err
+		values := chartutil.Values(c.Values)
+		data, err := values.YAML()
+		if err != nil {
+			return errors.Wrapf(err, "failed to marshal values YAML")
+		}
+		if err = ioutil.WriteFile(vf, []byte(data), 0755); err != nil {
+			return errors.Wrapf(err, "failed to save yaml file %s", vf)
 		}
 	}
 
@@ -136,15 +142,16 @@ func SaveDir(c *kchart.Chart, dest string, packName string) error {
 
 	// Save files
 	for _, f := range c.Files {
-		n := filepath.Join(outdir, f.TypeUrl)
-		if err := ioutil.WriteFile(n, f.Value, 0755); err != nil {
+		n := filepath.Join(outdir, f.Name)
+		if err := ioutil.WriteFile(n, f.Data, 0755); err != nil {
 			return err
 		}
 	}
 
 	// Save dependencies
 	base := filepath.Join(outdir, ChartsDir)
-	for _, dep := range c.Dependencies {
+	dependencies := c.Dependencies()
+	for _, dep := range dependencies {
 		// Here, we write each dependency as a tar file.
 		if _, err := chartutil.Save(dep, base); err != nil {
 			return err
@@ -178,11 +185,17 @@ func loadDirectory(pack *Pack, dir string, relPath string) error {
 	}
 	for _, fInfo := range fileSlice {
 		name := fInfo.Name()
+		chartPath := filepath.Join(dir, name)
 		if fInfo.IsDir() {
 			// assume root folders not starting with dot are chart folders
 			// could replace this logic with checking for charts / preview strings instead?
 			if relPath == "" && name != "preview" && !(strings.HasPrefix(name, ".")) {
-				localChart, err := chartutil.LoadDir(filepath.Join(dir, name))
+				chartLoader, err := loader.Loader(chartPath)
+				if err != nil {
+					return errors.Wrapf(err, "failed to create chart loader for chart %s", chartPath)
+				}
+
+				localChart, err := chartLoader.Load()
 				if err != nil {
 					continue
 				}
@@ -203,13 +216,13 @@ func loadDirectory(pack *Pack, dir string, relPath string) error {
 				}
 			} else {
 				// allow other directories to copy across
-				err = loadDirectory(pack, filepath.Join(dir, name), filepath.Join(relPath, name))
+				err = loadDirectory(pack, chartPath, filepath.Join(relPath, name))
 				if err != nil {
 					return err
 				}
 			}
 		} else {
-			var f, err = os.Open(filepath.Join(dir, name))
+			var f, err = os.Open(chartPath)
 			if err != nil {
 				return err
 			}
