@@ -114,6 +114,9 @@ type ImportOptions struct {
 	Destination           ImportDestination
 	reporter              ImportReporter
 	PackFilter            func(*Pack)
+	// env customization
+	EnvName               string
+	EnvStrategy           string
 
 	/*
 		TODO jenkins support
@@ -243,6 +246,10 @@ func (o *ImportOptions) AddImportFlags(cmd *cobra.Command, createProject bool) {
 	cmd.Flags().BoolVarP(&o.IgnoreCollaborator, "no-collaborator", "", false, "disables checking if the bot user is a collaborator. Only used if you have an issue with your git provider and this functionality in go-scm")
 	cmd.Flags().DurationVarP(&o.PullRequestPollPeriod, "pr-poll-period", "", time.Second*20, "the time between polls of the Pull Request on the cluster environment git repository")
 	cmd.Flags().DurationVarP(&o.PullRequestPollTimeout, "pr-poll-timeout", "", time.Minute*20, "the maximum amount of time we wait for the Pull Request on the cluster environment git repository")
+
+	cmd.Flags().StringVar(&o.EnvName, "env-name", "", "The name of the environment to create (only used for env projects)")
+	// FIXME parse enum and through what specified do not fit in enum
+	cmd.Flags().StringVar(&o.EnvStrategy, "env-strategy", "Never", "The promotion strategy of the environment to create (only used for env projects)")
 
 	o.BaseOptions.AddBaseFlags(cmd)
 	o.ScmFactory.AddFlags(cmd)

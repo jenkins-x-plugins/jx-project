@@ -4,6 +4,7 @@ import (
 	"path/filepath"
 
 	jxcore "github.com/jenkins-x/jx-api/v4/pkg/apis/core/v4beta1"
+	v1 "github.com/jenkins-x/jx-api/v4/pkg/apis/jenkins.io/v1"
 	"github.com/jenkins-x/jx-helpers/v3/pkg/files"
 	"github.com/jenkins-x/jx-helpers/v3/pkg/gitclient/giturl"
 	"github.com/jenkins-x/jx-helpers/v3/pkg/kube/naming"
@@ -32,7 +33,7 @@ func IsRemoteClusterGitRepository(dir string) (bool, error) {
 
 // allows any extra changes to be proposed to the dev environment pull request if needed
 // e.g. if a new environment git repository is imported we should ensure we have an Environment created for the new environment
-func (o *ImportOptions) modifyDevEnvironmentSource(importDir, promoteDir string, gitInfo *giturl.GitRepository, gitURL string, gitKind string) (bool, error) {
+func (o *ImportOptions) modifyDevEnvironmentSource(importDir, promoteDir string, gitInfo *giturl.GitRepository, gitURL string, gitKind string, envName string, envStrategy v1.PromotionStrategyType) (bool, error) {
 	log.Logger().Debugf("checking if the new repository is an Environment: %s", gitURL)
 
 	gitops, err := IsRemoteClusterGitRepository(importDir)
@@ -60,15 +61,18 @@ func (o *ImportOptions) modifyDevEnvironmentSource(importDir, promoteDir string,
 		}
 
 		// lets add a new environment
-		key := naming.ToValidName(repoName)
+
+		if envName == "" {
+			envName = naming.ToValidName(repoName)
+		}
 		requirements.Environments = append(requirements.Environments, jxcore.EnvironmentConfig{
-			Key:               key,
+			Key:               envName,
 			Owner:             repoOwner,
 			Repository:        repoName,
 			GitServer:         gitInfo.HostURL(),
 			GitKind:           gitKind,
 			RemoteCluster:     true,
-			PromotionStrategy: "Auto",
+			PromotionStrategy: envStrategy,
 		})
 		err = requirementsResource.SaveConfig(requirementsFileName)
 		if err != nil {
