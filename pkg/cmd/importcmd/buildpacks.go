@@ -377,6 +377,41 @@ func copyBuildPack(dest, src string, filter func(*Pack)) error {
 		return fmt.Errorf("could not load %s: %s", src, err)
 	}
 
+	// if we already have a Charts dir lets move it instead
+	chartsDir := filepath.Join(dest, "charts")
+	chartFile := filepath.Join(chartsDir, "Chart.yaml")
+	exists, err := files.FileExists(chartFile)
+	if err != nil {
+		return errors.Wrapf(err, "failed to check if chart file exists %s", chartFile)
+	}
+
+	if exists {
+		p.Charts = nil
+
+		// lets move the charts folder to charts/$name so its a real chart layout
+		_, appName := filepath.Split(dest)
+
+		fs, err := ioutil.ReadDir(chartsDir)
+		if err != nil {
+			return errors.Wrapf(err, "failed to read dir %s", chartsDir)
+		}
+		newDir := filepath.Join(dest, "charts", appName)
+		err = os.MkdirAll(newDir, files.DefaultDirWritePermissions)
+		if err != nil {
+			return errors.Wrapf(err, "failed to create dir %s", newDir)
+		}
+
+		for _, f := range fs {
+			name := f.Name()
+			oldPath := filepath.Join(chartsDir, name)
+			newPath := filepath.Join(newDir, name)
+			err = os.Rename(oldPath, newPath)
+			if err != nil {
+				return errors.Wrapf(err, "failed to move file %s to %s", oldPath, newPath)
+			}
+		}
+	}
+
 	// lets remove any files we think should be zapped
 	for _, file := range []string{jenkinsfile.PipelineConfigFileName, jenkinsfile.PipelineTemplateFileName} {
 		delete(p.Files, file)
