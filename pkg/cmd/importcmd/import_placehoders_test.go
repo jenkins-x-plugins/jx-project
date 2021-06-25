@@ -53,6 +53,12 @@ func TestReplacePlaceholders(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, "/home/jenkins/go/src/github.com/foo/bar/registry-org", string(testFile), "replaced placeholder")
 
+	// dir3
+	testDir3 := path.Join(f, "dir3")
+	testFile, err = LoadBytes(testDir3, "values.yaml")
+	assert.NoError(t, err)
+	assert.Equal(t, "# test comment\nfoo: /home/jenkins/go/src/github.com/foo/bar/registry-org\n", string(testFile), "replaced placeholder")
+
 	// REPLACE_ME_APP_NAME/REPLACE_ME_APP_NAME.txt
 	testDirBar := path.Join(f, "bar")
 	testFile, err = LoadBytes(testDirBar, "bar.txt")
