@@ -3,13 +3,14 @@ package root
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/jenkins-x-plugins/jx-project/pkg/cmd/importcmd"
 	"io/ioutil"
 	"net/http"
 	"os"
 	"path/filepath"
 	"sort"
 	"strings"
+
+	"github.com/jenkins-x-plugins/jx-project/pkg/cmd/importcmd"
 
 	"github.com/jenkins-x-plugins/jx-project/pkg/quickstarts"
 	"github.com/jenkins-x/jx-helpers/v3/pkg/cobras/helper"
@@ -214,7 +215,7 @@ func (o *CreateMLQuickstartOptions) Run() error {
 			w.Filter.Text = project.Repo
 			w.Filter.ProjectName = prefix + project.Tail
 			// w.GitRepositoryOptions.Name = w.Filter.ProjectName	// For Draft
-			w.ImportOptions.Repository = w.Filter.ProjectName	// For Draft
+			w.ImportOptions.Repository = w.Filter.ProjectName // For Draft
 			w.Filter.Language = ""
 			log.Logger().Debugf("Invoking CreateQuickstart for %s...\n", project.Repo)
 
