@@ -115,8 +115,8 @@ type ImportOptions struct {
 	reporter              ImportReporter
 	PackFilter            func(*Pack)
 	// env customization
-	EnvName               string
-	EnvStrategy           string
+	EnvName     string
+	EnvStrategy string
 
 	/*
 		TODO jenkins support
