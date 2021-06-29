@@ -20,6 +20,7 @@ import (
 // Options contains the command line options
 type Options struct {
 	importcmd.ImportOptions
+	RegenCharts bool
 }
 
 var (
@@ -52,16 +53,18 @@ func NewCmdPipelineEnable() (*cobra.Command, *Options) {
 	o.ImportOptions.DisableStartPipeline = true
 	o.ImportOptions.IgnoreJenkinsXFile = true
 
-	o.ImportOptions.PackFilter = func(pack *importcmd.Pack) {
-		// lets exclude everything from the pack other than lighthouse files
-		m := map[string]io.ReadCloser{}
-		for k, v := range pack.Files {
-			if strings.HasPrefix(k, ".lighthouse") {
-				m[k] = v
+	if o.RegenCharts {
+		o.ImportOptions.PackFilter = func(pack *importcmd.Pack) {
+			// lets exclude everything from the pack other than lighthouse files
+			m := map[string]io.ReadCloser{}
+			for k, v := range pack.Files {
+				if strings.HasPrefix(k, ".lighthouse") {
+					m[k] = v
+				}
 			}
+			pack.Charts = nil
+			pack.Files = m
 		}
-		pack.Charts = nil
-		pack.Files = m
 	}
 
 	cmd := &cobra.Command{
@@ -76,6 +79,7 @@ func NewCmdPipelineEnable() (*cobra.Command, *Options) {
 		},
 	}
 
+	cmd.Flags().BoolVarP(&o.RegenCharts, "charts", "", false, "Should we regen the charts")
 	cmd.Flags().StringVarP(&o.Dir, "dir", "", ".", "Specify the directory to import")
 	cmd.Flags().StringVarP(&o.Pack, "pack", "", "", "The name of the pipeline catalog pack to use. If none is specified it will be chosen based on matching the source code languages")
 
