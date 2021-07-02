@@ -678,7 +678,7 @@ func (o *ImportOptions) CreateNewRemoteRepository() error {
 
 	// lets use a retry loop to push in case the repository is not yet setup quite yet
 	f := func() error {
-		return gitclient.Push(o.Git(), dir, "origin", false, "master")
+		return gitclient.Push(o.Git(), dir, "origin", false, "HEAD")
 	}
 
 	bo := backoff.NewExponentialBackOff()
