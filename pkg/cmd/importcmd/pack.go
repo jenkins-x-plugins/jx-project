@@ -116,13 +116,25 @@ func SaveDir(c *chart.Chart, dest string, packName string) error {
 
 	// Save values.yaml
 	if c.Values != nil && len(c.Values) > 0 {
-		vf := filepath.Join(outdir, chartutil.ValuesfileName)
-		values := chartutil.Values(c.Values)
-		data, err := values.YAML()
-		if err != nil {
-			return errors.Wrapf(err, "failed to marshal values YAML")
+		// lets find the raw file for values.yaml and use to that to preserve comments
+		data := ""
+		for _, f := range c.Raw {
+			if f.Name == "values.yaml" {
+				data = string(f.Data)
+				break
+			}
 		}
-		if err = ioutil.WriteFile(vf, []byte(data), 0755); err != nil {
+
+		if data == "" {
+			values := chartutil.Values(c.Values)
+			var err error
+			data, err = values.YAML()
+			if err != nil {
+				return errors.Wrapf(err, "failed to marshal values YAML")
+			}
+		}
+		vf := filepath.Join(outdir, chartutil.ValuesfileName)
+		if err := ioutil.WriteFile(vf, []byte(data), 0755); err != nil {
 			return errors.Wrapf(err, "failed to save yaml file %s", vf)
 		}
 	}
