@@ -3,6 +3,7 @@
 package gitresolver
 
 import (
+	"github.com/jenkins-x/jx-helpers/v3/pkg/testhelpers"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -16,6 +17,8 @@ import (
 )
 
 func TestBuildPackInitClone(t *testing.T) {
+	defaultBranch := testhelpers.GetDefaultBranch(t)
+
 	mainRepo, err := ioutil.TempDir("", uuid.New().String())
 	assert.NoError(t, err)
 
@@ -58,7 +61,7 @@ func TestBuildPackInitClone(t *testing.T) {
 	// Set up the remote
 	err = gitclient.AddRemote(gitter, gitDir, "origin", remoteRepo)
 	assert.NoError(t, err)
-	err = gitclient.FetchBranch(gitter, gitDir, "origin", "master")
+	err = gitclient.FetchBranch(gitter, gitDir, "origin", defaultBranch)
 	assert.NoError(t, err)
 	err = gitclient.Merge(gitter, gitDir, "origin/master")
 	assert.NoError(t, err)
