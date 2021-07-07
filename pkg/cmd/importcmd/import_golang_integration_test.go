@@ -3,6 +3,7 @@
 package importcmd_test
 
 import (
+	"github.com/jenkins-x/jx-helpers/v3/pkg/testhelpers"
 	"io/ioutil"
 	"os"
 	"path"
@@ -54,6 +55,12 @@ func TestImportGoLangProject(t *testing.T) {
 	assert.FileExists(t, filepath.Join(testDir, "preview", "helmfile.yaml"))
 	assert.NoFileExists(t, filepath.Join(testDir, config.ProjectConfigFileName))
 	assert.FileExists(t, filepath.Join(testDir, ".lighthouse", "jenkins-x", "triggers.yaml"))
+
+	// lets verify we have comments still in the values yaml
+	valuesFile := filepath.Join(testDir, "charts", dirName, "values.yaml")
+	assert.FileExists(t, valuesFile)
+	valuesYaml, _ := testhelpers.AssertLoadFileText(t, valuesFile)
+	assert.True(t, strings.Contains(valuesYaml, "# "), "values yaml should contain a comment but was: %s", valuesYaml)
 
 	var commands []string
 	found := false
