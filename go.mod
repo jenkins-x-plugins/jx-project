@@ -16,7 +16,7 @@ require (
 	github.com/jenkins-x-plugins/jx-promote v0.0.278
 	github.com/jenkins-x/go-scm v1.10.10
 	github.com/jenkins-x/jx-api/v4 v4.1.5
-	github.com/jenkins-x/jx-helpers/v3 v3.0.127
+	github.com/jenkins-x/jx-helpers/v3 v3.0.128
 	github.com/jenkins-x/jx-logging/v3 v3.0.6
 	github.com/jenkins-x/lighthouse-client v0.0.233
 	github.com/pkg/errors v0.9.1
@@ -39,6 +39,7 @@ replace (
 	github.com/docker/docker => github.com/moby/moby v17.12.0-ce-rc1.0.20200618181300-9dc6525e6118+incompatible
 	// override the go-scm from tekton
 	github.com/jenkins-x/go-scm => github.com/jenkins-x/go-scm v1.10.10
+	github.com/jenkins-x/jx-helpers/v3 => github.com/jenkins-x/jx-helpers/v3 v3.0.128
 	// for the PipelineRun debug fix see: https://github.com/tektoncd/pipeline/pull/4145
 	github.com/tektoncd/pipeline => github.com/jstrachan/pipeline v0.21.1-0.20210811150720-45a86a5488af
 	k8s.io/api => k8s.io/api v0.20.7
