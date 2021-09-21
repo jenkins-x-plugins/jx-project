@@ -62,7 +62,7 @@ endif
 
 TEST_PACKAGE ?= ./...
 COVER_OUT:=$(REPORTS_DIR)/cover.out
-COVERFLAGS=-coverprofile=$(COVER_OUT) --covermode=count --coverpkg=./...
+COVERFLAGS=-coverprofile=$(COVER_OUT) --covermode=count --coverpkg=./pkg/...
 
 .PHONY: list
 list: ## List all make targets
@@ -75,9 +75,6 @@ help:
 
 full: check ## Build and run the tests
 check: build test ## Build and run the tests
-get-test-deps: ## Install test dependencies
-	$(GO_NOMOD) get github.com/axw/gocov/gocov
-	$(GO_NOMOD) get -u gopkg.in/matm/v1/gocov-html
 
 print-version: ## Print version
 	@echo $(VERSION)
@@ -112,11 +109,8 @@ test-release: ## Run tests with the "unit" build tag
 test-coverage : make-reports-dir ## Run tests and coverage for all tests with the "unit" build tag
 	CGO_ENABLED=$(CGO_ENABLED) $(GOTEST) --tags=unit $(COVERFLAGS) -failfast -short ./... $(TEST_BUILDFLAGS)
 
-test-report: make-reports-dir get-test-deps test-coverage ## Create the test report
-	@gocov convert $(COVER_OUT) | gocov report
-
-test-report-html: make-reports-dir get-test-deps test-coverage ## Create the test report in HTML format
-	@gocov convert $(COVER_OUT) | gocov-html > $(REPORTS_DIR)/cover.html && open $(REPORTS_DIR)/cover.html
+test-report-html: make-reports-dir test-coverage
+	$(GO) tool cover -html=$(COVER_OUT)
 
 install: $(GO_DEPENDENCIES) ## Install the binary
 	GOBIN=${GOPATH}/bin $(GO) install $(BUILDFLAGS) $(MAIN_SRC_FILE)
