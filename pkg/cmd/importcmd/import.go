@@ -149,9 +149,9 @@ var (
 	    Or you can use '--dir' to specify a directory to import.
 
 	    You can specify the git URL as an argument.
-	    
+
 		For more documentation see: [https://jenkins-x.io/docs/using-jx/creating/import/](https://jenkins-x.io/docs/using-jx/creating/import/)
-	    
+
 `)
 
 	importExample = templates.Examples(`
@@ -165,13 +165,13 @@ var (
 		%s import --url https://github.com/jenkins-x/spring-boot-web-example.git
 
         # Select a number of repositories from a GitHub organisation
-		%s import --github --org myname 
+		%s import --github --org myname
 
         # Import all repositories from a GitHub organisation selecting ones to not import
-		%s import --github --org myname --all 
+		%s import --github --org myname --all
 
         # Import all repositories from a GitHub organisation which contain the text foo
-		%s import --github --org myname --all --filter foo 
+		%s import --github --org myname --all --filter foo
 		`)
 
 	deployKinds = []string{constants.DeployKindKnative, constants.DeployKindDefault}
