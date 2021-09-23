@@ -63,7 +63,22 @@ func (o *ImportOptions) AddAndAcceptCollaborator(newRepository bool) error {
 	// If the user creating the repo is not the pipeline user, add the pipeline user as a contributor to the repo
 	if pipelineUserName != "" && pipelineUserName != userName { // TODO: not sure why:  && o.ScmFactory.GitServerURL == o.PipelineServer {
 		// Make the invitation
-		_, _, _, err = scmClient.Repositories.AddCollaborator(ctx, fullRepoName, pipelineUserName, permission)
+		switch o.ScmFactory.GitKind {
+		case "github":
+			_, _, _, err = scmClient.Repositories.AddCollaborator(ctx, fullRepoName, pipelineUserName, permission)
+		case "gitlab":
+			repoPath := scm.Join(owner, repoName)
+			repo, _, err := scmClient.Repositories.Find(ctx, repoPath)
+			if err != nil {
+				return errors.Wrapf(err, "failed to resolve gitlab repo id for %s", repoName)
+			}
+			_, _, _, err = scmClient.Repositories.AddCollaborator(ctx, repo.ID, pipelineUserName, permission)
+			if err != nil {
+				return errors.Wrapf(err, "failed to add %s as a collaborator to %s", pipelineUserName, repoName)
+			}
+			// that's it for GitLab, no invitations to accept
+			return nil
+		}
 		if err != nil {
 			return errors.Wrapf(err, "failed to add %s as a collaborator to %s", pipelineUserName, fullRepoName)
 		}
