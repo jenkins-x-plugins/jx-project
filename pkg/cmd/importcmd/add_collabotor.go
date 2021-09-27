@@ -65,11 +65,11 @@ func (o *ImportOptions) AddAndAcceptCollaborator(newRepository bool) error {
 		// Make the invitation
 		alreadyMember := false
 		_, alreadyMember, _, err = scmClient.Repositories.AddCollaborator(ctx, fullRepoName, pipelineUserName, permission)
-		if err != nil {
-			return errors.Wrapf(err, "failed to add %s as a collaborator to %s", pipelineUserName, fullRepoName)
-		}
 		if alreadyMember {
 			return nil
+		}
+		if err != nil {
+			return errors.Wrapf(err, "failed to add %s as a collaborator to %s", pipelineUserName, fullRepoName)
 		}
 
 		if o.OperatorNamespace == "" {
