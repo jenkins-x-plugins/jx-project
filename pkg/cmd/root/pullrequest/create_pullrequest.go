@@ -2,6 +2,7 @@ package pullrequest
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
@@ -23,8 +24,6 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/spf13/cobra"
-
-	"fmt"
 
 	"github.com/jenkins-x/jx-helpers/v3/pkg/cobras/templates"
 	"github.com/jenkins-x/jx-logging/v3/pkg/log"
@@ -91,7 +90,7 @@ func NewCmdCreatePullRequest() *cobra.Command {
 
 	cmd.Flags().StringVarP(&options.Title, optionTitle, "t", "", "The title of the pullrequest to create")
 	cmd.Flags().StringVarP(&options.Body, "body", "", "", "The body of the pullrequest")
-	cmd.Flags().StringVarP(&options.Base, "base", "", "master", "The base branch to create the pull request into")
+	cmd.Flags().StringVarP(&options.Base, "base", "", "", "The base branch to create the pull request into, instead of the default branch")
 	cmd.Flags().StringArrayVarP(&options.Labels, "label", "l", []string{}, "The labels to add to the pullrequest")
 	cmd.Flags().BoolVarP(&options.Push, "push", "", false, "If true the contents of the source directory will be committed, pushed, and used to create the pull request")
 	cmd.Flags().BoolVarP(&options.Fork, "fork", "", false, "If true, and the username configured to push the repo is different from the org name a PR is being created against, assume that this is a fork")
@@ -168,18 +167,19 @@ func (o *CreatePullRequestOptions) Run() error {
 			GitToken:     o.GitToken,
 			ScmClient:    o.ScmClient,
 		},
-		Gitter:        o.GitClient,
-		CommandRunner: o.CommandRunner,
-		GitKind:       o.GitKind,
-		OutDir:        "",
-		Function:      nil,
-		Labels:        o.Labels,
-		BranchName:    "",
-		ScmClient:     o.ScmClient,
-		BatchMode:     o.BatchMode,
-		Fork:          o.Fork,
-		CommitTitle:   o.Title,
-		CommitMessage: o.Body,
+		Gitter:         o.GitClient,
+		CommandRunner:  o.CommandRunner,
+		GitKind:        o.GitKind,
+		OutDir:         "",
+		Function:       nil,
+		Labels:         o.Labels,
+		BaseBranchName: o.Base,
+		BranchName:     "",
+		ScmClient:      o.ScmClient,
+		BatchMode:      o.BatchMode,
+		Fork:           o.Fork,
+		CommitTitle:    o.Title,
+		CommitMessage:  o.Body,
 	}
 
 	err = o.createPullRequestDetails(po)
