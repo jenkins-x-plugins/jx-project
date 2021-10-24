@@ -56,12 +56,12 @@ func (o *ImportOptions) addSourceConfigPullRequest(gitURL string, gitKind string
 		BranchName:        "",
 		PullRequestNumber: 0,
 		CommitTitle:       fmt.Sprintf("chore: import repository %s", safeGitURL),
-		CommitMessage:     "this commit will trigger a pipeline to [generate the CI/CD configuration](https://jenkins-x.io/docs/v3/about/how-it-works/#importing--creating-quickstarts) which will create a second commit on this Pull Request before it auto merges",
+		CommitMessage:     "this commit will trigger a pipeline to [generate the CI/CD configuration](https://jenkins-x.io/v3/about/how-it-works/#importing--creating-quickstarts) which will create a second commit on this Pull Request before it auto merges",
 		ScmClient:         o.ScmFactory.ScmClient,
 		BatchMode:         o.BatchMode,
 		UseGitHubOAuth:    false,
 		Fork:              false,
-		//Labels:            []string{"env/dev"},
+		// Labels:            []string{"env/dev"},
 	}
 
 	pro.Function = func() error {
