@@ -7,12 +7,10 @@ import (
 	"github.com/jenkins-x/jx-helpers/v3/pkg/stringhelpers"
 )
 
-var (
-	contextFunctions = map[string]bool{
-		"container": true,
-		"dir":       true,
-	}
-)
+var contextFunctions = map[string]bool{
+	"container": true,
+	"dir":       true,
+}
 
 // Statement represents a statement in a Jenkinsfile
 type Statement struct {
@@ -73,20 +71,20 @@ func NewWriter(indentCount int) *Writer {
 
 func (w *Writer) Write(inputStatements []*Statement) {
 	statements := w.combineSimilarContexts(inputStatements)
-	w.writeStatement(nil, statements)
+	w.writeStatement(statements)
 }
 
-func (w *Writer) writeStatement(parent *Statement, statements []*Statement) {
+func (w *Writer) writeStatement(statements []*Statement) {
 	for _, s := range statements {
 		text := s.Text()
 		hasChildren := len(s.Children) > 0
 		if hasChildren {
-			text = text + " {"
+			text += " {"
 		}
 		w.println(text)
 		if hasChildren {
 			w.IndentCount++
-			w.writeStatement(s, s.Children)
+			w.writeStatement(s.Children)
 			w.IndentCount--
 		}
 		if hasChildren {

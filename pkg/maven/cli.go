@@ -139,5 +139,5 @@ func InstallMavenIfRequired(runner cmdrunner.CommandRunner) error {
 	if err != nil {
 		return err
 	}
-	return fmt.Errorf("Could not find an apache-maven folder inside the unzipped maven distro at %s", mvnTmpDir)
+	return fmt.Errorf("could not find an apache-maven folder inside the unzipped maven distro at %s", mvnTmpDir)
 }

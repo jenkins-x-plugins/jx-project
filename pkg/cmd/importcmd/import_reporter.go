@@ -38,7 +38,7 @@ func (r *LogImportReporter) Trace(message string, args ...interface{}) {
 }
 
 // CreatedDevRepoPullRequest report progress
-func (r *LogImportReporter) CreatedDevRepoPullRequest(prURL string, devGitURL string) {
+func (r *LogImportReporter) CreatedDevRepoPullRequest(prURL, devGitURL string) {
 	log.Logger().Debugf("Created pull request %s on the development git repository %s", info(prURL), info(devGitURL))
 }
 

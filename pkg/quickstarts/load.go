@@ -40,10 +40,7 @@ func (o *Options) LoadQuickStartsModel(gitHubOrganisations []string, ignoreTeam 
 		return nil, errors.Wrapf(err, "failed to validate options")
 	}
 
-	locations, err := o.loadQuickStartLocations(gitHubOrganisations, ignoreTeam)
-	if err != nil {
-		return nil, err
-	}
+	locations := o.loadQuickStartLocations(gitHubOrganisations)
 
 	model, err := o.LoadQuickStartsFromLocations(locations)
 	if err != nil {
@@ -130,7 +127,7 @@ func (o *Options) LoadQuickStartsFromLocations(locations []v1.QuickStartLocation
 }
 
 // loadQuickStartLocations loads the quickstarts
-func (o *Options) loadQuickStartLocations(gitHubOrganisations []string, ignoreTeam bool) ([]v1.QuickStartLocation, error) {
+func (o *Options) loadQuickStartLocations(gitHubOrganisations []string) []v1.QuickStartLocation {
 	var locations []v1.QuickStartLocation
 
 	/* TODO
@@ -164,7 +161,7 @@ func (o *Options) loadQuickStartLocations(gitHubOrganisations []string, ignoreTe
 			})
 		}
 	}
-	return locations, nil
+	return locations
 }
 
 // LoadMLProjectSetsModel Load all quickstarts
@@ -175,10 +172,7 @@ func (o *Options) LoadMLProjectSetsModel(gitHubOrganisations []string, ignoreTea
 	}
 	log.Logger().Debugf("Valid options\n")
 
-	locations, err := o.loadQuickStartLocations(gitHubOrganisations, ignoreTeam)
-	if err != nil {
-		return nil, err
-	}
+	locations := o.loadQuickStartLocations(gitHubOrganisations)
 	log.Logger().Debugf("Locations: %s\n", locations)
 
 	model, err := o.LoadQuickStartsFromLocations(locations)

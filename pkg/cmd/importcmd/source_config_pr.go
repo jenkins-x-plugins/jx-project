@@ -14,7 +14,7 @@ import (
 	"github.com/pkg/errors"
 )
 
-func (o *ImportOptions) addSourceConfigPullRequest(gitURL string, gitKind string) (bool, error) {
+func (o *ImportOptions) addSourceConfigPullRequest(gitURL, gitKind string) (bool, error) {
 	remoteCluster := false
 	if o.NoDevPullRequest {
 		return remoteCluster, nil
@@ -112,7 +112,7 @@ func (o *ImportOptions) addSourceConfigPullRequest(gitURL string, gitKind string
 			log.Logger().Info("we now need to wait for the Pull Request to merge so that CI/CD can be setup via GitOps")
 			log.Logger().Info("")
 
-			err = o.waitForSourceRepositoryPullRequest(pr, devGitURL)
+			err = o.waitForSourceRepositoryPullRequest(pr)
 			if err != nil {
 				return remoteCluster, errors.Wrapf(err, "failed to wait for the Pull Request %s to merge", prURL)
 			}

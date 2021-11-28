@@ -21,15 +21,15 @@ func (f *QuickstartFilter) Matches(q *Quickstart) bool {
 		return false
 	}
 	owner := strings.ToLower(f.Owner)
-	if owner != "" && strings.ToLower(q.Owner) != owner {
+	if owner != "" && strings.EqualFold(q.Owner, owner) {
 		return false
 	}
 	language := strings.ToLower(f.Language)
-	if language != "" && strings.ToLower(q.Language) != language {
+	if language != "" && strings.EqualFold(q.Language, language) {
 		return false
 	}
 	framework := strings.ToLower(f.Framework)
-	if framework != "" && strings.ToLower(q.Framework) != framework {
+	if framework != "" && strings.EqualFold(q.Framework, framework) {
 		return false
 	}
 	if !f.AllowML && strings.HasPrefix(q.Name, "ML-") {

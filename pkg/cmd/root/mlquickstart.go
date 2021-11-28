@@ -179,7 +179,7 @@ func (o *CreateMLQuickstartOptions) Run() error {
 
 	dir := o.OutDir
 	if dir == "" {
-		dir, err = os.Getwd()
+		_, err = os.Getwd()
 		if err != nil {
 			return err
 		}
@@ -214,7 +214,6 @@ func (o *CreateMLQuickstartOptions) Run() error {
 			}
 			w.Filter.Text = project.Repo
 			w.Filter.ProjectName = prefix + project.Tail
-			// w.GitRepositoryOptions.Name = w.Filter.ProjectName	// For Draft
 			w.ImportOptions.Repository = w.Filter.ProjectName // For Draft
 			w.Filter.Language = ""
 			log.Logger().Debugf("Invoking CreateQuickstart for %s...\n", project.Repo)
@@ -260,6 +259,7 @@ func (o *CreateMLQuickstartOptions) getMLProjectSet(q *quickstarts.Quickstart) (
 	if err != nil {
 		return nil, err
 	}
+	defer res.Body.Close()
 	body, err := ioutil.ReadAll(res.Body)
 	if err != nil {
 		return nil, err

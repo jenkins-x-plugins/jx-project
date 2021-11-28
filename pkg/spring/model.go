@@ -24,8 +24,8 @@ import (
 )
 
 const (
-	OptionGroupId        = "group"
-	OptionArtifactId     = "artifact"
+	OptionGroupID        = "group"
+	OptionArtifactID     = "artifact"
 	OptionLanguage       = "language"
 	OptionJavaVersion    = "java-version"
 	OptionBootVersion    = "boot-version"
@@ -37,60 +37,58 @@ const (
 	startSpringURL = "https://start.spring.io"
 )
 
-var (
-	DefaultDependencyKinds = []string{"Core", "Web", "Template Engines", "SQL", "I/O", "Ops", "Spring Cloud GCP", "Azure", "Cloud Contract", "Cloud AWS", "Cloud Messaging", "Cloud Tracing"}
-)
+var DefaultDependencyKinds = []string{"Core", "Web", "Template Engines", "SQL", "I/O", "Ops", "Spring Cloud GCP", "Azure", "Cloud Contract", "Cloud AWS", "Cloud Messaging", "Cloud Tracing"}
 
-type SpringValue struct {
+type Value struct {
 	Type    string
 	Default string
 }
 
-type SpringOption struct {
+type Option struct {
 	ID           string
 	Name         string
 	Description  string
 	VersionRange string
 }
 
-type SpringOptions struct {
+type Options struct {
 	Type    string
 	Default string
-	Values  []SpringOption
+	Values  []Option
 }
 
-type SpringTreeGroup struct {
+type TreeGroup struct {
 	Name   string
-	Values []SpringOption
+	Values []Option
 }
 
-type SpringTreeSelect struct {
+type TreeSelect struct {
 	Type   string
-	Values []SpringTreeGroup
+	Values []TreeGroup
 }
 
-type SpringBootModel struct {
-	Packaging    SpringOptions
-	Language     SpringOptions
-	JavaVersion  SpringOptions
-	BootVersion  SpringOptions
-	Type         SpringOptions
-	GroupId      SpringValue
-	ArtifactId   SpringValue
-	Version      SpringValue
-	Name         SpringValue
-	Description  SpringValue
-	PackageName  SpringValue
-	Dependencies SpringTreeSelect
+type BootModel struct {
+	Packaging    Options
+	Language     Options
+	JavaVersion  Options
+	BootVersion  Options
+	Type         Options
+	GroupID      Value
+	ArtifactID   Value
+	Version      Value
+	Name         Value
+	Description  Value
+	PackageName  Value
+	Dependencies TreeSelect
 }
 
-type SpringBootForm struct {
+type BootForm struct {
 	Packaging       string
 	Language        string
 	JavaVersion     string
 	BootVersion     string
-	GroupId         string
-	ArtifactId      string
+	GroupID         string
+	ArtifactID      string
 	Version         string
 	Name            string
 	PackageName     string
@@ -107,7 +105,7 @@ type errorResponse struct {
 	Path      string `json:"path,omitempty"`
 }
 
-func LoadSpringBoot(cacheDir string) (*SpringBootModel, error) {
+func LoadSpringBoot(cacheDir string) (*BootModel, error) {
 	loader := func() ([]byte, error) {
 		client := http.Client{}
 		req, err := http.NewRequest(http.MethodGet, startSpringURL, nil)
@@ -121,6 +119,7 @@ func LoadSpringBoot(cacheDir string) (*SpringBootModel, error) {
 		if err != nil {
 			return nil, err
 		}
+		defer res.Body.Close()
 		return ioutil.ReadAll(res.Body)
 	}
 
@@ -133,7 +132,7 @@ func LoadSpringBoot(cacheDir string) (*SpringBootModel, error) {
 		return nil, err
 	}
 
-	model := SpringBootModel{}
+	model := BootModel{}
 	err = json.Unmarshal(body, &model)
 	if err != nil {
 		return nil, err
@@ -143,7 +142,7 @@ func LoadSpringBoot(cacheDir string) (*SpringBootModel, error) {
 		model.Type.Default = "maven"
 	}
 	if len(model.Type.Values) == 0 {
-		model.Type.Values = []SpringOption{
+		model.Type.Values = []Option{
 			{
 				ID:          "gradle",
 				Name:        "Gradle",
@@ -159,7 +158,7 @@ func LoadSpringBoot(cacheDir string) (*SpringBootModel, error) {
 	return &model, nil
 }
 
-func (model *SpringBootModel) CreateSurvey(data *SpringBootForm, advanced bool, batchMode bool) error {
+func (model *BootModel) CreateSurvey(data *BootForm, advanced, batchMode bool) error {
 	err := model.ValidateInput(OptionLanguage, &model.Language, data.Language)
 	if err != nil {
 		return err
@@ -181,7 +180,7 @@ func (model *SpringBootModel) CreateSurvey(data *SpringBootForm, advanced bool, 
 		return err
 	}
 
-	var qs = []*survey.Question{}
+	qs := []*survey.Question{}
 	if batchMode {
 		return nil
 	}
@@ -200,19 +199,19 @@ func (model *SpringBootModel) CreateSurvey(data *SpringBootForm, advanced bool, 
 	if data.Type == "" && advanced {
 		qs = append(qs, CreateValueSelect("Build Tool", "type", &model.Type, data))
 	}
-	if data.GroupId == "" {
-		qs = append(qs, CreateValueInput("Group", "groupId", &model.GroupId, data))
+	if data.GroupID == "" {
+		qs = append(qs, CreateValueInput("Group", "groupId", &model.GroupID, data))
 	}
-	if data.ArtifactId == "" {
-		qs = append(qs, CreateValueInput("Artifact", "artifactId", &model.ArtifactId, data))
+	if data.ArtifactID == "" {
+		qs = append(qs, CreateValueInput("Artifact", "artifactId", &model.ArtifactID, data))
 	}
 	if emptyArray(data.Dependencies) {
-		qs = append(qs, CreateSpringTreeSelect("Dependencies", "dependencies", &model.Dependencies, data))
+		qs = append(qs, CreateTreeSelect("Dependencies", "dependencies", &model.Dependencies, data))
 	}
 	return survey.Ask(qs, data)
 }
 
-func (o *SpringOptions) StringArray() []string {
+func (o *Options) StringArray() []string {
 	values := []string{}
 	for _, o := range o.Values {
 		id := o.ID
@@ -224,7 +223,7 @@ func (o *SpringOptions) StringArray() []string {
 	return values
 }
 
-func (options *SpringTreeSelect) StringArray() []string {
+func (options *TreeSelect) StringArray() []string {
 	values := []string{}
 	for _, g := range options.Values {
 		for _, o := range g.Values {
@@ -238,7 +237,7 @@ func (options *SpringTreeSelect) StringArray() []string {
 	return values
 }
 
-func (model *SpringBootModel) ValidateInput(name string, o *SpringOptions, value string) error {
+func (model *BootModel) ValidateInput(name string, o *Options, value string) error {
 	if value != "" && o != nil {
 		for _, v := range o.Values {
 			if v.ID == value {
@@ -250,8 +249,8 @@ func (model *SpringBootModel) ValidateInput(name string, o *SpringOptions, value
 	return nil
 }
 
-func (model *SpringBootModel) ValidateTreeInput(name string, o *SpringTreeSelect, values []string) error {
-	if values != nil && len(values) > 0 && o != nil {
+func (model *BootModel) ValidateTreeInput(name string, o *TreeSelect, values []string) error {
+	if len(values) > 0 && o != nil {
 		for _, value := range values {
 			if value != "" {
 				valid := false
@@ -272,7 +271,7 @@ func (model *SpringBootModel) ValidateTreeInput(name string, o *SpringTreeSelect
 	return nil
 }
 
-func CreateValueSelect(message string, name string, options *SpringOptions, data *SpringBootForm) *survey.Question {
+func CreateValueSelect(message, name string, options *Options, data *BootForm) *survey.Question {
 	values := options.StringArray()
 	return &survey.Question{
 		Name: name,
@@ -285,7 +284,7 @@ func CreateValueSelect(message string, name string, options *SpringOptions, data
 	}
 }
 
-func CreateValueInput(message string, name string, value *SpringValue, data *SpringBootForm) *survey.Question {
+func CreateValueInput(message, name string, value *Value, data *BootForm) *survey.Question {
 	return &survey.Question{
 		Name: name,
 		Prompt: &survey.Input{
@@ -296,7 +295,7 @@ func CreateValueInput(message string, name string, value *SpringValue, data *Spr
 	}
 }
 
-func CreateSpringTreeSelect(message string, name string, tree *SpringTreeSelect, data *SpringBootForm) *survey.Question {
+func CreateTreeSelect(message, name string, tree *TreeSelect, data *BootForm) *survey.Question {
 	dependencyKinds := []string{}
 	if data.DependencyKinds != nil {
 		dependencyKinds = data.DependencyKinds
@@ -306,8 +305,8 @@ func CreateSpringTreeSelect(message string, name string, tree *SpringTreeSelect,
 	}
 	values := []string{}
 	for _, t := range tree.Values {
-		name := t.Name
-		if stringhelpers.StringArrayIndex(dependencyKinds, name) >= 0 {
+		tvName := t.Name
+		if stringhelpers.StringArrayIndex(dependencyKinds, tvName) >= 0 {
 			for _, v := range t.Values {
 				id := v.ID
 				if id != "" {
@@ -327,8 +326,8 @@ func CreateSpringTreeSelect(message string, name string, tree *SpringTreeSelect,
 	}
 }
 
-func (data *SpringBootForm) CreateProject(workDir string) (string, error) {
-	dirName := data.ArtifactId
+func (data *BootForm) CreateProject(workDir string) (string, error) {
+	dirName := data.ArtifactID
 	if dirName == "" {
 		dirName = "project"
 	}
@@ -353,20 +352,20 @@ func (data *SpringBootForm) CreateProject(workDir string) (string, error) {
 	if err != nil {
 		return answer, err
 	}
-
+	defer res.Body.Close()
 	if res.StatusCode == 400 {
 		errorBody, err := ioutil.ReadAll(res.Body)
 		if err != nil {
 			return answer, err
 		}
 
-		errorResponse := errorResponse{}
-		err = json.Unmarshal(errorBody, &errorResponse)
+		errorResp := errorResponse{}
+		err = json.Unmarshal(errorBody, &errorResp)
 		if err != nil {
 			return answer, err
 		}
 
-		log.Logger().Infof("%s", termcolor.ColorError(errorResponse.Message))
+		log.Logger().Infof("%s", termcolor.ColorError(errorResp.Message))
 		return answer, errors.New("unable to create spring quickstart")
 	}
 
@@ -379,11 +378,11 @@ func (data *SpringBootForm) CreateProject(workDir string) (string, error) {
 	zipFile := dir + ".zip"
 	err = ioutil.WriteFile(zipFile, body, files.DefaultFileWritePermissions)
 	if err != nil {
-		return answer, fmt.Errorf("Failed to download file %s due to %s", zipFile, err)
+		return answer, fmt.Errorf("failed to download file %s due to %s", zipFile, err)
 	}
 	err = files.Unzip(zipFile, dir)
 	if err != nil {
-		return answer, fmt.Errorf("Failed to unzip new project file %s due to %s", zipFile, err)
+		return answer, fmt.Errorf("failed to unzip new project file %s due to %s", zipFile, err)
 	}
 	err = os.Remove(zipFile)
 	if err != nil {
@@ -392,13 +391,13 @@ func (data *SpringBootForm) CreateProject(workDir string) (string, error) {
 	return answer, nil
 }
 
-func (data *SpringBootForm) AddFormValues(form *url.Values) {
+func (data *BootForm) AddFormValues(form *url.Values) {
 	AddFormValue(form, "packaging", data.Packaging)
 	AddFormValue(form, "language", data.Language)
 	AddFormValue(form, "javaVersion", data.JavaVersion)
 	AddFormValue(form, "bootVersion", data.BootVersion)
-	AddFormValue(form, "groupId", data.GroupId)
-	AddFormValue(form, "artifactId", data.ArtifactId)
+	AddFormValue(form, "groupId", data.GroupID)
+	AddFormValue(form, "artifactId", data.ArtifactID)
 	AddFormValue(form, "version", data.Version)
 	AddFormValue(form, "name", data.Name)
 	AddFormValue(form, "type", data.Type)
@@ -413,14 +412,14 @@ func AddFormValues(form *url.Values, key string, values []string) {
 	}
 }
 
-func AddFormValue(form *url.Values, key string, v string) {
+func AddFormValue(form *url.Values, key, v string) {
 	if v != "" {
 		form.Add(key, v)
 	}
 }
 
 func emptyArray(values []string) bool {
-	return values == nil || len(values) == 0
+	return len(values) == 0
 }
 
 func addClientHeader(req *http.Request) {

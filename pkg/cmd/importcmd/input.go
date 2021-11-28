@@ -37,16 +37,16 @@ func (o *ImportOptions) PickOwner(userName string) (string, error) {
 }
 
 // PickRepoName picks the repository name
-func (o *ImportOptions) PickRepoName(owner string, defaultName string, allowExistingRepo bool) (string, error) {
+func (o *ImportOptions) PickRepoName(owner, defaultName string, allowExistingRepo bool) (string, error) {
 	help := fmt.Sprintf("enter the name of the git repository to create within the %s owner", owner)
 
 	validator := func(val interface{}) error {
 		str, ok := val.(string)
 		if !ok {
-			return fmt.Errorf("Expected string value")
+			return fmt.Errorf("expected string value")
 		}
 		if strings.TrimSpace(str) == "" {
-			return fmt.Errorf("Repository name is required")
+			return fmt.Errorf("repository name is required")
 		}
 		if allowExistingRepo {
 			return nil
@@ -59,7 +59,6 @@ func (o *ImportOptions) PickRepoName(owner string, defaultName string, allowExis
 		return "", errors.Wrapf(err, "failed to choose the git repository")
 	}
 	return name, nil
-
 }
 
 // GetOrganizations gets the organisation
@@ -75,7 +74,7 @@ func (o *ImportOptions) getOwners(userName string) ([]string, error) {
 		Size: 500,
 	})
 	if err != nil {
-		log.Logger().Warn("Please make sure that the file '$HOME/git/credentials' containes a valid API token in the format 'https://<Username>:<Personal Access Token>@github.com'")
+		log.Logger().Warn("Please make sure that the file '$HOME/git/credentials' contains a valid API token in the format 'https://<Username>:<Personal Access Token>@github.com'")
 		return nil, errors.Wrapf(err, "failed to list git organisations for user %s", userName)
 	}
 	for _, org := range orgs {
@@ -214,14 +213,12 @@ func (o *ImportOptions) PickNewOrExistingGitRepository() (*CreateRepoData, error
 		if err != nil {
 			return nil, err
 		}
-	} else {
-		if !o.IgnoreExistingRepository {
-			err := o.ValidateRepositoryName(owner, repoName)
-			if err != nil {
-				return nil, err
-			}
-			log.Logger().Infof(QuestionAnswer("Using repository", repoName))
+	} else if !o.IgnoreExistingRepository {
+		err := o.ValidateRepositoryName(owner, repoName)
+		if err != nil {
+			return nil, err
 		}
+		log.Logger().Infof(QuestionAnswer("Using repository", repoName))
 	}
 
 	fullName := scm.Join(owner, repoName)
@@ -236,7 +233,7 @@ func (o *ImportOptions) PickNewOrExistingGitRepository() (*CreateRepoData, error
 }
 
 // ValidateRepositoryName validates the repository does not exist
-func (o *ImportOptions) ValidateRepositoryName(owner string, name string) error {
+func (o *ImportOptions) ValidateRepositoryName(owner, name string) error {
 	fullName := scm.Join(owner, name)
 	ctx := context.Background()
 	_, res, err := o.ScmFactory.ScmClient.Repositories.Find(ctx, fullName)
@@ -250,7 +247,7 @@ func (o *ImportOptions) ValidateRepositoryName(owner string, name string) error 
 }
 
 // QuestionAnswer returns strings like Cobra question/answers for default cli options
-func QuestionAnswer(question string, answer string) string {
+func QuestionAnswer(question, answer string) string {
 	return fmt.Sprintf("%s %s: %s", termcolor.ColorBold(termcolor.ColorInfo("?")), termcolor.ColorBold(question), termcolor.ColorAnswer(answer))
 }
 

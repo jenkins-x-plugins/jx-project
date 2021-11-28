@@ -308,6 +308,7 @@ func (o *CreateQuickstartOptions) createQuickstart(f *quickstarts.QuickstartForm
 	if err != nil {
 		return answer, err
 	}
+	defer res.Body.Close()
 	body, err := ioutil.ReadAll(res.Body)
 	if err != nil {
 		return answer, err
@@ -377,6 +378,7 @@ func isMLProjectSet(q *quickstarts.Quickstart, username, token string) bool {
 	if err != nil {
 		return false
 	}
+	defer res.Body.Close()
 	bodybytes, err := ioutil.ReadAll(res.Body)
 	if err != nil {
 		log.Logger().Warnf("Problem parsing response body from %s: %s ", u, err)

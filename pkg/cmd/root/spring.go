@@ -49,7 +49,7 @@ type CreateSpringOptions struct {
 	Options
 
 	Advanced   bool
-	SpringForm spring.SpringBootForm
+	SpringForm spring.BootForm
 }
 
 // NewCmdCreateSpring creates a command object for the "create" command
@@ -73,8 +73,8 @@ func NewCmdCreateSpring() *cobra.Command {
 
 	cmd.Flags().StringArrayVarP(&options.SpringForm.DependencyKinds, spring.OptionDependencyKind, "k", spring.DefaultDependencyKinds, "Default dependency kinds to choose from")
 	cmd.Flags().StringArrayVarP(&options.SpringForm.Dependencies, spring.OptionDependency, "d", []string{}, "Spring Boot dependencies")
-	cmd.Flags().StringVarP(&options.SpringForm.GroupId, spring.OptionGroupId, "g", "", "Group ID to generate")
-	cmd.Flags().StringVarP(&options.SpringForm.ArtifactId, spring.OptionArtifactId, "a", "", "Artifact ID to generate")
+	cmd.Flags().StringVarP(&options.SpringForm.GroupID, spring.OptionGroupID, "g", "", "Group ID to generate")
+	cmd.Flags().StringVarP(&options.SpringForm.ArtifactID, spring.OptionArtifactID, "a", "", "Artifact ID to generate")
 	cmd.Flags().StringVarP(&options.SpringForm.Language, spring.OptionLanguage, "l", "", "Language to generate")
 	cmd.Flags().StringVarP(&options.SpringForm.BootVersion, spring.OptionBootVersion, "t", "", "Spring Boot version")
 	cmd.Flags().StringVarP(&options.SpringForm.JavaVersion, spring.OptionJavaVersion, "j", "", "Java version")
@@ -106,7 +106,7 @@ func (o *CreateSpringOptions) Run() error {
 			return err
 		}
 
-		data.ArtifactId = details.RepoName
+		data.ArtifactID = details.RepoName
 	}
 
 	model, err := spring.LoadSpringBoot(cacheDir)
