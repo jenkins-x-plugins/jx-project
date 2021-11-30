@@ -209,6 +209,13 @@ func TestImportOptions_GetOrganisation(t *testing.T) {
 			},
 			want: "",
 		},
+		{
+			name: "Nested org specified",
+			options: importcmd.ImportOptions{
+				RepoURL: "https://gitlab.com/jx-gitlab-test/cluster/gitlab-import-test-1", // Nested repo
+			},
+			want: "jx-gitlab-test",
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
