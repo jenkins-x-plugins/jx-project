@@ -112,7 +112,7 @@ func (o *WizardOptions) Run() error {
 	case importGitHubName:
 		return o.importGithubProject()
 	default:
-		return fmt.Errorf("Unknown selection: %s\n", name)
+		return fmt.Errorf("unknown selection: %s", name)
 	}
 }
 
@@ -148,14 +148,14 @@ func (o *WizardOptions) importDir() error {
 }
 
 func (o *WizardOptions) importGit() error {
-	repoUrl, err := o.Input.PickValue("Which git repository URL to import: ", "", true,
+	repoURL, err := o.Input.PickValue("Which git repository URL to import: ", "", true,
 		"Please specify the git URL which contains the source code you want to use for your new project")
 	if err != nil {
 		return err
 	}
 
 	w := &importcmd.ImportOptions{
-		RepoURL: repoUrl,
+		RepoURL: repoURL,
 	}
 	return w.Run()
 }

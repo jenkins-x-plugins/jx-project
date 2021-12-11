@@ -33,7 +33,7 @@ func IsRemoteClusterGitRepository(dir string) (bool, error) {
 
 // allows any extra changes to be proposed to the dev environment pull request if needed
 // e.g. if a new environment git repository is imported we should ensure we have an Environment created for the new environment
-func (o *ImportOptions) modifyDevEnvironmentSource(importDir, promoteDir string, gitInfo *giturl.GitRepository, gitURL string, gitKind string, envName string, envStrategy v1.PromotionStrategyType) (bool, error) {
+func (o *ImportOptions) modifyDevEnvironmentSource(importDir, promoteDir string, gitInfo *giturl.GitRepository, gitURL, gitKind, envName string, envStrategy v1.PromotionStrategyType) (bool, error) {
 	log.Logger().Debugf("checking if the new repository is an Environment: %s", gitURL)
 
 	gitops, err := IsRemoteClusterGitRepository(importDir)
@@ -53,7 +53,8 @@ func (o *ImportOptions) modifyDevEnvironmentSource(importDir, promoteDir string,
 		// lets make sure we have an environment for this  environment
 		repoOwner := gitInfo.Organisation
 		repoName := gitInfo.Name
-		for _, e := range requirements.Environments {
+		for k := range requirements.Environments {
+			e := requirements.Environments[k]
 			if e.Repository == repoName && e.Owner == repoOwner {
 				log.Logger().Infof("the dev repository already has the gitops environment repository %s configured", gitURL)
 				return true, nil

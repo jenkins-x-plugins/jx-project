@@ -37,13 +37,13 @@ type Pack struct {
 }
 
 // SaveDir saves a pack as files in a directory.
-func (p *Pack) SaveDir(dest string, packName string) error {
+func (p *Pack) SaveDir(dest, packName string) error {
 	// Create the chart directory
 	chartPath := filepath.Join(dest, ChartsDir)
 	_, err := os.Stat(chartPath)
 	if err != nil && os.IsNotExist(err) {
 		if err := os.MkdirAll(chartPath, 0755); err != nil {
-			return fmt.Errorf("Could not create %s: %s", chartPath, err)
+			return fmt.Errorf("could not create %s: %s", chartPath, err)
 		}
 	}
 	for _, chart := range p.Charts {
@@ -102,7 +102,7 @@ func (p *Pack) SaveDir(dest string, packName string) error {
 }
 
 // SaveDir saves a chart as files in a directory.
-func SaveDir(c *chart.Chart, dest string, packName string) error {
+func SaveDir(c *chart.Chart, dest, packName string) error {
 	// Create the chart directory
 	outdir := filepath.Join(dest, packName)
 	if err := os.MkdirAll(outdir, 0755); err != nil {
@@ -134,13 +134,13 @@ func SaveDir(c *chart.Chart, dest string, packName string) error {
 			}
 		}
 		vf := filepath.Join(outdir, chartutil.ValuesfileName)
-		if err := ioutil.WriteFile(vf, []byte(data), 0755); err != nil {
+		if err := ioutil.WriteFile(vf, []byte(data), 0600); err != nil {
 			return errors.Wrapf(err, "failed to save yaml file %s", vf)
 		}
 	}
 
 	for _, d := range []string{chartutil.TemplatesDir, ChartsDir} {
-		if err := os.MkdirAll(filepath.Join(outdir, d), 0755); err != nil {
+		if err := os.MkdirAll(filepath.Join(outdir, d), 0600); err != nil {
 			return err
 		}
 	}
@@ -148,7 +148,7 @@ func SaveDir(c *chart.Chart, dest string, packName string) error {
 	// Save templates
 	for _, f := range c.Templates {
 		n := filepath.Join(outdir, f.Name)
-		if err := ioutil.WriteFile(n, f.Data, 0755); err != nil {
+		if err := ioutil.WriteFile(n, f.Data, 0600); err != nil {
 			return err
 		}
 	}
@@ -156,7 +156,7 @@ func SaveDir(c *chart.Chart, dest string, packName string) error {
 	// Save files
 	for _, f := range c.Files {
 		n := filepath.Join(outdir, f.Name)
-		if err := ioutil.WriteFile(n, f.Data, 0755); err != nil {
+		if err := ioutil.WriteFile(n, f.Data, 0600); err != nil {
 			return err
 		}
 	}
@@ -191,7 +191,7 @@ func FromDir(dir string) (*Pack, error) {
 	return pack, err
 }
 
-func loadDirectory(pack *Pack, dir string, relPath string) error {
+func loadDirectory(pack *Pack, dir, relPath string) error {
 	fileSlice, err := ioutil.ReadDir(dir)
 	if err != nil {
 		return fmt.Errorf("error reading %s: %s", dir, err)

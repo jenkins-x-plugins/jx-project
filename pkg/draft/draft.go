@@ -53,7 +53,7 @@ func DoPackDetection(home draftpath.Home, out io.Writer, dir string) (string, er
 }
 
 // DoPackDetectionForBuildPack performs detection of the language based on a sepcific build pack
-func DoPackDetectionForBuildPack(out io.Writer, dir string, packDir string) (string, error) {
+func DoPackDetectionForBuildPack(out io.Writer, dir, packDir string) (string, error) {
 	log.Logger().Infof("performing pack detection in folder %s", dir)
 	langs, err := linguist.ProcessDir(dir)
 	if err != nil {

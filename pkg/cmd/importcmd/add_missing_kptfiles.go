@@ -101,7 +101,7 @@ func (o *ImportOptions) createMissingLighthouseKptFiles(lighthouseDir, packName 
 			return errors.Wrapf(err, "failed to create dir %s", localKptDir)
 		}
 
-		fromDir := filepath.Join("/packs", packName, ".lighthouse", name)
+		fromDir := filepath.Join("/packs", packName, ".lighthouse", name) //nolint:gocritic
 		gitURL = strings.TrimSuffix(gitURL, ".git")
 		text := fmt.Sprintf(kptFile, name, sha, gitURL, fromDir)
 		err = ioutil.WriteFile(localKptFile, []byte(text), files.DefaultFileWritePermissions)
@@ -182,8 +182,8 @@ func loadJobBaseFromSourcePath(path string) (bool, error) {
 			return true, nil
 		}
 		steps := ts.Steps
-		for _, step := range steps {
-			if isUsesImage(step.Image) {
+		for k := range steps {
+			if isUsesImage(steps[k].Image) {
 				return true, nil
 			}
 		}

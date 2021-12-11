@@ -466,7 +466,7 @@ func (a *Agent) GetImage() string {
 // body is assumed to have at least one ASCII letter.
 // suffix is assumed to be alphanumeric and non-empty.
 // TODO: Combine with kube.ToValidName (that function needs to handle lengths)
-func MangleToRfc1035Label(body string, suffix string) string {
+func MangleToRfc1035Label(body, suffix string) string {
 	const maxLabelLength = 63
 	maxBodyLength := maxLabelLength
 	if len(suffix) > 0 {
@@ -595,7 +595,7 @@ func validateAgent(a *Agent) *apis.FieldError {
 
 var containsASCIILetter = regexp.MustCompile(`[a-zA-Z]`).MatchString
 
-func validateStage(s Stage, parentAgent *Agent, parentVolumes []*corev1.Volume, kubeClient kubernetes.Interface, ns string) *apis.FieldError {
+func validateStage(s *Stage, parentAgent *Agent, parentVolumes []*corev1.Volume, kubeClient kubernetes.Interface, ns string) *apis.FieldError {
 	if len(s.Steps) == 0 && len(s.Stages) == 0 && len(s.Parallel) == 0 {
 		return apis.ErrMissingOneOf("steps", "stages", "parallel")
 	}
@@ -631,8 +631,9 @@ func validateStage(s Stage, parentAgent *Agent, parentVolumes []*corev1.Volume, 
 			return apis.ErrMultipleOneOf("steps", "stages", "parallel")
 		}
 		seenStepNames := make(map[string]int)
-		for i, step := range s.Steps {
-			if err := validateStep(step).ViaFieldIndex("steps", i); err != nil {
+		for i := range s.Steps {
+			step := s.Steps[i]
+			if err := validateStep(&step).ViaFieldIndex("steps", i); err != nil {
 				return err
 			}
 			if step.Name != "" {
@@ -664,16 +665,16 @@ func validateStage(s Stage, parentAgent *Agent, parentVolumes []*corev1.Volume, 
 		if len(s.Parallel) > 0 {
 			return apis.ErrMultipleOneOf("steps", "stages", "parallel")
 		}
-		for i, stage := range s.Stages {
-			if err := validateStage(stage, parentAgent, volumes, kubeClient, ns).ViaFieldIndex("stages", i); err != nil {
+		for i := range s.Stages {
+			if err := validateStage(&s.Stages[i], parentAgent, volumes, kubeClient, ns).ViaFieldIndex("stages", i); err != nil {
 				return err
 			}
 		}
 	}
 
 	if len(s.Parallel) > 0 {
-		for i, stage := range s.Parallel {
-			if err := validateStage(stage, parentAgent, volumes, kubeClient, ns).ViaFieldIndex("parallel", i); err != nil {
+		for i := range s.Parallel {
+			if err := validateStage(&s.Parallel[i], parentAgent, volumes, kubeClient, ns).ViaFieldIndex("parallel", i); err != nil {
 				return nil
 			}
 		}
@@ -694,7 +695,7 @@ func moreThanOneAreTrue(vals ...bool) bool {
 	return count > 1
 }
 
-func validateStep(s Step) *apis.FieldError {
+func validateStep(s *Step) *apis.FieldError {
 	// Special cases for when you use legacy build pack syntax inside a pipeline definition
 	if s.Container != "" {
 		return &apis.FieldError{
@@ -773,8 +774,8 @@ func validateLoop(l *Loop) *apis.FieldError {
 			return apis.ErrMissingField("values")
 		}
 
-		for i, step := range l.Steps {
-			if err := validateStep(step).ViaFieldIndex("steps", i); err != nil {
+		for i := range l.Steps {
+			if err := validateStep(&l.Steps[i]).ViaFieldIndex("steps", i); err != nil {
 				return err
 			}
 		}
@@ -788,8 +789,8 @@ func validateStages(stages []Stage, parentAgent *Agent, parentVolumes []*corev1.
 		return apis.ErrMissingField("stages")
 	}
 
-	for i, s := range stages {
-		if err := validateStage(s, parentAgent, parentVolumes, kubeClient, ns).ViaFieldIndex("stages", i); err != nil {
+	for i := range stages {
+		if err := validateStage(&stages[i], parentAgent, parentVolumes, kubeClient, ns).ViaFieldIndex("stages", i); err != nil {
 			return err
 		}
 	}
@@ -905,8 +906,9 @@ func validateContainerOptions(c *corev1.Container, volumes []*corev1.Volume) *ap
 			}
 		}
 		if len(c.VolumeMounts) > 0 {
-			for i, m := range c.VolumeMounts {
-				if !isVolumeMountValid(m, volumes) {
+			for i := range c.VolumeMounts {
+				m := c.VolumeMounts[i]
+				if !isVolumeMountValid(&m, volumes) {
 					fieldErr := &apis.FieldError{
 						Message: fmt.Sprintf("Volume mount name %s not found in volumes for stage or pipeline", m.Name),
 						Paths:   []string{"name"},
@@ -936,8 +938,9 @@ func validateSidecarContainer(c *corev1.Container, volumes []*corev1.Volume) *ap
 			}
 		}
 		if len(c.VolumeMounts) > 0 {
-			for i, m := range c.VolumeMounts {
-				if !isVolumeMountValid(m, volumes) {
+			for i := range c.VolumeMounts {
+				m := c.VolumeMounts[i]
+				if !isVolumeMountValid(&m, volumes) {
 					fieldErr := &apis.FieldError{
 						Message: fmt.Sprintf("Volume mount name %s not found in volumes for stage or pipeline", m.Name),
 						Paths:   []string{"name"},
@@ -952,7 +955,7 @@ func validateSidecarContainer(c *corev1.Container, volumes []*corev1.Volume) *ap
 	return nil
 }
 
-func isVolumeMountValid(mount corev1.VolumeMount, volumes []*corev1.Volume) bool {
+func isVolumeMountValid(mount *corev1.VolumeMount, volumes []*corev1.Volume) bool {
 	foundVolume := false
 
 	for _, v := range volumes {
@@ -1158,16 +1161,17 @@ func (p *StepPlaceholderReplacementArgs) workingDirAsPointer() *string {
 
 // ReplacePlaceholdersInStepAndStageDirs traverses this pipeline's stages and any nested stages for any steps (and any nested steps)
 // within the stages, and replaces "REPLACE_ME_..." placeholders in those steps' directories.
-func (j *ParsedPipeline) ReplacePlaceholdersInStepAndStageDirs(args StepPlaceholderReplacementArgs) {
+func (j *ParsedPipeline) ReplacePlaceholdersInStepAndStageDirs(args *StepPlaceholderReplacementArgs) {
 	var stages []Stage
-	for _, s := range j.Stages {
+	for k := range j.Stages {
+		s := j.Stages[k]
 		s.replacePlaceholdersInStage(j.WorkingDir, args)
 		stages = append(stages, s)
 	}
 	j.Stages = stages
 }
 
-func (s *Stage) replacePlaceholdersInStage(parentDir *string, args StepPlaceholderReplacementArgs) {
+func (s *Stage) replacePlaceholdersInStage(parentDir *string, args *StepPlaceholderReplacementArgs) {
 	var steps []Step
 	var stages []Stage
 	var parallel []Stage
@@ -1181,15 +1185,18 @@ func (s *Stage) replacePlaceholdersInStage(parentDir *string, args StepPlacehold
 		}
 	}
 	s.WorkingDir = replacePlaceholdersInDir(s.WorkingDir, args)
-	for _, step := range s.Steps {
+	for k := range s.Steps {
+		step := s.Steps[k]
 		step.replacePlaceholdersInStep(args)
 		steps = append(steps, step)
 	}
-	for _, nested := range s.Stages {
+	for k := range s.Stages {
+		nested := s.Stages[k]
 		nested.replacePlaceholdersInStage(s.WorkingDir, args)
 		stages = append(stages, nested)
 	}
-	for _, p := range s.Parallel {
+	for k := range s.Parallel {
+		p := s.Parallel[k]
 		p.replacePlaceholdersInStage(s.WorkingDir, args)
 		parallel = append(parallel, p)
 	}
@@ -1198,7 +1205,7 @@ func (s *Stage) replacePlaceholdersInStage(parentDir *string, args StepPlacehold
 	s.Parallel = parallel
 }
 
-func replacePlaceholdersInDir(originalDir *string, args StepPlaceholderReplacementArgs) *string {
+func replacePlaceholdersInDir(originalDir *string, args *StepPlaceholderReplacementArgs) *string {
 	if originalDir == nil || *originalDir == "" {
 		return originalDir
 	}
@@ -1220,7 +1227,7 @@ func replacePlaceholdersInDir(originalDir *string, args StepPlaceholderReplaceme
 	return &dir
 }
 
-func (s *Step) replacePlaceholdersInStep(args StepPlaceholderReplacementArgs) {
+func (s *Step) replacePlaceholdersInStep(args *StepPlaceholderReplacementArgs) {
 	if s.GetCommand() != "" {
 		s.modifyStep(args)
 		s.Dir = *replacePlaceholdersInDir(&s.Dir, args)
@@ -1233,7 +1240,8 @@ func (s *Step) replacePlaceholdersInStep(args StepPlaceholderReplacementArgs) {
 	s.Steps = steps
 	if s.Loop != nil {
 		var loopSteps []Step
-		for _, nested := range s.Loop.Steps {
+		for k := range s.Loop.Steps {
+			nested := s.Loop.Steps[k]
 			nested.replacePlaceholdersInStep(args)
 			loopSteps = append(loopSteps, nested)
 		}
@@ -1242,7 +1250,7 @@ func (s *Step) replacePlaceholdersInStep(args StepPlaceholderReplacementArgs) {
 }
 
 // modifyStep allows a container step to be modified to do something different
-func (s *Step) modifyStep(params StepPlaceholderReplacementArgs) {
+func (s *Step) modifyStep(params *StepPlaceholderReplacementArgs) {
 	if params.UseKaniko {
 		if strings.HasPrefix(s.GetCommand(), "skaffold build") ||
 			(len(s.Arguments) > 0 && strings.HasPrefix(strings.Join(s.Arguments[1:], " "), "skaffold build")) ||
@@ -1253,7 +1261,8 @@ func (s *Step) modifyStep(params StepPlaceholderReplacementArgs) {
 			localRepo := params.DockerRegistry
 			destination := params.DockerRegistry + "/" + params.DockerRegistryOrg + "/" + naming.ToValidName(params.GitName)
 
-			args := []string{"--cache=true", "--cache-dir=/workspace",
+			args := []string{
+				"--cache=true", "--cache-dir=/workspace",
 				"--context=" + sourceDir,
 				"--dockerfile=" + dockerfile,
 				"--destination=" + destination + ":${inputs.params.version}",
@@ -1313,7 +1322,7 @@ func (j *ParsedPipeline) AddContainerEnvVarsToPipeline(origEnv []corev1.EnvVar) 
 	}
 }
 
-func scopedEnv(newEnv []corev1.EnvVar, parentEnv []corev1.EnvVar) []corev1.EnvVar {
+func scopedEnv(newEnv, parentEnv []corev1.EnvVar) []corev1.EnvVar {
 	if len(parentEnv) == 0 && len(newEnv) == 0 {
 		return nil
 	}
@@ -1322,7 +1331,7 @@ func scopedEnv(newEnv []corev1.EnvVar, parentEnv []corev1.EnvVar) []corev1.EnvVa
 
 // CombineEnv combines the two environments into a single unified slice where
 // the `newEnv` overrides anything in the `parentEnv`
-func CombineEnv(newEnv []corev1.EnvVar, parentEnv []corev1.EnvVar) []corev1.EnvVar {
+func CombineEnv(newEnv, parentEnv []corev1.EnvVar) []corev1.EnvVar {
 	envMap := make(map[string]corev1.EnvVar)
 
 	for _, e := range parentEnv {
@@ -1354,15 +1363,15 @@ type transformedStage struct {
 	// TODO: Add the equivalent reverse relationship
 }
 
-func (ts transformedStage) isSequential() bool {
+func (ts *transformedStage) isSequential() bool {
 	return len(ts.Sequential) > 0
 }
 
-func (ts transformedStage) isParallel() bool {
+func (ts *transformedStage) isParallel() bool {
 	return len(ts.Parallel) > 0
 }
 
-func (ts transformedStage) getLinearTasks() []*tektonv1alpha1.Task {
+func (ts *transformedStage) getLinearTasks() []*tektonv1alpha1.Task {
 	if ts.isSequential() {
 		var tasks []*tektonv1alpha1.Task
 		for _, seqTs := range ts.Sequential {
@@ -1407,7 +1416,7 @@ type stageToTaskParams struct {
 	previousSiblingStage *transformedStage
 }
 
-func stageToTask(params stageToTaskParams) (*transformedStage, error) {
+func stageToTask(params *stageToTaskParams) (*transformedStage, error) {
 	if len(params.stage.Post) != 0 {
 		return nil, errors.New("post on stages not yet supported")
 	}
@@ -1522,10 +1531,10 @@ func stageToTask(params stageToTaskParams) (*transformedStage, error) {
 			volumes[v.Name] = *v
 		}
 
-		for _, step := range params.stage.Steps {
-			actualSteps, stepVolumes, newCounter, err := generateSteps(generateStepsParams{
-				stageParams:     params,
-				step:            step,
+		for k := range params.stage.Steps {
+			actualSteps, stepVolumes, newCounter, err := generateSteps(&generateStepsParams{
+				stageParams:     *params,
+				step:            params.stage.Steps[k],
 				inheritedAgent:  agent.Image,
 				env:             env,
 				parentContainer: stageContainer,
@@ -1538,8 +1547,8 @@ func stageToTask(params stageToTaskParams) (*transformedStage, error) {
 			stepCounter = newCounter
 
 			t.Spec.Steps = append(t.Spec.Steps, actualSteps...)
-			for k, v := range stepVolumes {
-				volumes[k] = v
+			for k := range stepVolumes {
+				volumes[k] = stepVolumes[k]
 			}
 		}
 
@@ -1563,14 +1572,14 @@ func stageToTask(params stageToTaskParams) (*transformedStage, error) {
 		ts := transformedStage{Stage: params.stage, Depth: params.depth, EnclosingStage: params.enclosingStage, PreviousSiblingStage: params.previousSiblingStage}
 		ts.computeWorkspace(params.parentWorkspace)
 
-		for i, nested := range params.stage.Stages {
+		for i := range params.stage.Stages {
 			var nestedPreviousSibling *transformedStage
 			if i > 0 {
 				nestedPreviousSibling = tasks[i-1]
 			}
-			nestedTask, err := stageToTask(stageToTaskParams{
+			nestedTask, err := stageToTask(&stageToTaskParams{
 				parentParams:         params.parentParams,
-				stage:                nested,
+				stage:                params.stage.Stages[i],
 				baseWorkingDir:       params.baseWorkingDir,
 				parentEnv:            env,
 				parentAgent:          agent,
@@ -1597,10 +1606,10 @@ func stageToTask(params stageToTaskParams) (*transformedStage, error) {
 		ts := transformedStage{Stage: params.stage, Depth: params.depth, EnclosingStage: params.enclosingStage, PreviousSiblingStage: params.previousSiblingStage}
 		ts.computeWorkspace(params.parentWorkspace)
 
-		for _, nested := range params.stage.Parallel {
-			nestedTask, err := stageToTask(stageToTaskParams{
+		for k := range params.stage.Parallel {
+			nestedTask, err := stageToTask(&stageToTaskParams{
 				parentParams:    params.parentParams,
-				stage:           nested,
+				stage:           params.stage.Parallel[k],
 				baseWorkingDir:  params.baseWorkingDir,
 				parentEnv:       env,
 				parentAgent:     agent,
@@ -1650,7 +1659,6 @@ func MergeContainers(parentContainer, childContainer *corev1.Container) (*corev1
 
 	// Get the patch meta for Container, which is needed for generating and applying the merge patch.
 	patchSchema, err := strategicpatch.NewPatchMetaFromStruct(parentContainer)
-
 	if err != nil {
 		return nil, err
 	}
@@ -1698,7 +1706,7 @@ type generateStepsParams struct {
 	stepCounter     int
 }
 
-func generateSteps(params generateStepsParams) ([]tektonv1alpha1.Step, map[string]corev1.Volume, int, error) {
+func generateSteps(params *generateStepsParams) ([]tektonv1alpha1.Step, map[string]corev1.Volume, int, error) {
 	volumes := make(map[string]corev1.Volume)
 	var steps []tektonv1alpha1.Step
 
@@ -1735,7 +1743,8 @@ func generateSteps(params generateStepsParams) ([]tektonv1alpha1.Step, map[strin
 		if params.stageParams.parentParams.PodTemplates != nil && params.stageParams.parentParams.PodTemplates[stepImage] != nil {
 			podTemplate := params.stageParams.parentParams.PodTemplates[stepImage]
 			containers := podTemplate.Spec.Containers
-			for _, volume := range podTemplate.Spec.Volumes {
+			for k := range podTemplate.Spec.Volumes {
+				volume := podTemplate.Spec.Volumes[k]
 				volumes[volume.Name] = volume
 			}
 			if !equality.Semantic.DeepEqual(c, &corev1.Container{}) {
@@ -1760,7 +1769,8 @@ func generateSteps(params generateStepsParams) ([]tektonv1alpha1.Step, map[strin
 		}
 		// Special-casing for commands starting with /kaniko/warmer, which doesn't have sh at all
 		if strings.HasPrefix(params.step.GetCommand(), "/kaniko/warmer") {
-			c.Command = append(targetDirPrefix, params.step.GetCommand())
+			targetDirPrefix = append(targetDirPrefix, params.step.GetCommand())
+			c.Command = targetDirPrefix
 			c.Args = params.step.Arguments
 		} else {
 			// If it's /kaniko/executor, use /busybox/sh instead of /bin/sh, and use the debug image
@@ -1812,11 +1822,12 @@ func generateSteps(params generateStepsParams) ([]tektonv1alpha1.Step, map[strin
 		for i, v := range params.step.Loop.Values {
 			loopEnv := scopedEnv([]corev1.EnvVar{{Name: params.step.Loop.Variable, Value: v}}, params.env)
 
-			for _, s := range params.step.Loop.Steps {
+			for k := range params.step.Loop.Steps {
+				s := params.step.Loop.Steps[k]
 				if s.Name != "" {
-					s.Name = s.Name + strconv.Itoa(1+i)
+					s.Name += strconv.Itoa(1 + i)
 				}
-				loopSteps, loopVolumes, loopCounter, loopErr := generateSteps(generateStepsParams{
+				loopSteps, loopVolumes, loopCounter, loopErr := generateSteps(&generateStepsParams{
 					stageParams:     params.stageParams,
 					step:            s,
 					inheritedAgent:  stepImage,
@@ -1835,8 +1846,8 @@ func generateSteps(params generateStepsParams) ([]tektonv1alpha1.Step, map[strin
 				steps = append(steps, loopSteps...)
 
 				// Add any new volumes that may have shown up
-				for k, v := range loopVolumes {
-					volumes[k] = v
+				for k := range loopVolumes {
+					volumes[k] = loopVolumes[k]
 				}
 			}
 		}
@@ -1846,8 +1857,8 @@ func generateSteps(params generateStepsParams) ([]tektonv1alpha1.Step, map[strin
 
 	// lets make sure if we've overloaded any environment variables we remove any remaining valueFrom structs
 	// to avoid creating bad Tasks
-	for i, step := range steps {
-		for j, e := range step.Env {
+	for i := range steps {
+		for j, e := range steps[i].Env {
 			if e.Value != "" {
 				steps[i].Env[j].ValueFrom = nil
 			}
@@ -1858,8 +1869,8 @@ func generateSteps(params generateStepsParams) ([]tektonv1alpha1.Step, map[strin
 }
 
 // PipelineRunName returns the pipeline name given the pipeline and build identifier
-func PipelineRunName(pipelineIdentifier string, buildIdentifier string) string {
-	return MangleToRfc1035Label(fmt.Sprintf("%s", pipelineIdentifier), buildIdentifier)
+func PipelineRunName(pipelineIdentifier, buildIdentifier string) string {
+	return MangleToRfc1035Label(pipelineIdentifier, buildIdentifier)
 }
 
 // CRDsFromPipelineParams is how the parameters to GenerateCRDs are specified
@@ -1877,7 +1888,7 @@ type CRDsFromPipelineParams struct {
 }
 
 // GenerateCRDs translates the Pipeline into the corresponding Pipeline and Task CRDs
-func (j *ParsedPipeline) GenerateCRDs(params CRDsFromPipelineParams) (*tektonv1alpha1.Pipeline, []*tektonv1alpha1.Task, error) {
+func (j *ParsedPipeline) GenerateCRDs(params *CRDsFromPipelineParams) (*tektonv1alpha1.Pipeline, []*tektonv1alpha1.Task, error) {
 	if len(j.Post) != 0 {
 		return nil, nil, errors.New("Post at top level not yet supported")
 	}
@@ -1929,11 +1940,12 @@ func (j *ParsedPipeline) GenerateCRDs(params CRDsFromPipelineParams) (*tektonv1a
 
 	baseEnv := j.GetEnv()
 
-	for i, s := range j.Stages {
+	for i := range j.Stages {
+		s := j.Stages[i]
 		isLastStage := i == len(j.Stages)-1
 
-		stage, err := stageToTask(stageToTaskParams{
-			parentParams:         params,
+		stage, err := stageToTask(&stageToTaskParams{
+			parentParams:         *params,
 			stage:                s,
 			baseWorkingDir:       baseWorkingDir,
 			parentEnv:            baseEnv,
@@ -1980,10 +1992,11 @@ func (j *ParsedPipeline) GenerateCRDs(params CRDsFromPipelineParams) (*tektonv1a
 	return p, tasks, nil
 }
 
-func shouldRemoveWorkspaceOutput(stage *transformedStage, taskName string, index int, tasksLen int, isLastStage bool) bool {
+func shouldRemoveWorkspaceOutput(stage *transformedStage, taskName string, index, tasksLen int, isLastStage bool) bool {
 	if stage.isParallel() {
 		parallelStages := stage.Parallel
-		for _, ps := range parallelStages {
+		for k := range parallelStages {
+			ps := parallelStages[k]
 			if ps.Task != nil && ps.Task.Name == taskName {
 				return true
 			}
@@ -2026,7 +2039,7 @@ func createPipelineTasks(stage *transformedStage, resourceName string) []tektonv
 
 		_, provider := findWorkspaceProvider(stage, stage.getEnclosing(0))
 		var previousStageNames []string
-		for _, previousStage := range findPreviousNonBlockStages(*stage) {
+		for _, previousStage := range findPreviousNonBlockStages(stage) {
 			previousStageNames = append(previousStageNames, previousStage.PipelineTask.Name)
 		}
 		pTask.Resources = &tektonv1alpha1.PipelineTaskResources{
@@ -2084,9 +2097,6 @@ func findWorkspaceProvider(stage, sibling *transformedStage) (bool, []string) {
 			if *sibling.Stage.Options.Workspace == *stage.Stage.Options.Workspace {
 				return true, []string{sibling.PipelineTask.Name}
 			}
-		} else {
-			// We are in a sequential stage and sibling has not had its PipelineTask created.
-			// Check the task before it so we don't use a workspace of a later task.
 		}
 		sibling = sibling.PreviousSiblingStage
 	}
@@ -2096,27 +2106,27 @@ func findWorkspaceProvider(stage, sibling *transformedStage) (bool, []string) {
 
 // Find the end tasks for this stage, traversing down to the end stages of any
 // nested sequential or parallel stages as well.
-func findEndStages(stage transformedStage) []*transformedStage {
+func findEndStages(stage *transformedStage) []*transformedStage {
 	if stage.isSequential() {
-		return findEndStages(*stage.Sequential[len(stage.Sequential)-1])
+		return findEndStages(stage.Sequential[len(stage.Sequential)-1])
 	} else if stage.isParallel() {
 		var endTasks []*transformedStage
-		for _, pStage := range stage.Parallel {
-			endTasks = append(endTasks, findEndStages(*pStage)...)
+		for _, v := range stage.Parallel {
+			endTasks = append(endTasks, findEndStages(v)...)
 		}
 		return endTasks
 	} else {
-		return []*transformedStage{&stage}
+		return []*transformedStage{stage}
 	}
 }
 
 // Find the tasks that run immediately before this stage, not including
 // sequential or parallel wrapper stages.
-func findPreviousNonBlockStages(stage transformedStage) []*transformedStage {
+func findPreviousNonBlockStages(stage *transformedStage) []*transformedStage {
 	if stage.PreviousSiblingStage != nil {
-		return findEndStages(*stage.PreviousSiblingStage)
+		return findEndStages(stage.PreviousSiblingStage)
 	} else if stage.EnclosingStage != nil {
-		return findPreviousNonBlockStages(*stage.EnclosingStage)
+		return findPreviousNonBlockStages(stage.EnclosingStage)
 	} else {
 		return []*transformedStage{}
 	}
@@ -2164,14 +2174,13 @@ func findDuplicates(names []string) *apis.FieldError {
 func validateStageNames(j *ParsedPipeline) (err *apis.FieldError) {
 	var validate func(stages []Stage, stageNames *[]string)
 	validate = func(stages []Stage, stageNames *[]string) {
-
-		for _, stage := range stages {
+		for k := range stages {
+			stage := stages[k]
 			*stageNames = append(*stageNames, stage.Name)
 			if len(stage.Stages) > 0 {
 				validate(stage.Stages, stageNames)
 			}
 		}
-
 	}
 	var names []string
 
@@ -2182,7 +2191,7 @@ func validateStageNames(j *ParsedPipeline) (err *apis.FieldError) {
 	return
 }
 
-func builderHomeStep(envs []corev1.EnvVar, parentContainer *corev1.Container, defaultImage string, versionsDir string) ([]tektonv1alpha1.Step, error) {
+func builderHomeStep(envs []corev1.EnvVar, parentContainer *corev1.Container, defaultImage, versionsDir string) ([]tektonv1alpha1.Step, error) {
 	var err error
 	image := defaultImage
 	if image == "" {
@@ -2218,7 +2227,7 @@ func builderHomeStep(envs []corev1.EnvVar, parentContainer *corev1.Container, de
 }
 
 // todo JR lets remove this when we switch tekton to using git merge type pipelineresources
-func getDefaultTaskSpec(envs []corev1.EnvVar, parentContainer *corev1.Container, defaultImage string, versionsDir string) (tektonv1alpha1.TaskSpec, error) {
+func getDefaultTaskSpec(envs []corev1.EnvVar, parentContainer *corev1.Container, defaultImage, versionsDir string) (tektonv1alpha1.TaskSpec, error) {
 	var err error
 	image := defaultImage
 	if image == "" {
@@ -2299,8 +2308,8 @@ func ApplyStepOverridesToPipeline(pipeline *ParsedPipeline, override *PipelineOv
 	}
 
 	var newStages []Stage
-	for _, s := range pipeline.Stages {
-		overriddenStage := ApplyStepOverridesToStage(s, override)
+	for k := range pipeline.Stages {
+		overriddenStage := ApplyStepOverridesToStage(&pipeline.Stages[k], override)
 		if !equality.Semantic.DeepEqual(overriddenStage, Stage{}) {
 			newStages = append(newStages, overriddenStage)
 		}
@@ -2363,8 +2372,8 @@ func ApplyNonStepOverridesToPipeline(pipeline *ParsedPipeline, override *Pipelin
 	}
 
 	var newStages []Stage
-	for _, s := range pipeline.Stages {
-		overriddenStage := ApplyNonStepOverridesToStage(s, override)
+	for k := range pipeline.Stages {
+		overriddenStage := ApplyNonStepOverridesToStage(&pipeline.Stages[k], override)
 		if !equality.Semantic.DeepEqual(overriddenStage, Stage{}) {
 			newStages = append(newStages, overriddenStage)
 		}
@@ -2376,9 +2385,9 @@ func ApplyNonStepOverridesToPipeline(pipeline *ParsedPipeline, override *Pipelin
 
 // ApplyNonStepOverridesToStage applies non-step overrides, such as stage agent, containerOptions, and volumes, to this
 // stage and its children.
-func ApplyNonStepOverridesToStage(stage Stage, override *PipelineOverride) Stage {
+func ApplyNonStepOverridesToStage(stage *Stage, override *PipelineOverride) Stage {
 	if override == nil {
-		return stage
+		return *stage
 	}
 
 	// Since a traditional build pack only has one stage at this point, treat anything that's stage-specific as valid here.
@@ -2425,52 +2434,50 @@ func ApplyNonStepOverridesToStage(stage Stage, override *PipelineOverride) Stage
 	}
 	if len(stage.Stages) > 0 {
 		var newStages []Stage
-		for _, s := range stage.Stages {
-			newStages = append(newStages, ApplyNonStepOverridesToStage(s, override))
+		for k := range stage.Stages {
+			newStages = append(newStages, ApplyNonStepOverridesToStage(&stage.Stages[k], override))
 		}
 		stage.Stages = newStages
 	}
 	if len(stage.Parallel) > 0 {
 		var newParallel []Stage
-		for _, s := range stage.Parallel {
-			newParallel = append(newParallel, ApplyNonStepOverridesToStage(s, override))
+		for k := range stage.Parallel {
+			newParallel = append(newParallel, ApplyNonStepOverridesToStage(&stage.Parallel[k], override))
 		}
 		stage.Parallel = newParallel
 	}
 
-	return stage
+	return *stage
 }
 
 // ApplyStepOverridesToStage applies a set of overrides to named steps in this stage and its children
-func ApplyStepOverridesToStage(stage Stage, override *PipelineOverride) Stage {
+func ApplyStepOverridesToStage(stage *Stage, override *PipelineOverride) Stage {
 	if override == nil {
-		return stage
+		return *stage
 	}
 
 	if override.MatchesStage(stage.Name) {
 		if len(stage.Steps) > 0 {
 			var newSteps []Step
 			if override.Name != "" {
-				for _, s := range stage.Steps {
-					newSteps = append(newSteps, OverrideStep(s, override)...)
+				for k := range stage.Steps {
+					newSteps = append(newSteps, OverrideStep(&stage.Steps[k], override)...)
 				}
-			} else {
 				// If no step name was specified but there are steps, just replace all steps in the stage/lifecycle,
 				// or add the new steps before/after the existing steps in the stage/lifecycle
-				if steps := override.AsStepsSlice(); len(steps) > 0 {
-					if override.Type == nil || *override.Type == StepOverrideReplace {
-						newSteps = append(newSteps, stepPointerSliceToStepSlice(steps)...)
-					} else if *override.Type == StepOverrideBefore {
-						newSteps = append(newSteps, stepPointerSliceToStepSlice(steps)...)
-						newSteps = append(newSteps, stage.Steps...)
-					} else if *override.Type == StepOverrideAfter {
-						newSteps = append(newSteps, stage.Steps...)
-						newSteps = append(newSteps, stepPointerSliceToStepSlice(steps)...)
-					}
+			} else if steps := override.AsStepsSlice(); len(steps) > 0 {
+				if override.Type == nil || *override.Type == StepOverrideReplace {
+					newSteps = append(newSteps, stepPointerSliceToStepSlice(steps)...)
+				} else if *override.Type == StepOverrideBefore {
+					newSteps = append(newSteps, stepPointerSliceToStepSlice(steps)...)
+					newSteps = append(newSteps, stage.Steps...)
+				} else if *override.Type == StepOverrideAfter {
+					newSteps = append(newSteps, stage.Steps...)
+					newSteps = append(newSteps, stepPointerSliceToStepSlice(steps)...)
 				}
-				// If there aren't any steps as well as no step name, then we're removing all steps from this stage/lifecycle,
-				// so just don't add anything to newSteps, and we'll end up returning an empty stage
 			}
+			// If there aren't any steps as well as no step name, then we're removing all steps from this stage/lifecycle,
+			// so just don't add anything to newSteps, and we'll end up returning an empty stage
 
 			// If newSteps isn't empty, use it for the stage's steps list. Otherwise, if no agent override is specified,
 			// we're removing this stage, so return an empty stage.
@@ -2483,25 +2490,25 @@ func ApplyStepOverridesToStage(stage Stage, override *PipelineOverride) Stage {
 	}
 	if len(stage.Stages) > 0 {
 		var newStages []Stage
-		for _, s := range stage.Stages {
-			newStages = append(newStages, ApplyStepOverridesToStage(s, override))
+		for k := range stage.Stages {
+			newStages = append(newStages, ApplyStepOverridesToStage(&stage.Stages[k], override))
 		}
 		stage.Stages = newStages
 	}
 	if len(stage.Parallel) > 0 {
 		var newParallel []Stage
-		for _, s := range stage.Parallel {
-			newParallel = append(newParallel, ApplyStepOverridesToStage(s, override))
+		for k := range stage.Parallel {
+			newParallel = append(newParallel, ApplyStepOverridesToStage(&stage.Parallel[k], override))
 		}
 		stage.Parallel = newParallel
 	}
 
-	return stage
+	return *stage
 }
 
 // OverrideStep overrides an existing step, if it matches the override's name, with the contents of the override. It also
 // recurses into child steps.
-func OverrideStep(step Step, override *PipelineOverride) []Step {
+func OverrideStep(step *Step, override *PipelineOverride) []Step {
 	if override != nil {
 		if step.Name == override.Name {
 			var newSteps []Step
@@ -2521,28 +2528,27 @@ func OverrideStep(step Step, override *PipelineOverride) []Step {
 			if override.Type == nil || *override.Type == StepOverrideReplace {
 				return newSteps
 			} else if *override.Type == StepOverrideBefore {
-				return append(newSteps, step)
+				return append(newSteps, *step)
 			} else if *override.Type == StepOverrideAfter {
-				return append([]Step{step}, newSteps...)
+				return append([]Step{*step}, newSteps...)
 			}
 
 			// Fall back on just returning the original. We shouldn't ever get here.
-			return []Step{step}
+			return []Step{*step}
 		}
 
 		if len(step.Steps) > 0 {
 			var newSteps []*Step
 			for _, s := range step.Steps {
-				for _, o := range OverrideStep(*s, override) {
-					stepCopy := o
-					newSteps = append(newSteps, &stepCopy)
+				for k := range OverrideStep(s, override) {
+					newSteps = append(newSteps, &OverrideStep(s, override)[k])
 				}
 			}
 			step.Steps = newSteps
 		}
 	}
 
-	return []Step{step}
+	return []Step{*step}
 }
 
 // StringParamValue generates a Tekton ArrayOrString value for the given string

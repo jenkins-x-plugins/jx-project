@@ -19,7 +19,7 @@ const (
 )
 
 // GitQuickstart returns a github based quickstart
-func GitQuickstart(owner string, repo string, version string, downloadURL string, language string, framework string, tags ...string) *Quickstart {
+func GitQuickstart(owner, repo, version, downloadURL, language, framework string, tags ...string) *Quickstart {
 	return &Quickstart{
 		ID:             owner + "/" + repo,
 		Owner:          owner,
@@ -145,7 +145,7 @@ func (model *QuickstartModel) CreateSurvey(filter *QuickstartFilter, batchMode b
 	sort.Strings(names)
 
 	if len(names) == 0 {
-		return nil, fmt.Errorf("No quickstarts match filter")
+		return nil, fmt.Errorf("no quickstarts match filter")
 	}
 	answer := ""
 	if len(names) == 1 {
@@ -153,7 +153,7 @@ func (model *QuickstartModel) CreateSurvey(filter *QuickstartFilter, batchMode b
 		answer = names[0]
 	} else if batchMode {
 		// should not prompt for selection in batch mode so return an error
-		return nil, fmt.Errorf("More than one quickstart matches the current filter options. Try filtering based on other criteria (eg. Owner or Text): %v", names)
+		return nil, fmt.Errorf("more than one quickstart matches the current filter options. Try filtering based on other criteria (eg. Owner or Text): %v", names)
 	} else {
 		var err error
 		answer, err = i.PickNameWithDefault(names, "select the quickstart you wish to create:", answer, "you need to pick the quickstart project to start from")
@@ -163,11 +163,11 @@ func (model *QuickstartModel) CreateSurvey(filter *QuickstartFilter, batchMode b
 	}
 
 	if answer == "" {
-		return nil, fmt.Errorf("No quickstart chosen")
+		return nil, fmt.Errorf("no quickstart chosen")
 	}
 	q := m[answer]
 	if q == nil {
-		return nil, fmt.Errorf("Could not find chosen quickstart for %s", answer)
+		return nil, fmt.Errorf("could not find chosen quickstart for %s", answer)
 	}
 	name := filter.ProjectName
 	form := &QuickstartForm{
@@ -236,17 +236,14 @@ func (model *QuickstartModel) LoadQuickStarts(qs *v1alpha1.QuickstartsSpec, dir,
 		if to == nil {
 			to = &Quickstart{}
 		}
-		err := model.convertToQuickStart(from, to)
-		if err != nil {
-			return errors.Wrapf(err, "failed to convert quickstart from the version stream %s", id)
-		}
+		model.convertToQuickStart(from, to)
 		model.Quickstarts[id] = to
 	}
 
 	return nil
 }
 
-func (model *QuickstartModel) convertToQuickStart(from *v1alpha1.QuickstartSource, to *Quickstart) error {
+func (model *QuickstartModel) convertToQuickStart(from *v1alpha1.QuickstartSource, to *Quickstart) {
 	s := func(text string, override string) string {
 		if override != "" {
 			return override
@@ -271,5 +268,4 @@ func (model *QuickstartModel) convertToQuickStart(from *v1alpha1.QuickstartSourc
 	to.Framework = s(to.Framework, from.Framework)
 	to.Language = s(to.Language, from.Language)
 	to.Tags = ss(to.Tags, from.Tags)
-	return nil
 }

@@ -164,9 +164,9 @@ func (o *ImportOptions) InvokeDraftPack(i *InvokeDraftPack) (string, error) {
 	jenkinsPluginsName := filepath.Join(dir, "plugins.txt")
 	packagerConfigName := filepath.Join(dir, "packager-config.yml")
 	jenkinsxYaml := filepath.Join(dir, config.ProjectConfigFileName)
-	envChart := filepath.Join(dir, "env/Chart.yaml")
+	envChart := filepath.Join(dir, "env", "Chart.yaml")
 	lpack := ""
-	if len(customDraftPack) == 0 {
+	if customDraftPack == "" {
 		if i.ProjectConfig == nil {
 			i.ProjectConfig, _, err = config.LoadProjectConfig(dir)
 			if err != nil {
@@ -190,7 +190,7 @@ func (o *ImportOptions) InvokeDraftPack(i *InvokeDraftPack) (string, error) {
 		}
 	}
 
-	if len(lpack) == 0 {
+	if lpack == "" {
 		if exists, err := files.FileExists(pomName); err == nil && exists {
 			pack, err := PomFlavour(pomName)
 			if err != nil {
@@ -230,12 +230,12 @@ func (o *ImportOptions) InvokeDraftPack(i *InvokeDraftPack) (string, error) {
 					}
 
 					// lets check for a helm pack
-					files, err2 := filepath.Glob(filepath.Join(dir, "charts/*/Chart.yaml"))
+					files, err2 := filepath.Glob(filepath.Join(dir, "charts", "*", "Chart.yaml"))
 					if err2 != nil {
 						return "", errors.Wrapf(err, "failed to detect if there was a chart file in dir %s", dir)
 					}
 					if len(files) == 0 {
-						files, err2 = filepath.Glob(filepath.Join(dir, "*/Chart.yaml"))
+						files, err2 = filepath.Glob(filepath.Join(dir, "*", "Chart.yaml"))
 						if err2 != nil {
 							return "", errors.Wrapf(err, "failed to detect if there was a chart file in dir %s", dir)
 						}

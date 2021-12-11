@@ -159,13 +159,13 @@ type CreatePipelineArguments struct {
 // Validate validates all the arguments are set correctly
 func (a *CreateJenkinsfileArguments) Validate() error {
 	if a.ConfigFile == "" {
-		return fmt.Errorf("Missing argument: ConfigFile")
+		return fmt.Errorf("missing argument: ConfigFile")
 	}
 	if a.TemplateFile == "" {
-		return fmt.Errorf("Missing argument: TemplateFile")
+		return fmt.Errorf("missing argument: TemplateFile")
 	}
 	if a.OutputFile == "" {
-		return fmt.Errorf("Missing argument: ReportName")
+		return fmt.Errorf("missing argument: ReportName")
 	}
 	return nil
 }
@@ -364,7 +364,7 @@ func (p *Pipelines) AllMap() map[string]*PipelineLifecycles {
 }
 
 // defaultContainerAndDir defaults the container if none is being used
-func (p *Pipelines) defaultContainerAndDir(container string, dir string) {
+func (p *Pipelines) defaultContainerAndDir(container, dir string) {
 	defaultContainerAndDir(container, dir, p.All()...)
 }
 
@@ -403,7 +403,7 @@ func (p *Pipelines) GetPipeline(kind string, lazyCreate bool) (*PipelineLifecycl
 	}
 }
 
-func defaultContainerAndDir(container string, dir string, lifecycles ...*PipelineLifecycles) {
+func defaultContainerAndDir(container, dir string, lifecycles ...*PipelineLifecycles) {
 	for _, l := range lifecycles {
 		if l != nil {
 			defaultLifecycleContainerAndDir(container, dir, l.All())
@@ -411,7 +411,7 @@ func defaultContainerAndDir(container string, dir string, lifecycles ...*Pipelin
 	}
 }
 
-func defaultLifecycleContainerAndDir(container string, dir string, lifecycles PipelineLifecycleArray) {
+func defaultLifecycleContainerAndDir(container, dir string, lifecycles PipelineLifecycleArray) {
 	if container == "" && dir == "" {
 		return
 	}
@@ -478,12 +478,12 @@ func defaultDirAroundSteps(dir string, steps []*syntax.Step) []*syntax.Step {
 }
 
 // LoadPipelineConfig returns the pipeline configuration
-func LoadPipelineConfig(fileName string, resolver ImportFileResolver, isTekton bool, clearContainer bool) (*PipelineConfig, error) {
+func LoadPipelineConfig(fileName string, resolver ImportFileResolver, isTekton, clearContainer bool) (*PipelineConfig, error) {
 	return LoadPipelineConfigAndMaybeValidate(fileName, resolver, isTekton, clearContainer, true)
 }
 
 // LoadPipelineConfigAndMaybeValidate returns the pipeline configuration, optionally after validating the YAML.
-func LoadPipelineConfigAndMaybeValidate(fileName string, resolver ImportFileResolver, isTekton bool, clearContainer bool, skipYamlValidation bool) (*PipelineConfig, error) {
+func LoadPipelineConfigAndMaybeValidate(fileName string, resolver ImportFileResolver, isTekton, clearContainer, skipYamlValidation bool) (*PipelineConfig, error) {
 	config := PipelineConfig{}
 	exists, err := files.FileExists(fileName)
 	if err != nil || !exists {
@@ -499,7 +499,7 @@ func LoadPipelineConfigAndMaybeValidate(fileName string, resolver ImportFileReso
 			return &config, fmt.Errorf("failed to validate YAML file %s due to %s", fileName, err)
 		}
 		if len(validationErrors) > 0 {
-			return &config, fmt.Errorf("Validation failures in YAML file %s:\n%s", fileName, strings.Join(validationErrors, "\n"))
+			return &config, fmt.Errorf("validation failures in YAML file %s:\n%s", fileName, strings.Join(validationErrors, "\n"))
 		}
 	}
 	err = yaml.Unmarshal(data, &config)
@@ -663,7 +663,6 @@ func (c *PipelineConfig) GetAllEnvVars() map[string]string {
 		}
 	}
 	return answer
-
 }
 
 // ExtendPipelines extends the parent lifecycle with the base
@@ -701,7 +700,7 @@ func ExtendPipelines(pipelineName string, parent, base *PipelineLifecycles, over
 }
 
 // ExtendLifecycle extends the lifecycle with the inherited base lifecycle
-func ExtendLifecycle(pipelineName, stageName string, parent *PipelineLifecycle, base *PipelineLifecycle, overrides []*syntax.PipelineOverride) *PipelineLifecycle {
+func ExtendLifecycle(pipelineName, stageName string, parent, base *PipelineLifecycle, overrides []*syntax.PipelineOverride) *PipelineLifecycle {
 	var lifecycle *PipelineLifecycle
 	if parent == nil {
 		lifecycle = base
@@ -727,28 +726,27 @@ func ExtendLifecycle(pipelineName, stageName string, parent *PipelineLifecycle, 
 				// If a step name is specified on this override, override looking for that step.
 				if override.Name != "" {
 					for _, s := range lifecycle.Steps {
-						for _, o := range syntax.OverrideStep(*s, override) {
-							overriddenStep := o
+						for k := range syntax.OverrideStep(s, override) {
+							overriddenStep := syntax.OverrideStep(s, override)[k]
 							overriddenSteps = append(overriddenSteps, &overriddenStep)
 						}
 					}
-				} else {
 					// If no step name was specified but there are steps, just replace all steps in the stage/lifecycle,
 					// or add the new steps before/after the existing steps in the stage/lifecycle
-					if steps := override.AsStepsSlice(); len(steps) > 0 {
-						if override.Type == nil || *override.Type == syntax.StepOverrideReplace {
-							overriddenSteps = append(overriddenSteps, steps...)
-						} else if *override.Type == syntax.StepOverrideBefore {
-							overriddenSteps = append(overriddenSteps, steps...)
-							overriddenSteps = append(overriddenSteps, lifecycle.Steps...)
-						} else if *override.Type == syntax.StepOverrideAfter {
-							overriddenSteps = append(overriddenSteps, lifecycle.Steps...)
-							overriddenSteps = append(overriddenSteps, override.Steps...)
-						}
+				} else if steps := override.AsStepsSlice(); len(steps) > 0 {
+					if override.Type == nil || *override.Type == syntax.StepOverrideReplace {
+						overriddenSteps = append(overriddenSteps, steps...)
+					} else if *override.Type == syntax.StepOverrideBefore {
+						overriddenSteps = append(overriddenSteps, steps...)
+						overriddenSteps = append(overriddenSteps, lifecycle.Steps...)
+					} else if *override.Type == syntax.StepOverrideAfter {
+						overriddenSteps = append(overriddenSteps, lifecycle.Steps...)
+						overriddenSteps = append(overriddenSteps, override.Steps...)
 					}
-					// If there aren't any steps as well as no step name, then we're removing all steps from this stage/lifecycle,
-					// so do nothing. =)
 				}
+				// If there aren't any steps as well as no step name, then we're removing all steps from this stage/lifecycle,
+				// so do nothing. =)
+
 				lifecycle.Steps = overriddenSteps
 			}
 		}
@@ -801,7 +799,7 @@ func (a *CreateJenkinsfileArguments) GenerateJenkinsfile(resolver ImportFileReso
 }
 
 // createPipelineSteps translates a step into one or more steps that can be used in jenkins-x.yml pipeline syntax.
-func (c *PipelineConfig) createPipelineSteps(step *syntax.Step, prefixPath string, args CreatePipelineArguments) ([]syntax.Step, int) {
+func (c *PipelineConfig) createPipelineSteps(step *syntax.Step, prefixPath string, args *CreatePipelineArguments) ([]syntax.Step, int) {
 	steps := []syntax.Step{}
 
 	containerName := c.Agent.GetImage()
@@ -875,7 +873,7 @@ func replaceCommandText(step *syntax.Step) string {
 }
 
 // createStageForBuildPack generates the Task for a build pack
-func (c *PipelineConfig) createStageForBuildPack(args CreatePipelineArguments) (*syntax.Stage, int, error) {
+func (c *PipelineConfig) createStageForBuildPack(args *CreatePipelineArguments) (*syntax.Stage, int, error) {
 	if args.Lifecycles == nil {
 		return nil, args.StepCounter, errors.New("generatePipeline: no lifecycles")
 	}
@@ -884,7 +882,6 @@ func (c *PipelineConfig) createStageForBuildPack(args CreatePipelineArguments) (
 	container := ""
 	if c.Agent != nil {
 		container = c.Agent.GetImage()
-
 	}
 	if args.CustomImage != "" {
 		container = args.CustomImage
@@ -922,7 +919,7 @@ func (c *PipelineConfig) createStageForBuildPack(args CreatePipelineArguments) (
 }
 
 // CreatePipelineForBuildPack translates a set of lifecycles into a full pipeline.
-func (c *PipelineConfig) CreatePipelineForBuildPack(args CreatePipelineArguments) (*syntax.ParsedPipeline, int, error) {
+func (c *PipelineConfig) CreatePipelineForBuildPack(args *CreatePipelineArguments) (*syntax.ParsedPipeline, int, error) {
 	args.GitOrg = naming.ToValidName(strings.ToLower(args.GitOrg))
 	args.GitName = naming.ToValidName(strings.ToLower(args.GitName))
 	args.DockerRegistryOrg = strings.ToLower(args.DockerRegistryOrg)
@@ -954,7 +951,8 @@ func (c *PipelineConfig) CreatePipelineForBuildPack(args CreatePipelineArguments
 					parsed.Options = &syntax.RootOptions{}
 				}
 				parsed.Options.ContainerOptions = &container
-				for _, v := range podTemplate.Spec.Volumes {
+				for k := range podTemplate.Spec.Volumes {
+					v := podTemplate.Spec.Volumes[k]
 					parsed.Options.Volumes = append(parsed.Options.Volumes, &corev1.Volume{
 						Name:         v.Name,
 						VolumeSource: v.VolumeSource,
