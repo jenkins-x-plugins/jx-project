@@ -134,13 +134,13 @@ func SaveDir(c *chart.Chart, dest, packName string) error {
 			}
 		}
 		vf := filepath.Join(outdir, chartutil.ValuesfileName)
-		if err := ioutil.WriteFile(vf, []byte(data), 0600); err != nil {
+		if err := ioutil.WriteFile(vf, []byte(data), 0755); err != nil { //nolint:gosec
 			return errors.Wrapf(err, "failed to save yaml file %s", vf)
 		}
 	}
 
 	for _, d := range []string{chartutil.TemplatesDir, ChartsDir} {
-		if err := os.MkdirAll(filepath.Join(outdir, d), 0600); err != nil {
+		if err := os.MkdirAll(filepath.Join(outdir, d), 0755); err != nil { //nolint:gosec
 			return err
 		}
 	}
@@ -148,7 +148,7 @@ func SaveDir(c *chart.Chart, dest, packName string) error {
 	// Save templates
 	for _, f := range c.Templates {
 		n := filepath.Join(outdir, f.Name)
-		if err := ioutil.WriteFile(n, f.Data, 0600); err != nil {
+		if err := ioutil.WriteFile(n, f.Data, 0755); err != nil { //nolint:gosec
 			return err
 		}
 	}
@@ -156,7 +156,7 @@ func SaveDir(c *chart.Chart, dest, packName string) error {
 	// Save files
 	for _, f := range c.Files {
 		n := filepath.Join(outdir, f.Name)
-		if err := ioutil.WriteFile(n, f.Data, 0600); err != nil {
+		if err := ioutil.WriteFile(n, f.Data, 0755); err != nil { //nolint:gosec
 			return err
 		}
 	}
