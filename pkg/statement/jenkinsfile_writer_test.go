@@ -5,7 +5,7 @@ package statement_test
 import (
 	"testing"
 
-	"github.com/jenkins-x/jx-project/pkg/statement"
+	"github.com/jenkins-x-plugins/jx-project/pkg/statement"
 	"github.com/stretchr/testify/assert"
 )
 

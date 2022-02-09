@@ -10,12 +10,14 @@ import (
 	"path/filepath"
 	"testing"
 
+	"github.com/jenkins-x/go-scm/scm"
+
+	"github.com/jenkins-x-plugins/jx-project/pkg/cmd/importcmd"
+	"github.com/jenkins-x-plugins/jx-project/pkg/cmd/testimports"
 	v1 "github.com/jenkins-x/jx-api/v4/pkg/apis/jenkins.io/v1"
 	"github.com/jenkins-x/jx-helpers/v3/pkg/files"
 	"github.com/jenkins-x/jx-helpers/v3/pkg/kube/jxenv"
 	"github.com/jenkins-x/jx-helpers/v3/pkg/kube/naming"
-	"github.com/jenkins-x/jx-project/pkg/cmd/importcmd"
-	"github.com/jenkins-x/jx-project/pkg/cmd/testimports"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -39,7 +41,7 @@ func TestImportTektonCatalogProject(t *testing.T) {
 	dirName = naming.ToValidName(dirName)
 	_, o := importcmd.NewCmdImportAndOptions()
 
-	testimports.SetFakeClients(t, o)
+	testimports.SetFakeClients(t, o, false)
 
 	o.Dir = testDir
 	o.DisableMaven = true
@@ -60,7 +62,7 @@ func TestImportTektonCatalogProject(t *testing.T) {
 	assert.FileExists(t, filepath.Join(testDir, ".lighthouse", "jenkins-x", "triggers.yaml"))
 	assert.FileExists(t, filepath.Join(testDir, ".lighthouse", "jenkins-x", "release.yaml"))
 	assert.FileExists(t, filepath.Join(testDir, ".lighthouse", "jenkins-x", "pullrequest.yaml"))
-	assert.FileExists(t, filepath.Join(testDir, ".lighthouse", "jenkins-x", "Kptfile"))
+	assert.NoFileExists(t, filepath.Join(testDir, ".lighthouse", "jenkins-x", "Kptfile"))
 	assert.NoFileExists(t, filepath.Join(testDir, "jenkins-x.yml"))
 
 	assert.FileExists(t, filepath.Join(testDir, "Dockerfile"))
@@ -75,4 +77,19 @@ func TestImportTektonCatalogProject(t *testing.T) {
 	flag, _, err := o.ScmFactory.ScmClient.Repositories.IsCollaborator(ctx, repoFullName, testimports.PipelineUsername)
 	require.NoError(t, err, "failed to check for collaborator for repo %s user %s", repoFullName, testimports.PipelineUsername)
 	assert.True(t, flag, "should be a collaborator for repo %s user %s", repoFullName, testimports.PipelineUsername)
+
+	envRepo := "jenkins-x-labs-bdd-tests/jx3-gke-gsm"
+	prs, _, err := o.ScmFactory.ScmClient.PullRequests.List(ctx, envRepo, scm.PullRequestListOptions{})
+	require.NoError(t, err, "failed to find dev env repo %s", envRepo)
+	require.Len(t, prs, 1, "should have found a Pull Request for dev env repo %s", envRepo)
+
+	pr := prs[0]
+	labels := pr.Labels
+	require.NotEmpty(t, labels, "should labels Pull Request for dev env repo %s #%d", envRepo, pr.Number)
+	var labelValues []string
+	for _, label := range labels {
+		labelValues = append(labelValues, label.Name)
+	}
+	t.Logf("Pull Request #%d for dev env repo %s has labels: %v", pr.Number, envRepo, labelValues)
+	assert.Equal(t, []string{"env/dev"}, labelValues, "Pull Request labels for #%d on dev env repo %s", pr.Number, envRepo)
 }

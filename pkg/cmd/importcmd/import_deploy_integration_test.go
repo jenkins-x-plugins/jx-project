@@ -9,13 +9,13 @@ import (
 	"path/filepath"
 	"testing"
 
+	"github.com/jenkins-x-plugins/jx-project/pkg/cmd/importcmd"
+	"github.com/jenkins-x-plugins/jx-project/pkg/cmd/testimports"
+	"github.com/jenkins-x-plugins/jx-project/pkg/constants"
 	v1 "github.com/jenkins-x/jx-api/v4/pkg/apis/jenkins.io/v1"
 	"github.com/jenkins-x/jx-helpers/v3/pkg/files"
 	"github.com/jenkins-x/jx-helpers/v3/pkg/kube/jxenv"
 	"github.com/jenkins-x/jx-helpers/v3/pkg/kube/naming"
-	"github.com/jenkins-x/jx-project/pkg/cmd/importcmd"
-	"github.com/jenkins-x/jx-project/pkg/cmd/testimports"
-	"github.com/jenkins-x/jx-project/pkg/constants"
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/require"
 
@@ -165,7 +165,7 @@ func assertImportHasDeploy(t *testing.T, o *importcmd.ImportOptions, testDir str
 	_, testName := filepath.Split(testDir)
 	testName = naming.ToValidName(testName)
 
-	testimports.SetFakeClients(t, o)
+	testimports.SetFakeClients(t, o, false)
 	o.UseDefaultGit = true
 
 	err := o.Run()

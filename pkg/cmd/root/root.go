@@ -4,29 +4,33 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/jenkins-x-plugins/jx-project/pkg/cmd/root/enable"
+
+	"github.com/jenkins-x-plugins/jx-project/pkg/cmd/common"
+	"github.com/jenkins-x-plugins/jx-project/pkg/cmd/importcmd"
+	"github.com/jenkins-x-plugins/jx-project/pkg/cmd/root/pullrequest"
 	"github.com/jenkins-x/jx-helpers/v3/pkg/cobras"
 	"github.com/jenkins-x/jx-helpers/v3/pkg/cobras/helper"
 	"github.com/jenkins-x/jx-helpers/v3/pkg/input"
 	"github.com/jenkins-x/jx-helpers/v3/pkg/input/survey"
-	"github.com/jenkins-x/jx-project/pkg/cmd/common"
-	"github.com/jenkins-x/jx-project/pkg/cmd/importcmd"
-	"github.com/jenkins-x/jx-project/pkg/cmd/root/pullrequest"
 
 	"github.com/jenkins-x/jx-helpers/v3/pkg/cobras/templates"
 	"github.com/spf13/cobra"
 )
 
 const (
-	createQuickstartName = "Create new application from a Quickstart"
-	createSpringName     = "Create new Spring Boot microservice"
-	importDirName        = "Import existing code from a directory"
-	importGitName        = "Import code from a git repository"
-	importGitHubName     = "Import code from a github repository"
+	createQuickstartName   = "Create new application from a Quickstart"
+	createMLQuickstartName = "Create new application from a Machine Learning Quickstart"
+	createSpringName       = "Create new Spring Boot microservice"
+	importDirName          = "Import existing code from a directory"
+	importGitName          = "Import code from a git repository"
+	importGitHubName       = "Import code from a github repository"
 )
 
 var (
 	createProjectNames = []string{
 		createQuickstartName,
+		createMLQuickstartName,
 		createSpringName,
 		importDirName,
 		importGitName,
@@ -62,7 +66,7 @@ type WizardOptions struct {
 func NewCmdMain() (*cobra.Command, *WizardOptions) {
 	options := &WizardOptions{}
 	cmd := &cobra.Command{
-		Use:     "project",
+		Use:     common.BinaryName,
 		Short:   "Create a new project by importing code, creating a quickstart or custom wizard for spring",
 		Long:    createProjectLong,
 		Example: fmt.Sprintf(createProjectExample, common.BinaryName),
@@ -73,7 +77,9 @@ func NewCmdMain() (*cobra.Command, *WizardOptions) {
 		},
 	}
 
+	cmd.AddCommand(cobras.SplitCommand(enable.NewCmdPipelineEnable()))
 	cmd.AddCommand(cobras.SplitCommand(NewCmdCreateQuickstart()))
+	cmd.AddCommand(cobras.SplitCommand(NewCmdCreateMLQuickstart()))
 	cmd.AddCommand(NewCmdCreateSpring())
 	cmd.AddCommand(importcmd.NewCmdImport())
 	cmd.AddCommand(pullrequest.NewCmdCreatePullRequest())
@@ -95,6 +101,8 @@ func (o *WizardOptions) Run() error {
 	switch name {
 	case createQuickstartName:
 		return o.createQuickstart()
+	case createMLQuickstartName:
+		return o.createMLQuickstart()
 	case createSpringName:
 		return o.createSpring()
 	case importDirName:
@@ -104,12 +112,17 @@ func (o *WizardOptions) Run() error {
 	case importGitHubName:
 		return o.importGithubProject()
 	default:
-		return fmt.Errorf("Unknown selection: %s\n", name)
+		return fmt.Errorf("unknown selection: %s", name)
 	}
 }
 
 func (o *WizardOptions) createQuickstart() error {
 	w := &CreateQuickstartOptions{}
+	return w.Run()
+}
+
+func (o *WizardOptions) createMLQuickstart() error {
+	w := &CreateMLQuickstartOptions{}
 	return w.Run()
 }
 
@@ -135,14 +148,14 @@ func (o *WizardOptions) importDir() error {
 }
 
 func (o *WizardOptions) importGit() error {
-	repoUrl, err := o.Input.PickValue("Which git repository URL to import: ", "", true,
+	repoURL, err := o.Input.PickValue("Which git repository URL to import: ", "", true,
 		"Please specify the git URL which contains the source code you want to use for your new project")
 	if err != nil {
 		return err
 	}
 
 	w := &importcmd.ImportOptions{
-		RepoURL: repoUrl,
+		RepoURL: repoURL,
 	}
 	return w.Run()
 }

@@ -21,7 +21,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/jenkins-x/jx-project/pkg/cmd/root"
+	"github.com/jenkins-x-plugins/jx-project/pkg/cmd/root"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 )

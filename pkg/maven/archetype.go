@@ -1,10 +1,9 @@
 package maven
 
 import (
-	"strings"
-
 	"fmt"
 	"sort"
+	"strings"
 
 	"github.com/jenkins-x/jx-helpers/v3/pkg/input"
 	"github.com/jenkins-x/jx-helpers/v3/pkg/options"
@@ -17,14 +16,14 @@ const (
 )
 
 type ArtifactVersions struct {
-	GroupId     string
-	ArtifactId  string
+	GroupID     string
+	ArtifactID  string
 	Description string
 	Versions    []string
 }
 
 type GroupArchectypes struct {
-	GroupId   string
+	GroupID   string
 	Artifacts map[string]*ArtifactVersions
 }
 
@@ -33,26 +32,26 @@ type ArchetypeModel struct {
 }
 
 type ArtifactData struct {
-	GroupId     string
-	ArtifactId  string
+	GroupID     string
+	ArtifactID  string
 	Version     string
 	Description string
 }
 
 type ArchetypeFilter struct {
 	GroupIds         []string
-	GroupIdFilter    string
-	ArtifactIdFilter string
+	GroupIDFilter    string
+	ArtifactIDFilter string
 	Version          string
 }
 
 type ArchetypeForm struct {
-	ArchetypeGroupId    string
-	ArchetypeArtifactId string
+	ArchetypeGroupID    string
+	ArchetypeArtifactID string
 	ArchetypeVersion    string
 
-	GroupId    string
-	ArtifactId string
+	GroupID    string
+	ArtifactID string
 	Package    string
 	Version    string
 }
@@ -66,7 +65,7 @@ func NewArchetypeModel() ArchetypeModel {
 func (m *ArchetypeModel) GroupIDs(filter string) []string {
 	answer := []string{}
 	for group := range m.Groups {
-		if filter == "" || strings.Index(group, filter) >= 0 {
+		if filter == "" || strings.Contains(group, filter) {
 			answer = append(answer, group)
 		}
 	}
@@ -74,12 +73,12 @@ func (m *ArchetypeModel) GroupIDs(filter string) []string {
 	return answer
 }
 
-func (m *ArchetypeModel) ArtifactIDs(groupId string, filter string) []string {
+func (m *ArchetypeModel) ArtifactIDs(groupID, filter string) []string {
 	answer := []string{}
-	artifact := m.Groups[groupId]
+	artifact := m.Groups[groupID]
 	if artifact != nil {
 		for a := range artifact.Artifacts {
-			if filter == "" || strings.Index(a, filter) >= 0 {
+			if filter == "" || strings.Contains(a, filter) {
 				answer = append(answer, a)
 			}
 		}
@@ -88,14 +87,14 @@ func (m *ArchetypeModel) ArtifactIDs(groupId string, filter string) []string {
 	return answer
 }
 
-func (m *ArchetypeModel) Versions(groupId string, artifactId, filter string) []string {
+func (m *ArchetypeModel) Versions(groupID, artifactID, filter string) []string {
 	answer := []string{}
-	artifact := m.Groups[groupId]
+	artifact := m.Groups[groupID]
 	if artifact != nil {
-		av := artifact.Artifacts[artifactId]
+		av := artifact.Artifacts[artifactID]
 		if av != nil {
 			for _, v := range av.Versions {
-				if filter == "" || strings.Index(v, filter) >= 0 {
+				if filter == "" || strings.Contains(v, filter) {
 					answer = append(answer, v)
 				}
 			}
@@ -107,33 +106,33 @@ func (m *ArchetypeModel) Versions(groupId string, artifactId, filter string) []s
 }
 
 func (m *ArchetypeModel) AddArtifact(a *ArtifactData) *ArtifactVersions {
-	groupId := a.GroupId
-	artifactId := a.ArtifactId
+	groupID := a.GroupID
+	artifactID := a.ArtifactID
 	version := a.Version
 	description := a.Description
-	if groupId == "" || artifactId == "" || version == "" {
+	if groupID == "" || artifactID == "" || version == "" {
 		return nil
 	}
 
 	if m.Groups == nil {
 		m.Groups = map[string]*GroupArchectypes{}
 	}
-	group := m.Groups[groupId]
+	group := m.Groups[groupID]
 	if group == nil {
 		group = &GroupArchectypes{
-			GroupId:   groupId,
+			GroupID:   groupID,
 			Artifacts: map[string]*ArtifactVersions{},
 		}
-		m.Groups[groupId] = group
+		m.Groups[groupID] = group
 	}
-	artifact := group.Artifacts[artifactId]
+	artifact := group.Artifacts[artifactID]
 	if artifact == nil {
 		artifact = &ArtifactVersions{
-			GroupId:    groupId,
-			ArtifactId: artifactId,
+			GroupID:    groupID,
+			ArtifactID: artifactID,
 			Versions:   []string{},
 		}
-		group.Artifacts[artifactId] = artifact
+		group.Artifacts[artifactID] = artifact
 	}
 	if artifact.Description == "" && description != "" {
 		artifact.Description = description
@@ -144,59 +143,59 @@ func (m *ArchetypeModel) AddArtifact(a *ArtifactData) *ArtifactVersions {
 	return artifact
 }
 
-func (model *ArchetypeModel) CreateSurvey(data *ArchetypeFilter, pickVersion bool, form *ArchetypeForm, i input.Interface) error {
+func (m *ArchetypeModel) CreateSurvey(data *ArchetypeFilter, pickVersion bool, form *ArchetypeForm, i input.Interface) error {
 	groupIds := data.GroupIds
 	var err error
 	if len(data.GroupIds) == 0 {
-		filteredGroups := model.GroupIDs(data.GroupIdFilter)
+		filteredGroups := m.GroupIDs(data.GroupIDFilter)
 		if len(filteredGroups) == 0 {
-			return options.InvalidOption("group-filter", data.GroupIdFilter, model.GroupIDs(""))
+			return options.InvalidOption("group-filter", data.GroupIDFilter, m.GroupIDs(""))
 		}
 
 		// lets pick from all groups
-		form.ArchetypeGroupId, err = i.PickNameWithDefault(filteredGroups, "Group ID:", form.ArchetypeGroupId, "please pick the maven Group ID")
+		form.ArchetypeGroupID, err = i.PickNameWithDefault(filteredGroups, "Group ID:", form.ArchetypeGroupID, "please pick the maven Group ID")
 		if err != nil {
 			return errors.Wrapf(err, "failed to pick Group ID")
 		}
-		artifactsWithoutFilter := model.ArtifactIDs(form.ArchetypeGroupId, "")
+		artifactsWithoutFilter := m.ArtifactIDs(form.ArchetypeGroupID, "")
 		if len(artifactsWithoutFilter) == 0 {
-			return fmt.Errorf("Could not find any artifacts for group %s", form.ArchetypeGroupId)
+			return fmt.Errorf("could not find any artifacts for group %s", form.ArchetypeGroupID)
 		}
 	} else {
 		// TODO for now lets just support a single group ID being passed in
-		form.ArchetypeGroupId = groupIds[0]
+		form.ArchetypeGroupID = groupIds[0]
 
-		artifactsWithoutFilter := model.ArtifactIDs(form.ArchetypeGroupId, "")
+		artifactsWithoutFilter := m.ArtifactIDs(form.ArchetypeGroupID, "")
 		if len(artifactsWithoutFilter) == 0 {
-			return options.InvalidOption("group", form.ArchetypeGroupId, model.GroupIDs(""))
+			return options.InvalidOption("group", form.ArchetypeGroupID, m.GroupIDs(""))
 		}
 	}
-	if form.ArchetypeGroupId == "" {
-		return fmt.Errorf("No archetype groupId selected")
+	if form.ArchetypeGroupID == "" {
+		return fmt.Errorf("no archetype groupId selected")
 	}
 
-	artifactIds := model.ArtifactIDs(form.ArchetypeGroupId, data.ArtifactIdFilter)
+	artifactIds := m.ArtifactIDs(form.ArchetypeGroupID, data.ArtifactIDFilter)
 	if len(artifactIds) == 0 {
-		artifactsWithoutFilter := model.ArtifactIDs(form.ArchetypeGroupId, "")
-		return options.InvalidOption("artifact", data.ArtifactIdFilter, artifactsWithoutFilter)
+		artifactsWithoutFilter := m.ArtifactIDs(form.ArchetypeGroupID, "")
+		return options.InvalidOption("artifact", data.ArtifactIDFilter, artifactsWithoutFilter)
 	}
 
 	if len(artifactIds) == 1 {
-		form.ArchetypeArtifactId = artifactIds[0]
+		form.ArchetypeArtifactID = artifactIds[0]
 	} else {
-		form.ArchetypeArtifactId, err = i.PickNameWithDefault(artifactIds, "Artifact ID:", form.ArchetypeArtifactId, "please pick the maven Artifact ID")
+		form.ArchetypeArtifactID, err = i.PickNameWithDefault(artifactIds, "Artifact ID:", form.ArchetypeArtifactID, "please pick the maven Artifact ID")
 		if err != nil {
 			return errors.Wrapf(err, "failed to pick Artifact ID")
 		}
 	}
-	if form.ArchetypeArtifactId == "" {
-		return fmt.Errorf("No archetype artifactId selected")
+	if form.ArchetypeArtifactID == "" {
+		return fmt.Errorf("no archetype artifactId selected")
 	}
 
 	version := data.Version
-	versions := model.Versions(form.ArchetypeGroupId, form.ArchetypeArtifactId, version)
+	versions := m.Versions(form.ArchetypeGroupID, form.ArchetypeArtifactID, version)
 	if len(versions) == 0 {
-		return options.InvalidOption("version", version, model.Versions(form.ArchetypeGroupId, form.ArchetypeArtifactId, ""))
+		return options.InvalidOption("version", version, m.Versions(form.ArchetypeGroupID, form.ArchetypeArtifactID, ""))
 	}
 
 	if len(versions) == 1 || !pickVersion {
@@ -208,17 +207,17 @@ func (model *ArchetypeModel) CreateSurvey(data *ArchetypeFilter, pickVersion boo
 		}
 	}
 	if form.ArchetypeVersion == "" {
-		return fmt.Errorf("No archetype version selected")
+		return fmt.Errorf("no archetype version selected")
 	}
 
-	if form.GroupId == "" {
-		form.GroupId, err = i.PickValue("Project Group ID:", "com.acme", true, "The maven Group ID used to default in the pom")
+	if form.GroupID == "" {
+		form.GroupID, err = i.PickValue("Project Group ID:", "com.acme", true, "The maven Group ID used to default in the pom")
 		if err != nil {
 			return errors.Wrapf(err, "failed to pick Project Group ID")
 		}
 	}
-	if form.ArtifactId == "" {
-		form.ArtifactId, err = i.PickValue("Project Artifact ID:", "", true, "The maven Artifact ID used to default in the pom")
+	if form.ArtifactID == "" {
+		form.ArtifactID, err = i.PickValue("Project Artifact ID:", "", true, "The maven Artifact ID used to default in the pom")
 		if err != nil {
 			return errors.Wrapf(err, "failed to pick Project Artifact ID")
 		}

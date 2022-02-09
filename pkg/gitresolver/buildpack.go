@@ -8,7 +8,7 @@ import (
 )
 
 // InitBuildPack initialises the build pack URL and git ref returning the packs dir or an error
-func InitBuildPack(gitter gitclient.Interface, packURL string, packRef string) (string, error) {
+func InitBuildPack(gitter gitclient.Interface, packURL, packRef string) (string, error) {
 	dir, err := gitclient.CloneToDir(gitter, packURL, "")
 	if err != nil {
 		return "", err

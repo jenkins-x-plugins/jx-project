@@ -8,14 +8,14 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/jenkins-x-plugins/jx-project/pkg/cmd/common"
+	"github.com/jenkins-x-plugins/jx-project/pkg/cmd/importcmd"
+	"github.com/jenkins-x-plugins/jx-project/pkg/quickstarts"
 	"github.com/jenkins-x/jx-helpers/v3/pkg/cobras/helper"
 	"github.com/jenkins-x/jx-helpers/v3/pkg/files"
 	"github.com/jenkins-x/jx-helpers/v3/pkg/gitclient"
 	"github.com/jenkins-x/jx-helpers/v3/pkg/options"
 	"github.com/jenkins-x/jx-helpers/v3/pkg/termcolor"
-	"github.com/jenkins-x/jx-project/pkg/cmd/common"
-	"github.com/jenkins-x/jx-project/pkg/cmd/importcmd"
-	"github.com/jenkins-x/jx-project/pkg/quickstarts"
 	"github.com/pkg/errors"
 
 	"github.com/jenkins-x/jx-logging/v3/pkg/log"
@@ -308,6 +308,7 @@ func (o *CreateQuickstartOptions) createQuickstart(f *quickstarts.QuickstartForm
 	if err != nil {
 		return answer, err
 	}
+	defer res.Body.Close()
 	body, err := ioutil.ReadAll(res.Body)
 	if err != nil {
 		return answer, err
@@ -377,6 +378,7 @@ func isMLProjectSet(q *quickstarts.Quickstart, username, token string) bool {
 	if err != nil {
 		return false
 	}
+	defer res.Body.Close()
 	bodybytes, err := ioutil.ReadAll(res.Body)
 	if err != nil {
 		log.Logger().Warnf("Problem parsing response body from %s: %s ", u, err)

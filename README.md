@@ -1,29 +1,28 @@
 # jx project
 
-[![Documentation](https://godoc.org/github.com/jenkins-x/jx-project?status.svg)](https://pkg.go.dev/mod/github.com/jenkins-x/jx-project)
-[![Go Report Card](https://goreportcard.com/badge/github.com/jenkins-x/jx-project)](https://goreportcard.com/report/github.com/jenkins-x/jx-project)
-[![Releases](https://img.shields.io/github/release-pre/jenkins-x/jx-project.svg)](https://github.com/jenkins-x/jx-project/releases)
-[![LICENSE](https://img.shields.io/github/license/jenkins-x/jx-project.svg)](https://github.com/jenkins-x/jx-project/blob/master/LICENSE)
+[![Documentation](https://godoc.org/github.com/jenkins-x-plugins/jx-project?status.svg)](https://pkg.go.dev/mod/github.com/jenkins-x-plugins/jx-project)
+[![Go Report Card](https://goreportcard.com/badge/github.com/jenkins-x-plugins/jx-project)](https://goreportcard.com/report/github.com/jenkins-x-plugins/jx-project)
+[![Releases](https://img.shields.io/github/release-pre/jenkins-x-plugins/jx-project.svg)](https://github.com/jenkins-x-plugins/jx-project/releases)
+[![LICENSE](https://img.shields.io/github/license/jenkins-x-plugins/jx-project.svg)](https://github.com/jenkins-x-plugins/jx-project/blob/master/LICENSE)
 [![Slack Status](https://img.shields.io/badge/slack-join_chat-white.svg?logo=slack&style=social)](https://slack.k8s.io/)
 
-`jx project` is an experimental binary plugin to allow quickstarts to be created and repositories to be imported into either [Jenkins](https://jenkins.io/) servers or [Jenkins X](https://jenkins-x.io/).
+`jx project` is a plugin to allow quickstarts to be created and repositories to be imported into either [Jenkins](https://jenkins.io/) servers or [Jenkins X](https://jenkins-x.io/).
 
 The idea is to provide a single developer UX around creating quickstarts and importing repositories whether you use just Jenkins or just Jenkins X or a combination of both.
 
 ## Getting Started
 
-Download the [jx-project binary](https://github.com/jenkins-x/jx-project/releases) for your operating system and add it to your `$PATH`.
-
-There will be an `app` you can install soon too...
+Download the [jx-project binary](https://github.com/jenkins-x-plugins/jx-project/releases) for your operating system and add it to your `$PATH`.
 
 ## Importing Repositories and Creating Quickstarts
 
-Just run the `jx alpha project` command line and follow the instructions.
+Just run the `jx project` command line and follow the instructions.
 
 If you have ever seen [Jenkins X](https://jenkins-x.io/) or have used `jx import` or `jx create quickstart` you can try run those directly via:
 
-* `jx alpha project quickstart`
-* `jx alpha project import`
+* `jx project quickstart`
+* `jx project mlquickstart`
+* `jx project import`
  
 ## How it works
 
@@ -52,10 +51,11 @@ When importing a project these approaches are supported:
 For those of you who know [Jenkins X](https://jenkins-x.io/) and have used [jx import](https://jenkins-x.io/commands/jx_import/) before this wizard is a little different:
 
 * the commands are a little different:
-  * `jx create import` is now `jx alpha project import`
-  * `jx create quickstart` is now `jx alpha project quickstart`
-  * `jx create project` is now `jx alpha project`
-  * `jx create spring` is now `jx alpha project spring`
+  * `jx create import` is now `jx project import`
+  * `jx create quickstart` is now `jx project quickstart`
+  * `jx create mlquickstart` is now `jx project mlquickstart`
+  * `jx create project` is now `jx project`
+  * `jx create spring` is now `jx project spring`
 * when importing to Jenkins X we ask which build pack you wish to use (e.g. classic or kubernetes) so that you can import java libraries or node modules easily in addition to kubernetes native applications
 * the wizard will prompt you for the pack name (language) once the detection has occurred. Usually the pack name detection is good enough. e.g. detecting `maven` but you may wish to change the version of the pack (e.g. `maven-java11`)
 * when importing a project and you are using Jenkins X and Jenkins in the same cluster you get asked whether you want to import the project into [Jenkins X](https://jenkins-x.io/) or to pick which Jenkins server to use

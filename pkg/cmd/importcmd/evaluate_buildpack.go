@@ -142,7 +142,7 @@ func (o *ImportOptions) getOrganisationOrCurrentUser() string {
 }
 
 func (o *ImportOptions) getCurrentUser() string {
-	//walk through every file in the given dir and update the placeholders
+	// walk through every file in the given dir and update the placeholders
 	if o.ScmFactory.GitUsername == "" {
 		if o.ScmFactory.ScmClient != nil {
 			ctx := context.Background()

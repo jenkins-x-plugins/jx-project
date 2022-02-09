@@ -6,15 +6,14 @@ import (
 )
 
 const (
-	MAVEN        = "maven"
-	MAVEN_JAVA11 = "maven-java11"
-	APPSERVER    = "appserver"
-	LIBERTY      = "liberty"
-	DROPWIZARD   = "dropwizard"
+	MAVEN       = "maven"
+	MAVENJAVA11 = "maven-java11"
+	APPSERVER   = "appserver"
+	LIBERTY     = "liberty"
+	DROPWIZARD  = "dropwizard"
 )
 
 func PomFlavour(path string) (string, error) {
-
 	b, err := ioutil.ReadFile(path)
 	if err != nil {
 		return "", nil
@@ -32,7 +31,7 @@ func PomFlavour(path string) (string, error) {
 		return APPSERVER, nil
 	}
 	if strings.Contains(s, "<java.version>11</java.version>") {
-		return MAVEN_JAVA11, nil
+		return MAVENJAVA11, nil
 	}
 
 	return MAVEN, nil

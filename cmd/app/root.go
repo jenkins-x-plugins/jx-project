@@ -1,9 +1,10 @@
+//nolint
 // +build !windows
 
 package app
 
 import (
-	"github.com/jenkins-x/jx-project/pkg/cmd/root"
+	"github.com/jenkins-x-plugins/jx-project/pkg/cmd/root"
 )
 
 // Run runs the command, if args are not nil they will be set on the command

@@ -10,8 +10,8 @@ import (
 	"path/filepath"
 	"testing"
 
+	"github.com/jenkins-x-plugins/jx-project/pkg/cmd/importcmd"
 	"github.com/jenkins-x/jx-helpers/v3/pkg/files"
-	"github.com/jenkins-x/jx-project/pkg/cmd/importcmd"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -32,6 +32,7 @@ func TestReplacePlaceholders(t *testing.T) {
 	o.Dir = f
 	o.AppName = "bar"
 	o.Organisation = "foo"
+	o.ScmFactory.NoWriteGitCredentialsFile = true
 
 	o.ReplacePlaceholders("github.com", "registry-org")
 
@@ -51,6 +52,12 @@ func TestReplacePlaceholders(t *testing.T) {
 	testFile, err = LoadBytes(testDir2, "file.txt")
 	assert.NoError(t, err)
 	assert.Equal(t, "/home/jenkins/go/src/github.com/foo/bar/registry-org", string(testFile), "replaced placeholder")
+
+	// dir3
+	testDir3 := path.Join(f, "dir3")
+	testFile, err = LoadBytes(testDir3, "values.yaml")
+	assert.NoError(t, err)
+	assert.Equal(t, "# test comment\nfoo: /home/jenkins/go/src/github.com/foo/bar/registry-org\n", string(testFile), "replaced placeholder")
 
 	// REPLACE_ME_APP_NAME/REPLACE_ME_APP_NAME.txt
 	testDirBar := path.Join(f, "bar")

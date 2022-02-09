@@ -19,10 +19,10 @@ const (
 
 // CacheLoader defines cache value population callback that should be executed if cache entry with given key is
 // not present.
-type CacheLoader func() ([]byte, error)
+type Loader func() ([]byte, error)
 
 // LoadCacheData loads cached data from the given cache file name and loader
-func LoadCacheData(fileName string, loader CacheLoader) ([]byte, error) {
+func LoadCacheData(fileName string, loader Loader) ([]byte, error) {
 	if fileName == "" {
 		return loader()
 	}
@@ -54,16 +54,13 @@ func LoadCacheData(fileName string, loader CacheLoader) ([]byte, error) {
 // shouldUseCache returns true if we should use the cached data to serve up the content
 func shouldUseCache(filePath string) bool {
 	lastUpdateTime := getTimeFromFileIfExists(filePath)
-	if time.Since(lastUpdateTime).Hours() < defaultCacheTimeoutHours {
-		return true
-	}
-	return false
+	return time.Since(lastUpdateTime).Hours() < defaultCacheTimeoutHours
 }
 
 func writeTimeToFile(path string, inputTime time.Time) error {
 	err := ioutil.WriteFile(path, []byte(inputTime.Format(timeLayout)), defaultFileWritePermisons)
 	if err != nil {
-		return fmt.Errorf("Error writing current update time to file: %s", err)
+		return fmt.Errorf("error writing current update time to file: %s", err)
 	}
 	return nil
 }

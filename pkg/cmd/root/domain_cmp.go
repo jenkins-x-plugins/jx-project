@@ -8,7 +8,7 @@ import (
 )
 
 // SameRootDomain returns true if the same last 2 paths of the domain are the same. e.g. *.github.com or *.mygitserver.com
-func SameRootDomain(u1 string, u2 string) (bool, error) {
+func SameRootDomain(u1, u2 string) (bool, error) {
 	url1, err := url.Parse(u1)
 	if err != nil {
 		return false, errors.Wrapf(err, "failed to parse URL %s", u1)

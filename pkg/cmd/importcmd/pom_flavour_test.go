@@ -7,7 +7,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/jenkins-x/jx-project/pkg/cmd/importcmd"
+	"github.com/jenkins-x-plugins/jx-project/pkg/cmd/importcmd"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -34,7 +34,7 @@ func TestMavenJava11Detection(t *testing.T) {
 	assert.Nil(t, err)
 	flavour, err := importcmd.PomFlavour(file.Name())
 	assert.Nil(t, err)
-	assert.Equal(t, importcmd.MAVEN_JAVA11, flavour)
+	assert.Equal(t, importcmd.MAVENJAVA11, flavour)
 	err = os.Remove(file.Name())
 	assert.Nil(t, err)
 }

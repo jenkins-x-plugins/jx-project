@@ -1,5 +1,10 @@
-apiVersion: v1
+apiVersion: v2
 appVersion: "7.0.0.RC1"
 description: A Helm Chart
 name: REPLACE_ME_APP_NAME
 version: 0.0.1-SNAPSHOT
+dependencies:
+- name: mychart
+  version: 1.2.3
+- name: anotherchart
+  version: 4.5.6

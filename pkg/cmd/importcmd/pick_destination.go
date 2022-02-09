@@ -5,7 +5,7 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/jenkins-x/jx-gitops/pkg/sourceconfigs"
+	"github.com/jenkins-x-plugins/jx-gitops/pkg/sourceconfigs"
 	"github.com/jenkins-x/jx-helpers/v3/pkg/kube/naming"
 	"github.com/jenkins-x/jx-helpers/v3/pkg/stringhelpers"
 	"github.com/jenkins-x/jx-logging/v3/pkg/log"

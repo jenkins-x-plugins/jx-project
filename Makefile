@@ -9,7 +9,7 @@ MAIN_SRC_FILE=cmd/main.go
 GO := GO111MODULE=on go
 GO_NOMOD :=GO111MODULE=off go
 REV := $(shell git rev-parse --short HEAD 2> /dev/null || echo 'unknown')
-ORG := jenkins-x-labs
+ORG := jenkins-x-plugins
 ORG_REPO := $(ORG)/$(NAME)
 RELEASE_ORG_REPO := $(ORG_REPO)
 ROOT_PACKAGE := github.com/$(ORG_REPO)
@@ -19,6 +19,8 @@ GO_DEPENDENCIES := $(call rwildcard,pkg/,*.go) $(call rwildcard,cmd/j,*.go)
 BRANCH     := $(shell git rev-parse --abbrev-ref HEAD 2> /dev/null  || echo 'unknown')
 BUILD_DATE := $(shell date +%Y%m%d-%H:%M:%S)
 CGO_ENABLED = 0
+
+TMP_HOME ?= /tmp/jx-project-git-home
 
 REPORTS_DIR=$(BUILD_TARGET)/reports
 
@@ -60,7 +62,7 @@ endif
 
 TEST_PACKAGE ?= ./...
 COVER_OUT:=$(REPORTS_DIR)/cover.out
-COVERFLAGS=-coverprofile=$(COVER_OUT) --covermode=count --coverpkg=./...
+COVERFLAGS=-coverprofile=$(COVER_OUT) --covermode=count --coverpkg=./pkg/...
 
 .PHONY: list
 list: ## List all make targets
@@ -73,9 +75,6 @@ help:
 
 full: check ## Build and run the tests
 check: build test ## Build and run the tests
-get-test-deps: ## Install test dependencies
-	$(GO_NOMOD) get github.com/axw/gocov/gocov
-	$(GO_NOMOD) get -u gopkg.in/matm/v1/gocov-html
 
 print-version: ## Print version
 	@echo $(VERSION)
@@ -96,16 +95,22 @@ make-reports-dir:
 	mkdir -p $(REPORTS_DIR)
 
 test: ## Run tests with the "unit" build tag
-	KUBECONFIG=/cluster/connections/not/allowed CGO_ENABLED=$(CGO_ENABLED) $(GOTEST) --tags="integration unit" -failfast -short ./... $(TEST_BUILDFLAGS)
+	# lets reuse a tmp home dir to avoid modifying the real ~/.git-credentials
+	mkdir -p $(TMP_HOME)
+	KUBECONFIG=/cluster/connections/not/allowed XDG_CONFIG_HOME==$(TMP_HOME) CGO_ENABLED=$(CGO_ENABLED) $(GOTEST) --tags="integration unit" -failfast -short ./... $(TEST_BUILDFLAGS)
+
+# lets use a tmp dir for HOME to avoid the tests breaking the actual git creds
+test-release: ## Run tests with the "unit" build tag
+	# lets reuse a tmp home dir to avoid modifying the real ~/.git-credentials
+	#mkdir -p $(TMP_HOME)
+	#HOME=$(TMP_HOME) git config --global --add user.name JenkinsXBot && git config --global --add user.email jenkins-x@googlegroups.com
+	#KUBECONFIG=/cluster/connections/not/allowed HOME==$(TMP_HOME) CGO_ENABLED=$(CGO_ENABLED) $(GOTEST) --tags="integration unit" -failfast -short ./... $(TEST_BUILDFLAGS)
 
 test-coverage : make-reports-dir ## Run tests and coverage for all tests with the "unit" build tag
 	CGO_ENABLED=$(CGO_ENABLED) $(GOTEST) --tags=unit $(COVERFLAGS) -failfast -short ./... $(TEST_BUILDFLAGS)
 
-test-report: make-reports-dir get-test-deps test-coverage ## Create the test report
-	@gocov convert $(COVER_OUT) | gocov report
-
-test-report-html: make-reports-dir get-test-deps test-coverage ## Create the test report in HTML format
-	@gocov convert $(COVER_OUT) | gocov-html > $(REPORTS_DIR)/cover.html && open $(REPORTS_DIR)/cover.html
+test-report-html: make-reports-dir test-coverage
+	$(GO) tool cover -html=$(COVER_OUT)
 
 install: $(GO_DEPENDENCIES) ## Install the binary
 	GOBIN=${GOPATH}/bin $(GO) install $(BUILDFLAGS) $(MAIN_SRC_FILE)
@@ -126,7 +131,7 @@ darwin: ## Build for OSX
 	chmod +x build/darwin/$(NAME)
 
 .PHONY: release
-release: clean linux test
+release: clean linux test-release
 
 release-all: release linux win darwin
 
@@ -178,7 +183,7 @@ bin/docs:
 	go build $(LDFLAGS) -v -o bin/docs cmd/docs/*.go
 
 .PHONY: docs
-docs: bin/docs generate-refdocs ## update docs
+docs: bin/docs  ## update docs
 	@echo "Generating docs"
 	@./bin/docs --target=./docs/cmd
 	@./bin/docs --target=./docs/man/man1 --kind=man

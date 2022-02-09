@@ -4,12 +4,20 @@ import (
 	"context"
 	"fmt"
 	"io/ioutil"
+	"net/url"
 	"os"
 	"path/filepath"
 	"strings"
 	"time"
 
+	"github.com/cenkalti/backoff"
+
 	"github.com/denormal/go-gitignore"
+	"github.com/jenkins-x-plugins/jx-project/pkg/cmd/common"
+	"github.com/jenkins-x-plugins/jx-project/pkg/config"
+	"github.com/jenkins-x-plugins/jx-project/pkg/constants"
+	"github.com/jenkins-x-plugins/jx-project/pkg/maven"
+	"github.com/jenkins-x-plugins/jx-project/pkg/prow"
 	"github.com/jenkins-x/go-scm/scm"
 	v1 "github.com/jenkins-x/jx-api/v4/pkg/apis/jenkins.io/v1"
 	"github.com/jenkins-x/jx-api/v4/pkg/client/clientset/versioned"
@@ -32,11 +40,6 @@ import (
 	"github.com/jenkins-x/jx-helpers/v3/pkg/scmhelpers"
 	"github.com/jenkins-x/jx-helpers/v3/pkg/termcolor"
 	"github.com/jenkins-x/jx-logging/v3/pkg/log"
-	"github.com/jenkins-x/jx-project/pkg/cmd/common"
-	"github.com/jenkins-x/jx-project/pkg/config"
-	"github.com/jenkins-x/jx-project/pkg/constants"
-	"github.com/jenkins-x/jx-project/pkg/maven"
-	"github.com/jenkins-x/jx-project/pkg/prow"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"k8s.io/client-go/kubernetes"
@@ -57,11 +60,11 @@ type ImportOptions struct {
 	Dir              string
 	Organisation     string
 	Repository       string
-	//Credentials                        string
+	// Credentials                        string
 	AppName      string
 	SelectFilter string
 	Jenkinsfile  string
-	//BranchPattern                      string
+	// BranchPattern                      string
 	ImportGitCommitMessage string
 	Pack                   string
 	DockerRegistryOrg      string
@@ -70,7 +73,7 @@ type ImportOptions struct {
 	GitConfDir             string
 	PipelineUserName       string
 	PipelineServer         string
-	//ImportMode                         string
+	// ImportMode                         string
 	ServiceAccount                     string
 	Namespace                          string
 	OperatorNamespace                  string
@@ -90,6 +93,8 @@ type ImportOptions struct {
 	WaitForSourceRepositoryPullRequest bool
 	NoDevPullRequest                   bool
 	IgnoreExistingRepository           bool
+	IgnoreCollaborator                 bool
+	IgnoreJenkinsXFile                 bool
 	PullRequestPollPeriod              time.Duration
 	PullRequestPollTimeout             time.Duration
 	DeployOptions                      v1.DeployOptions
@@ -108,6 +113,11 @@ type ImportOptions struct {
 	gitInfo               *giturl.GitRepository
 	Destination           ImportDestination
 	reporter              ImportReporter
+	PackFilter            func(*Pack)
+	// env customization
+	EnvName     string
+	EnvStrategy string
+	NestedRepo  bool
 
 	/*
 		TODO jenkins support
@@ -120,16 +130,7 @@ type ImportOptions struct {
 const (
 	updateBotMavenPluginVersion = "RELEASE"
 
-	triggerPipelineBuildPack = "trigger-jenkins"
-
 	jenkinsfileName = "Jenkinsfile"
-
-	jenkinsfileRunnerBuildPack = "jenkinsfilerunner"
-	jenkinsServerEnvVar        = "TRIGGER_JENKINS_SERVER"
-
-	// TODO until `jx` can handle overrides of step images without having to copy/paste the command too we need to copy paste the command
-	// from the build pack if we wish to override the image name
-	defaultJenkinsfileRunnerCommand = "/app/bin/jenkinsfile-runner-launcher -w /app/jenkins -p /usr/share/jenkins/ref/plugins -f /workspace/source --runWorkspace /workspace/build"
 )
 
 var (
@@ -140,9 +141,9 @@ var (
 	    Or you can use '--dir' to specify a directory to import.
 
 	    You can specify the git URL as an argument.
-	    
+
 		For more documentation see: [https://jenkins-x.io/docs/using-jx/creating/import/](https://jenkins-x.io/docs/using-jx/creating/import/)
-	    
+
 `)
 
 	importExample = templates.Examples(`
@@ -156,18 +157,16 @@ var (
 		%s import --url https://github.com/jenkins-x/spring-boot-web-example.git
 
         # Select a number of repositories from a GitHub organisation
-		%s import --github --org myname 
+		%s import --github --org myname
 
         # Import all repositories from a GitHub organisation selecting ones to not import
-		%s import --github --org myname --all 
+		%s import --github --org myname --all
 
         # Import all repositories from a GitHub organisation which contain the text foo
-		%s import --github --org myname --all --filter foo 
+		%s import --github --org myname --all --filter foo
 		`)
 
 	deployKinds = []string{constants.DeployKindKnative, constants.DeployKindDefault}
-
-	removeSourceRepositoryAnnotations = []string{"kubectl.kubernetes.io/last-applied-configuration", "jenkins.io/chart"}
 )
 
 // NewCmdImport the cobra command for jx-project import
@@ -193,7 +192,6 @@ func NewCmdImportAndOptions() (*cobra.Command, *ImportOptions) {
 	cmd.Flags().StringVarP(&options.RepoURL, "url", "u", "", "The git clone URL to clone into the current directory and then import")
 	cmd.Flags().BoolVarP(&options.GitHub, "github", "", false, "If you wish to pick the repositories from GitHub to import")
 	cmd.Flags().BoolVarP(&options.SelectAll, "all", "", false, "If selecting projects to import from a Git provider this defaults to selecting them all")
-	//cmd.Flags().StringVarP(&options.SelectFilter, "filter", "", "", "If selecting projects to import from a Git provider this filters the list of repositories")
 
 	options.AddImportFlags(cmd, false)
 	return cmd, options
@@ -211,18 +209,13 @@ func (o *ImportOptions) AddImportFlags(cmd *cobra.Command, createProject bool) {
 	cmd.Flags().StringVarP(&o.Dir, "dir", "", ".", "Specify the directory to import")
 	cmd.Flags().StringVarP(&o.PipelineCatalogDir, "pipeline-catalog-dir", "", "", "The pipeline catalog directory you want to use instead of the buildPackGitURL in the dev Environment Team settings. Generally only used for testing pipelines")
 	cmd.Flags().StringVarP(&o.Repository, "name", notCreateProject("n"), "", "Specify the Git repository name to import the project into (if it is not already in one)")
-	//cmd.Flags().StringVarP(&o.Credentials, "credentials", notCreateProject("c"), "", "The Jenkins credentials name used by the job")
-	//cmd.Flags().StringVarP(&o.Jenkinsfile, "jenkinsfile", notCreateProject("j"), "", "The name of the Jenkinsfile to use. If not specified then 'Jenkinsfile' will be used")
 	cmd.Flags().BoolVarP(&o.DryRun, "dry-run", "", false, "Performs local changes to the repo but skips the import into Jenkins X")
 	cmd.Flags().BoolVarP(&o.DisableBuildPack, "no-pack", "", false, "Disable trying to default a Dockerfile and Helm Chart from the pipeline catalog pack")
 	cmd.Flags().StringVarP(&o.ImportGitCommitMessage, "import-commit-message", "", "", "Specifies the initial commit message used when importing the project")
-	//cmd.Flags().StringVarP(&o.BranchPattern, "branches", "", "", "The branch pattern for branches to trigger CI/CD pipelines on")
 	cmd.Flags().StringVarP(&o.Pack, "pack", "", "", "The name of the pipeline catalog pack to use. If none is specified it will be chosen based on matching the source code languages")
-	//cmd.Flags().StringVarP(&o.SchedulerName, "scheduler", "", "", "The name of the Scheduler configuration to use for ChatOps when using Prow")
 	cmd.Flags().StringVarP(&o.DockerRegistryOrg, "docker-registry-org", "", "", "The name of the docker registry organisation to use. If not specified then the Git provider organisation will be used")
 	cmd.Flags().StringVarP(&o.OperatorNamespace, "operator-namespace", "", boot.GitOperatorNamespace, "The namespace where the git operator is installed")
 	cmd.Flags().StringVarP(&o.BootSecretName, "boot-secret-name", "", boot.SecretName, "The name of the boot secret")
-	//cmd.Flags().BoolVarP(&o.DisableMaven, "disable-updatebot", "", false, "disable updatebot-maven-plugin from attempting to fix/update the maven pom.xml")
 	cmd.Flags().BoolVarP(&o.UseDefaultGit, "use-default-git", "", false, "use default git account")
 	cmd.Flags().StringVarP(&o.DeployKind, "deploy-kind", "", "", fmt.Sprintf("The kind of deployment to use for the project. Should be one of %s", strings.Join(deployKinds, ", ")))
 	cmd.Flags().BoolVarP(&o.DeployOptions.Canary, constants.OptionCanary, "", false, "should we use canary rollouts (progressive delivery) by default for this application. e.g. using a Canary deployment via flagger. Requires the installation of flagger and istio/gloo in your cluster")
@@ -234,9 +227,14 @@ func (o *ImportOptions) AddImportFlags(cmd *cobra.Command, createProject bool) {
 	cmd.Flags().BoolVarP(&o.WaitForSourceRepositoryPullRequest, "wait-for-pr", "", true, "waits for the Pull Request generated on the cluster environment git repository to merge")
 	cmd.Flags().BoolVarP(&o.NoDevPullRequest, "no-dev-pr", "", false, "disables generating a Pull Request on the cluster git repository")
 	cmd.Flags().BoolVarP(&o.DisableStartPipeline, "no-start", "", false, "disables starting a release pipeline when importing/creating a new project")
+	cmd.Flags().BoolVarP(&o.IgnoreCollaborator, "no-collaborator", "", false, "disables checking if the bot user is a collaborator. Only used if you have an issue with your git provider and this functionality in go-scm")
 	cmd.Flags().DurationVarP(&o.PullRequestPollPeriod, "pr-poll-period", "", time.Second*20, "the time between polls of the Pull Request on the cluster environment git repository")
 	cmd.Flags().DurationVarP(&o.PullRequestPollTimeout, "pr-poll-timeout", "", time.Minute*20, "the maximum amount of time we wait for the Pull Request on the cluster environment git repository")
 
+	cmd.Flags().StringVar(&o.EnvName, "env-name", "", "The name of the environment to create (only used for env projects)")
+	// FIXME parse enum and through what specified do not fit in enum
+	cmd.Flags().StringVar(&o.EnvStrategy, "env-strategy", "Never", "The promotion strategy of the environment to create (only used for env projects)")
+	cmd.Flags().BoolVarP(&o.NestedRepo, "nested-repo", "", false, "Specify if using nested repositories (in gitlab)")
 	o.BaseOptions.AddBaseFlags(cmd)
 	o.ScmFactory.AddFlags(cmd)
 
@@ -338,7 +336,7 @@ func (o *ImportOptions) Run() error {
 			return err
 		}
 
-		o.DiscoveredGitURL, err = gitdiscovery.FindGitURLFromDir(o.Dir)
+		o.DiscoveredGitURL, err = gitdiscovery.FindGitURLFromDir(o.Dir, true)
 		if err != nil {
 			return errors.Wrapf(err, "failed to discover the git URL")
 		}
@@ -376,7 +374,6 @@ func (o *ImportOptions) Run() error {
 			}
 		}
 	}
-
 	if o.AppName == "" && o.gitInfo != nil {
 		o.Organisation = o.gitInfo.Organisation
 		o.AppName = o.gitInfo.Name
@@ -388,8 +385,10 @@ func (o *ImportOptions) Run() error {
 		}
 		_, o.AppName = filepath.Split(dir)
 	}
+	if o.Repository == "" && o.NestedRepo {
+		o.Repository = o.AppName
+	}
 	o.AppName = naming.ToValidName(strings.ToLower(o.AppName))
-
 	jenkinsfile, err := o.HasJenkinsfile()
 	if err != nil {
 		return err
@@ -406,9 +405,12 @@ func (o *ImportOptions) Run() error {
 		if err != nil {
 			return err
 		}
-		if o.Destination.Jenkins.Server != "" || o.Destination.JenkinsfileRunner.Enabled {
+		if o.Destination.Jenkins.Server != "" {
 			// lets not run the Jenkins X build packs
 			o.DisableBuildPack = true
+		} else if o.Destination.JenkinsfileRunner.Enabled {
+			o.DisableBuildPack = false
+			o.Pack = "jenkinsfilerunner"
 		}
 	}
 
@@ -418,19 +420,25 @@ func (o *ImportOptions) Run() error {
 	if err != nil {
 		return errors.Wrapf(err, "failed to check if dir contains a %s file", jxProjectFile)
 	}
-	if jxProjectFileExists {
-		o.DisableBuildPack = true
-
-		// we may need to add a custom build pack to handle the old jenkins-x.yml build packs
-		projectConfig, projectConfigFile, err := config.LoadProjectConfig(o.Dir)
+	if jxProjectFileExists && !o.IgnoreJenkinsXFile {
+		converted, err := o.convertOldPipeline()
 		if err != nil {
-			return errors.Wrapf(err, "failed to load project oconfig file from %s", o.Dir)
+			return errors.Wrapf(err, "failed to convert old pipeline")
 		}
-		if projectConfig.BuildPackGitURef == "" || strings.HasPrefix(projectConfig.BuildPackGitURef, "https://github.com/jenkins-x/jx3-pipeline-catalog") {
-			projectConfig.BuildPackGitURef = "https://github.com/jenkins-x/jxr-packs-kubernetes"
-			err = projectConfig.SaveConfig(projectConfigFile)
+
+		o.DisableBuildPack = true
+		if !converted {
+			// we may need to add a custom build pack to handle the old jenkins-x.yml build packs
+			projectConfig, projectConfigFile, err := config.LoadProjectConfig(o.Dir)
 			if err != nil {
-				return errors.Wrapf(err, "failed to save config file %s", projectConfigFile)
+				return errors.Wrapf(err, "failed to load project oconfig file from %s", o.Dir)
+			}
+			if projectConfig.BuildPackGitURef == "" || strings.HasPrefix(projectConfig.BuildPackGitURef, "https://github.com/jenkins-x/jx3-pipeline-catalog") {
+				projectConfig.BuildPackGitURef = "https://github.com/jenkins-x/jxr-packs-kubernetes"
+				err = projectConfig.SaveConfig(projectConfigFile)
+				if err != nil {
+					return errors.Wrapf(err, "failed to save config file %s", projectConfigFile)
+				}
 			}
 		}
 	}
@@ -503,9 +511,11 @@ func (o *ImportOptions) Run() error {
 		return nil
 	}
 
-	err = o.AddAndAcceptCollaborator(newRepository)
-	if err != nil {
-		return errors.Wrapf(err, "failed to add and accept collaborator")
+	if !o.IgnoreCollaborator {
+		err = o.AddAndAcceptCollaborator(newRepository)
+		if err != nil {
+			return errors.Wrapf(err, "failed to add and accept collaborator")
+		}
 	}
 
 	gitURL := ""
@@ -627,6 +637,20 @@ func (o *ImportOptions) CreateNewRemoteRepository() error {
 	if repo.Clone == "" {
 		repo.Clone = repo.Link
 	}
+
+	// lets allow a BDD test to switch the git host to push to
+	// e.g. if using kind and gitea and running tests inside k8s without public access to the gitea server
+	gitPushHost := os.Getenv("JX_GIT_PUSH_HOST")
+	if repo.Clone != "" && gitPushHost != "" {
+		u, err := url.Parse(repo.Clone)
+		if err != nil {
+			return errors.Wrapf(err, "failed to parse repository clone URL %s", repo.Clone)
+		}
+		u.Host = gitPushHost
+		repo.Clone = u.String()
+		log.Logger().Infof("switching to the git clone URL %s", info(repo.Clone))
+	}
+
 	o.DiscoveredGitURL = repo.Clone
 	pushGitURL, err := o.ScmFactory.CreateAuthenticatedURL(repo.Clone)
 	if err != nil {
@@ -636,7 +660,17 @@ func (o *ImportOptions) CreateNewRemoteRepository() error {
 	if err != nil {
 		return err
 	}
-	err = gitclient.Push(o.Git(), dir, "origin", false, "master")
+
+	// lets use a retry loop to push in case the repository is not yet setup quite yet
+	f := func() error {
+		return gitclient.Push(o.Git(), dir, "origin", false, "HEAD")
+	}
+
+	bo := backoff.NewExponentialBackOff()
+	bo.InitialInterval = 3 * time.Second
+	bo.MaxElapsedTime = time.Minute
+	bo.Reset()
+	err = backoff.Retry(f, bo)
 	if err != nil {
 		return err
 	}
@@ -771,12 +805,6 @@ func (o *ImportOptions) DefaultGitIgnore() error {
 func (o *ImportOptions) doImport() error {
 	gitURL := o.DiscoveredGitURL
 
-	defaultJenkinsfileName := jenkinsfileName
-	jenkinsfile := o.Jenkinsfile
-	if jenkinsfile == "" {
-		jenkinsfile = defaultJenkinsfileName
-	}
-
 	dockerfileLocation := ""
 	if o.Dir != "" {
 		dockerfileLocation = filepath.Join(o.Dir, "Dockerfile")
@@ -798,7 +826,7 @@ func (o *ImportOptions) doImport() error {
 	// TODO should we prompt the user for the git kind if we can't detect / find it?
 	gitKind := o.ScmFactory.GitKind
 
-	err = o.addSourceConfigPullRequest(gitURL, gitKind)
+	remoteCluster, err := o.addSourceConfigPullRequest(gitURL, gitKind)
 	if err != nil {
 		return errors.Wrapf(err, "failed to create Pull Request on the cluster git repository")
 	}
@@ -807,12 +835,16 @@ func (o *ImportOptions) doImport() error {
 		return nil
 	}
 
-	repoFullName := scm.Join(o.Organisation, o.AppName)
+	repoName := o.GitRepositoryOptions.Name
+	if repoName == "" {
+		repoName = o.AppName
+	}
+	repoFullName := scm.Join(o.Organisation, repoName)
 
-	if !o.Destination.Jenkins.Enabled {
+	if !o.Destination.Jenkins.Enabled && !remoteCluster {
 		c := &cmdrunner.Command{
 			Name: "jx",
-			Args: []string{"pipeline", "wait", "--owner", o.Organisation, "--repo", o.AppName},
+			Args: []string{"pipeline", "wait", "--owner", o.Organisation, "--repo", repoName},
 			Out:  os.Stdout,
 			Err:  os.Stderr,
 		}
@@ -923,7 +955,6 @@ func (o *ImportOptions) ReplacePlaceholders(gitServerName, dockerRegistryOrg str
 			}
 		}
 		return nil
-
 	}); err != nil {
 		return fmt.Errorf("error replacing placeholders %v", err)
 	}
@@ -939,7 +970,7 @@ func (o *ImportOptions) ReplacePlaceholders(gitServerName, dockerRegistryOrg str
 func (o *ImportOptions) skipPathForReplacement(path string, fi os.FileInfo, ignore gitignore.GitIgnore) (bool, error) {
 	relPath, _ := filepath.Rel(o.Dir, path)
 	match := ignore.Relative(relPath, fi.IsDir())
-	matchIgnore := match != nil && match.Ignore() //Defaults to including if match == nil
+	matchIgnore := match != nil && match.Ignore() // Defaults to including if match == nil
 	if fi.IsDir() {
 		if matchIgnore || fi.Name() == ".git" {
 			o.GetReporter().Trace("skipping directory %q", path)
@@ -967,7 +998,7 @@ func replacePlaceholdersInFile(replacer *strings.Replacer, file string) error {
 	lines := string(input)
 	if strings.Contains(lines, constants.PlaceHolderPrefix) { // Avoid unnecessarily rewriting files
 		output := replacer.Replace(lines)
-		err = ioutil.WriteFile(file, []byte(output), 0644)
+		err = ioutil.WriteFile(file, []byte(output), 0600)
 		if err != nil {
 			log.Logger().Errorf("failed to write file %s: %v", file, err)
 			return err
@@ -1009,12 +1040,12 @@ func (o *ImportOptions) addAppNameToGeneratedFile(filename, field, value string)
 	lines := strings.Split(string(input), "\n")
 
 	for i, line := range lines {
-		if strings.Contains(line, field) {
+		if strings.HasPrefix(line, field) {
 			lines[i] = fmt.Sprintf("%s%s", field, value)
 		}
 	}
 	output := strings.Join(lines, "\n")
-	err = ioutil.WriteFile(file, []byte(output), 0644)
+	err = ioutil.WriteFile(file, []byte(output), 0600)
 	if err != nil {
 		return err
 	}
@@ -1079,19 +1110,21 @@ func (o *ImportOptions) fixDockerIgnoreFile() error {
 	if err == nil && exists {
 		data, err := ioutil.ReadFile(filename)
 		if err != nil {
-			return fmt.Errorf("Failed to load %s: %s", filename, err)
+			return fmt.Errorf("failed to load %s: %s", filename, err)
 		}
 		lines := strings.Split(string(data), "\n")
 		for i, line := range lines {
-			if strings.TrimSpace(line) == "Dockerfile" {
-				lines = append(lines[:i], lines[i+1:]...)
-				text := strings.Join(lines, "\n")
-				err = ioutil.WriteFile(filename, []byte(text), files.DefaultFileWritePermissions)
-				if err != nil {
-					return err
-				}
-				o.GetReporter().Trace("Removed old `Dockerfile` entry from %s", termcolor.ColorInfo(filename))
+			if strings.TrimSpace(line) != "Dockerfile" {
+				continue
 			}
+			lines = append(lines[:i], lines[i+1:]...)
+			text := strings.Join(lines, "\n")
+			err = ioutil.WriteFile(filename, []byte(text), files.DefaultFileWritePermissions)
+			if err != nil {
+				return err
+			}
+			o.GetReporter().Trace("Removed old `Dockerfile` entry from %s", termcolor.ColorInfo(filename))
+
 		}
 	}
 	return nil
@@ -1119,7 +1152,7 @@ func (o *ImportOptions) CreateProwOwnersFile() error {
 	if err != nil {
 		return err
 	}
-	err = ioutil.WriteFile(filename, yaml, 0644)
+	err = ioutil.WriteFile(filename, yaml, 0600)
 	if err != nil {
 		return err
 	}
@@ -1149,7 +1182,7 @@ func (o *ImportOptions) CreateProwOwnersAliasesFile() error {
 	if err != nil {
 		return err
 	}
-	return ioutil.WriteFile(filename, yaml, 0644)
+	return ioutil.WriteFile(filename, yaml, 0600)
 }
 
 func (o *ImportOptions) fixMaven() error {
@@ -1171,11 +1204,11 @@ func (o *ImportOptions) fixMaven() error {
 		// lets ensure the mvn plugins are ok
 		out, err := o.CommandRunner(cmdrunner.NewCommand(dir, "mvn", "io.jenkins.updatebot:updatebot-maven-plugin:"+updateBotMavenPluginVersion+":plugin", "-Dartifact=maven-deploy-plugin", "-Dversion="+constants.MinimumMavenDeployVersion))
 		if err != nil {
-			return fmt.Errorf("Failed to update maven deploy plugin: %s output: %s", err, out)
+			return fmt.Errorf("failed to update maven deploy plugin: %s output: %s", err, out)
 		}
 		out, err = o.CommandRunner(cmdrunner.NewCommand(dir, "mvn", "io.jenkins.updatebot:updatebot-maven-plugin:"+updateBotMavenPluginVersion+":plugin", "-Dartifact=maven-surefire-plugin", "-Dversion=3.0.0-M1"))
 		if err != nil {
-			return fmt.Errorf("Failed to update maven surefire plugin: %s output: %s", err, out)
+			return fmt.Errorf("failed to update maven surefire plugin: %s output: %s", err, out)
 		}
 		_, err = gitclient.AddAndCommitFiles(o.Git(), dir, "fix(plugins): use a better version of maven plugins")
 		if err != nil {
@@ -1185,7 +1218,7 @@ func (o *ImportOptions) fixMaven() error {
 		// lets ensure the probe paths are ok
 		out, err = o.CommandRunner(cmdrunner.NewCommand(dir, "mvn", "io.jenkins.updatebot:updatebot-maven-plugin:"+updateBotMavenPluginVersion+":chart"))
 		if err != nil {
-			return fmt.Errorf("Failed to update chart: %s output: %s", err, out)
+			return fmt.Errorf("failed to update chart: %s output: %s", err, out)
 		}
 		if out != "" {
 			log.Logger().Infof(out)
@@ -1247,33 +1280,32 @@ func (o *ImportOptions) DefaultValuesFromTeamSettings(settings *v1.TeamSettings)
 }
 
 // ConfigureImportOptions updates the import options struct based on values from the create repo struct
-func (options *ImportOptions) ConfigureImportOptions(repoData *CreateRepoData) {
+func (o *ImportOptions) ConfigureImportOptions(repoData *CreateRepoData) {
 	// configure the import options based on previous answers
 	owner := repoData.Organisation
 	repoName := repoData.RepoName
 
-	options.Organisation = owner
-	options.AppName = repoName
-	options.Repository = repoName
-	options.GitRepositoryOptions.Namespace = owner
-	options.GitRepositoryOptions.Name = repoName
-	//options.GitProvider = repoData.GitProvider
+	o.Organisation = owner
+	o.AppName = repoName
+	o.Repository = repoName
+	o.GitRepositoryOptions.Namespace = owner
+	o.GitRepositoryOptions.Name = repoName
 
 	// TODO
-	//options.GitDetails = *repoData
-	//options.GitServer = repoData.GitServer
+	// options.GitDetails = *repoData
+	// options.GitServer = repoData.GitServer
 }
 
 // GetGitRepositoryDetails determines the git repository details to use during the import command
-func (options *ImportOptions) GetGitRepositoryDetails() (*CreateRepoData, error) {
-	err := options.DefaultsFromTeamSettings()
+func (o *ImportOptions) GetGitRepositoryDetails() (*CreateRepoData, error) {
+	err := o.DefaultsFromTeamSettings()
 	if err != nil {
 		return nil, err
 	}
-	//config git repositoryoptions parameters: Owner and RepoName
-	options.GitRepositoryOptions.Namespace = options.Organisation
-	options.GitRepositoryOptions.Name = options.Repository
-	details, err := options.PickNewOrExistingGitRepository()
+	// config git repositoryoptions parameters: Owner and RepoName
+	o.GitRepositoryOptions.Namespace = o.Organisation
+	o.GitRepositoryOptions.Name = o.Repository
+	details, err := o.PickNewOrExistingGitRepository()
 	if err != nil {
 		return nil, err
 	}
@@ -1415,7 +1447,7 @@ func (o *ImportOptions) enableJenkinsfileRunnerPipeline(destination ImportDestin
 */
 
 // PickCatalogFolderName if not in batch mode lets confirm to the user which catalog folder we are going to use
-func (o *ImportOptions) PickCatalogFolderName(i *InvokeDraftPack, dir string, chosenPack string) (string, error) {
+func (o *ImportOptions) PickCatalogFolderName(i *InvokeDraftPack, dir, chosenPack string) (string, error) {
 	if o.BatchMode || o.Pack != "" {
 		return chosenPack, nil
 	}
@@ -1444,7 +1476,7 @@ func (o *ImportOptions) Git() gitclient.Interface {
 	return o.Gitter
 }
 
-func (o *ImportOptions) waitForSourceRepositoryPullRequest(pullRequestInfo *scm.PullRequest, devEnvGitURL string) error {
+func (o *ImportOptions) waitForSourceRepositoryPullRequest(pullRequestInfo *scm.PullRequest) error {
 	logNoMergeCommitSha := false
 	logHasMergeSha := false
 	start := time.Now()
@@ -1468,19 +1500,17 @@ func (o *ImportOptions) waitForSourceRepositoryPullRequest(pullRequestInfo *scm.
 			if err != nil {
 				log.Logger().Warnf("Failed to query the Pull Request status for %s %s", pullRequestInfo.Link, err)
 			} else {
-				elaspedString := time.Now().Sub(start).String()
+				elaspedString := time.Since(start).String()
 				if pr.Merged {
 					if pr.MergeSha == "" {
 						if !logNoMergeCommitSha {
-							logNoMergeCommitSha = true
-							log.Logger().Infof("Pull Request %s is merged but we don't yet have a merge SHA after waiting %s", termcolor.ColorInfo(pr.Link), elaspedString)
+							log.Logger().Infof("Pull Request %s was merged but we didn't yet have a merge SHA after waiting %s", termcolor.ColorInfo(pr.Link), elaspedString)
 							return nil
 						}
 					} else {
 						mergeSha := pr.MergeSha
 						if !logHasMergeSha {
-							logHasMergeSha = true
-							log.Logger().Infof("Pull Request %s is merged at sha %s after waiting %s", termcolor.ColorInfo(pr.Link), termcolor.ColorInfo(mergeSha), elaspedString)
+							log.Logger().Infof("Pull Request %s was merged at sha %s after waiting %s", termcolor.ColorInfo(pr.Link), termcolor.ColorInfo(mergeSha), elaspedString)
 							return nil
 						}
 					}
@@ -1492,7 +1522,7 @@ func (o *ImportOptions) waitForSourceRepositoryPullRequest(pullRequestInfo *scm.
 				}
 			}
 			if time.Now().After(end) {
-				return fmt.Errorf("Timed out waiting for pull request %s to merge. Waited %s", pr.Link, durationString)
+				return fmt.Errorf("timed out waiting for pull request %s to merge. Waited %s", pr.Link, durationString)
 			}
 			time.Sleep(o.PullRequestPollPeriod)
 		}
