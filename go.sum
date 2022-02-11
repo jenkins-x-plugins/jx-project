@@ -709,16 +709,14 @@ github.com/jbrukh/bayesian v0.0.0-20200318221351-d726b684ca4a h1:gbdjhSslIoRRiSS
 github.com/jbrukh/bayesian v0.0.0-20200318221351-d726b684ca4a/go.mod h1:SELxwZQq/mPnfPCR2mchLmT4TQaPJvYtLcCtDWSM7vM=
 github.com/jehiah/go-strftime v0.0.0-20171201141054-1d33003b3869/go.mod h1:cJ6Cj7dQo+O6GJNiMx+Pa94qKj+TG8ONdKHgMNIyyag=
 github.com/jenkins-x-plugins/jx-charter v0.0.28/go.mod h1:oWhIpQIRc08qikMIH7VF08kQM/onYtU9teWq8eCSaJE=
-github.com/jenkins-x-plugins/jx-gitops v0.3.13 h1:cgVjWK5xROCCa/6iMfjhGmywGtaWRWCHFCGb6/xSHsI=
 github.com/jenkins-x-plugins/jx-gitops v0.3.13/go.mod h1:ItVSTOif+r5n9K2hCPg42O67NHwVj1jRZ2NsVpIMNiY=
 github.com/jenkins-x-plugins/jx-gitops v0.4.2 h1:lBFNI+pu7JqvExllaW1jvzf6Jld7PAzvIseGJmpAkJM=
 github.com/jenkins-x-plugins/jx-gitops v0.4.2/go.mod h1:Beb5FCfhm2ZZBaWB+WlYHK07A65p67nAe9LoirbZPHg=
 github.com/jenkins-x-plugins/jx-promote v0.0.278 h1:5jNLSQ3OtSZC8PxxOMjb5zx2tc0GMG7jLsxa85m5hKQ=
 github.com/jenkins-x-plugins/jx-promote v0.0.278/go.mod h1:C1youC3c6Xc/sxPibAciyrgrBW71shgLQkvx7t+B3oM=
 github.com/jenkins-x/gen-crd-api-reference-docs v0.1.6/go.mod h1:a4dzSf/nNLMMMqultm6IlV/04xq26uICEYPkSTOahWQ=
-github.com/jenkins-x/go-scm v1.10.11 h1:Nt5QObE5n2INKpojEy6/qm1Z7nYnTA4iAKKy1AgBCcE=
-github.com/jenkins-x/go-scm v1.10.11/go.mod h1:z7xTO9/VzqW3xEbEMH2z5cpOGrZ8+nOHOWfU1ngFGxs=
-github.com/jenkins-x/jx-api/v4 v4.1.5 h1:EIEuEMs7qCVvU4c9YfViStH3CIMTcpdXy0jZS436ESk=
+github.com/jenkins-x/go-scm v1.11.2 h1:21opwBzOKigHVP12PuS4FvKL8YNtBPHZk+rX5gRuBtg=
+github.com/jenkins-x/go-scm v1.11.2/go.mod h1:z7xTO9/VzqW3xEbEMH2z5cpOGrZ8+nOHOWfU1ngFGxs=
 github.com/jenkins-x/jx-api/v4 v4.1.5/go.mod h1:l11kHlFy40UGu9pdhCRxDiJcEgRubSVzybWB2jXjLcs=
 github.com/jenkins-x/jx-api/v4 v4.3.0 h1:qcfKgPKOh4ZznDyZZPLmqvXlJblr29QugTiI4UJlS4g=
 github.com/jenkins-x/jx-api/v4 v4.3.0/go.mod h1:l11kHlFy40UGu9pdhCRxDiJcEgRubSVzybWB2jXjLcs=
@@ -728,7 +726,6 @@ github.com/jenkins-x/jx-kube-client/v3 v3.0.2 h1:sJs6FaIwycDYwE4UsA7j9tpdXOxXEta
 github.com/jenkins-x/jx-kube-client/v3 v3.0.2/go.mod h1:C/mKnCT5wvolX61eLKJVBNev9sqnkGNpi4skTQ1Gr3Q=
 github.com/jenkins-x/jx-logging/v3 v3.0.6 h1:rXiLYK7WuliCtujKkeU77fnSTJRDSIgbIk7PG4fnZGc=
 github.com/jenkins-x/jx-logging/v3 v3.0.6/go.mod h1:Vp2ER2SYgGhAgEEHlLwfi2ZB54tz6ya1qExq0A4CKMI=
-github.com/jenkins-x/lighthouse-client v0.0.233 h1:7Fk95Sp/lSoFWBB1fDKos0NQn7K99EefHp/zBY2e7K4=
 github.com/jenkins-x/lighthouse-client v0.0.233/go.mod h1:+UWIylcx9Jz1gd1o6wFIkPTXTcN6UnuLnb6TKOcJB1c=
 github.com/jenkins-x/lighthouse-client v0.0.295 h1:PlcN40gVngPI8Q2T/Q7t+LkMiQnS7350/pE2852pG9M=
 github.com/jenkins-x/lighthouse-client v0.0.295/go.mod h1:pEv7yiqqxbQLapfK4ubbxEoMzbJ/Yw1jmqFR4RcN01Y=
@@ -1048,7 +1045,6 @@ github.com/ryanuber/columnize v2.1.0+incompatible/go.mod h1:sm1tb6uqfes/u+d4ooFo
 github.com/ryanuber/go-glob v1.0.0/go.mod h1:807d1WSdnB0XRJzKNil9Om6lcp/3a0v4qIHxIXzX/Yc=
 github.com/samuel/go-zookeeper v0.0.0-20190923202752-2cc03de413da/go.mod h1:gi+0XIa01GRL2eRQVjQkKGqKF3SF9vZR/HnPullcV2E=
 github.com/satori/go.uuid v1.2.0/go.mod h1:dA0hQrYB0VpLJoorglMZABFdXlWrHn1NEOzdhQKdks0=
-github.com/satori/go.uuid v1.2.1-0.20180103174451-36e9d2ebbde5 h1:Jw7W4WMfQDxsXvfeFSaS2cHlY7bAF4MGrgnbd0+Uo78=
 github.com/satori/go.uuid v1.2.1-0.20180103174451-36e9d2ebbde5/go.mod h1:dA0hQrYB0VpLJoorglMZABFdXlWrHn1NEOzdhQKdks0=
 github.com/sclevine/spec v1.2.0/go.mod h1:W4J29eT/Kzv7/b9IWLB055Z+qvVC9vt0Arko24q7p+U=
 github.com/sean-/seed v0.0.0-20170313163322-e2103e2c3529/go.mod h1:DxrIzT+xaE7yg65j358z/aeFdxmN0P9QXhEzd20vsDc=
