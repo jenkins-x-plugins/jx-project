@@ -40,11 +40,10 @@ func TestImportProjectsToJenkins(t *testing.T) {
 	// TODO jenkins import current disabled
 	t.SkipNow()
 
-	tempDir, err := ioutil.TempDir("", "test-import-projects")
-	assert.NoError(t, err)
+	tempDir := t.TempDir()
 
 	testData := path.Join("test_data", "import_projects")
-	_, err = os.Stat(testData)
+	_, err := os.Stat(testData)
 	assert.NoError(t, err)
 
 	files, err := ioutil.ReadDir(testData)
@@ -60,11 +59,10 @@ func TestImportProjectsToJenkins(t *testing.T) {
 }
 
 func TestImportProjectToJenkinsX(t *testing.T) {
-	tempDir, err := ioutil.TempDir("", "test-import-ng-projects")
-	assert.NoError(t, err)
+	tempDir := t.TempDir()
 
 	testData := path.Join("test_data", "import_projects")
-	_, err = os.Stat(testData)
+	_, err := os.Stat(testData)
 	assert.NoError(t, err)
 
 	files, err := ioutil.ReadDir(testData)
