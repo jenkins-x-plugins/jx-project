@@ -4,7 +4,6 @@ package importcmd_test
 
 import (
 	"context"
-	"io/ioutil"
 	"os"
 	"path"
 	"path/filepath"
@@ -23,11 +22,10 @@ import (
 )
 
 func TestImportTektonCatalogProject(t *testing.T) {
-	tempDir, err := ioutil.TempDir("", "test-import-jx-gha-")
-	assert.NoError(t, err)
+	tempDir := t.TempDir()
 
 	testData := path.Join("test_data", "import_projects")
-	_, err = os.Stat(testData)
+	_, err := os.Stat(testData)
 	assert.NoError(t, err)
 
 	name := "nodejs"

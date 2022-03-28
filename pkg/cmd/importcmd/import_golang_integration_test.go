@@ -3,8 +3,6 @@
 package importcmd_test
 
 import (
-	"github.com/jenkins-x/jx-helpers/v3/pkg/testhelpers"
-	"io/ioutil"
 	"os"
 	"path"
 	"path/filepath"
@@ -16,17 +14,17 @@ import (
 	"github.com/jenkins-x-plugins/jx-project/pkg/config"
 	"github.com/jenkins-x/jx-helpers/v3/pkg/files"
 	"github.com/jenkins-x/jx-helpers/v3/pkg/kube/naming"
+	"github.com/jenkins-x/jx-helpers/v3/pkg/testhelpers"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
 func TestImportGoLangProject(t *testing.T) {
-	tempDir, err := ioutil.TempDir("", "test-import-jx-gha-")
-	assert.NoError(t, err)
+	tempDir := t.TempDir()
 
 	testData := path.Join("test_data", "import_projects")
-	_, err = os.Stat(testData)
+	_, err := os.Stat(testData)
 	assert.NoError(t, err)
 
 	name := "golang"

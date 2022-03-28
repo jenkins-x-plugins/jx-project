@@ -3,7 +3,6 @@
 package root_test
 
 import (
-	"io/ioutil"
 	"path/filepath"
 	"testing"
 
@@ -13,8 +12,7 @@ import (
 )
 
 func TestCreateQuickstartProjects(t *testing.T) {
-	testDir, err := ioutil.TempDir("", "test-create-quickstart")
-	assert.NoError(t, err)
+	testDir := t.TempDir()
 
 	appName := "mynode"
 
@@ -31,7 +29,7 @@ func TestCreateQuickstartProjects(t *testing.T) {
 	o.Repository = appName
 	o.WaitForSourceRepositoryPullRequest = false
 
-	err = o.Run()
+	err := o.Run()
 	assert.NoError(t, err)
 	if err == nil {
 		appDir := filepath.Join(testDir, appName)
@@ -44,8 +42,7 @@ func TestCreateQuickstartProjects(t *testing.T) {
 }
 
 func TestCreateQuickstartProjectWithChart(t *testing.T) {
-	testDir, err := ioutil.TempDir("", "test-create-quickstart-with-chart")
-	assert.NoError(t, err)
+	testDir := t.TempDir()
 
 	appName := "mynodedb"
 
@@ -62,7 +59,7 @@ func TestCreateQuickstartProjectWithChart(t *testing.T) {
 	o.Repository = appName
 	o.WaitForSourceRepositoryPullRequest = false
 
-	err = o.Run()
+	err := o.Run()
 	assert.NoError(t, err)
 	if err == nil {
 		appDir := filepath.Join(testDir, appName)

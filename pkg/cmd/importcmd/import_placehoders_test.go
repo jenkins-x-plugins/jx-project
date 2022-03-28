@@ -17,11 +17,10 @@ import (
 )
 
 func TestReplacePlaceholders(t *testing.T) {
-	f, err := ioutil.TempDir("", "test-replace-placeholders")
-	assert.NoError(t, err)
+	f := t.TempDir()
 
 	testData := path.Join("test_data", "replace_placeholders")
-	_, err = os.Stat(testData)
+	_, err := os.Stat(testData)
 	assert.NoError(t, err)
 
 	files.CopyDir(testData, f, true)

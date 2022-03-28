@@ -3,7 +3,6 @@
 package importcmd_test
 
 import (
-	"io/ioutil"
 	"os"
 	"path"
 	"path/filepath"
@@ -25,11 +24,10 @@ func TestImportGitHubActionProject(t *testing.T) {
 	// TODO github action support currently disabled
 	t.SkipNow()
 
-	tempDir, err := ioutil.TempDir("", "test-import-jx-gha-")
-	assert.NoError(t, err)
+	tempDir := t.TempDir()
 
 	testData := path.Join("test_data", "import_projects")
-	_, err = os.Stat(testData)
+	_, err := os.Stat(testData)
 	assert.NoError(t, err)
 
 	name := "nodejs"
