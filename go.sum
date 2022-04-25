@@ -714,8 +714,12 @@ github.com/jenkins-x-plugins/jx-charter v0.0.28 h1:Pwtcm2L8+xmtboPBIvTsc3jPLEwZu
 github.com/jenkins-x-plugins/jx-charter v0.0.28/go.mod h1:oWhIpQIRc08qikMIH7VF08kQM/onYtU9teWq8eCSaJE=
 github.com/jenkins-x-plugins/jx-gitops v0.7.5 h1:QaBD+HcJpTmJAY8V/PUVPHMrTiHyllt5moB0N9zVChk=
 github.com/jenkins-x-plugins/jx-gitops v0.7.5/go.mod h1:pGPx4HuCEmUtaJcVT/SdTxVIpLHnD+kgr3rDCXKrgiU=
+github.com/jenkins-x-plugins/jx-gitops v0.7.6 h1:53ZapHjOS5QlBB2+7+wvwcHCg9EGyTZvc3/OErtKFzI=
+github.com/jenkins-x-plugins/jx-gitops v0.7.6/go.mod h1:IQurqapdxQ3oaLBqo25gH9nahOWPC9krPwQrk6BqiOY=
 github.com/jenkins-x-plugins/jx-promote v0.2.5 h1:axEAS8BFjiqkPEnQ0t6j8QhUjy3ALv3UykJZmLn9H+w=
 github.com/jenkins-x-plugins/jx-promote v0.2.5/go.mod h1:w07SDEO7CTyKMj1eDeqYUwZuWlqwjGbbCyFHzDWnUaw=
+github.com/jenkins-x-plugins/jx-promote v0.2.8 h1:y9GR/rBY66yttXgDCR3D8/PoGjq685AE/32+yiUGax4=
+github.com/jenkins-x-plugins/jx-promote v0.2.8/go.mod h1:nl2ktyOtIem3sX/ku+8Xui1E0ER0t2B+I5ynK5Ox9mw=
 github.com/jenkins-x/gen-crd-api-reference-docs v0.1.6 h1:jV0THW6KeMYC0rcawdPeix7+ZmDZMR0UMU+QJr5gU6Y=
 github.com/jenkins-x/gen-crd-api-reference-docs v0.1.6/go.mod h1:a4dzSf/nNLMMMqultm6IlV/04xq26uICEYPkSTOahWQ=
 github.com/jenkins-x/go-scm v1.11.5 h1:bWfyBlcDB/HHSRmJOSmBs2l4VRL2YF1Ka6Y1dn4Inx0=
@@ -737,6 +741,8 @@ github.com/jenkins-x/lighthouse-client v0.0.437 h1:wmXJpCWT8AxGYkfH1knNyMQ89UYmw
 github.com/jenkins-x/lighthouse-client v0.0.437/go.mod h1:N7QjV8q6Pc72XiEWdEJAfx/HxO4XyiDj7H9l6ah6mcE=
 github.com/jenkins-x/lighthouse-client v0.0.438 h1:bgdwLGzgrpdDolI3lQ0DIkekvmXFvdc3N+DQVWo5d5o=
 github.com/jenkins-x/lighthouse-client v0.0.438/go.mod h1:N7QjV8q6Pc72XiEWdEJAfx/HxO4XyiDj7H9l6ah6mcE=
+github.com/jenkins-x/lighthouse-client v0.0.439 h1:VLNaN0AEedIzvhp3wu65FCggTnyqQzE1K7fxDCSMfDU=
+github.com/jenkins-x/lighthouse-client v0.0.439/go.mod h1:N7QjV8q6Pc72XiEWdEJAfx/HxO4XyiDj7H9l6ah6mcE=
 github.com/jenkins-x/logrus-stackdriver-formatter v0.2.3 h1:NuRWKUPCEX1wKlXA8ZYSG28qGKd41R7BK11YDQkPwqo=
 github.com/jenkins-x/logrus-stackdriver-formatter v0.2.3/go.mod h1:litPp7VZWDRCl8LvXuqGngy+65kkg/+T23TgFnDmfTk=
 github.com/jessevdk/go-flags v1.4.0/go.mod h1:4FA24M0QyGHXBuZZK/XkWh8h0e1EYbRYJSGM75WSRxI=
