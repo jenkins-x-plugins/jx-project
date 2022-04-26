@@ -730,6 +730,8 @@ github.com/jenkins-x/jx-api/v4 v4.3.4 h1:aximwXBVce5DwCTF6DQziRTzI/tgyGBKu7SJMIv
 github.com/jenkins-x/jx-api/v4 v4.3.4/go.mod h1:hORWEL0AqeqtkCmgfs1yEwv6CGZXljDE/7+/P3sfs/k=
 github.com/jenkins-x/jx-api/v4 v4.3.5 h1:B+K9DKCtCYyYteDaHGmZrBUKkuUULHPFwKQc3j16ECA=
 github.com/jenkins-x/jx-api/v4 v4.3.5/go.mod h1:iHK40sCT1ct/C5cIa+Uo+MDFFAjXfnA88MImhPfiTmY=
+github.com/jenkins-x/jx-api/v4 v4.3.6 h1:Sj5VJZ9jiaiuI4nrfUs5e3bnJalwMuqUOFK68ZH2a3U=
+github.com/jenkins-x/jx-api/v4 v4.3.6/go.mod h1:BjLd7lmBB0CpqA1U2IZ2AyEQ2A66U1lDUBz/lsvld3A=
 github.com/jenkins-x/jx-helpers/v3 v3.2.5 h1:Nxy83rMtTAoLrduPStldEuwS1E9tpGEON/VpMlACFtE=
 github.com/jenkins-x/jx-helpers/v3 v3.2.5/go.mod h1:w0isjFV0n85jYJogjTW9cdm8vM/8k1mLhTfLXrb4lCs=
 github.com/jenkins-x/jx-kube-client/v3 v3.0.2 h1:sJs6FaIwycDYwE4UsA7j9tpdXOxXEta9KNUJp6s45VI=
@@ -743,6 +745,8 @@ github.com/jenkins-x/lighthouse-client v0.0.438 h1:bgdwLGzgrpdDolI3lQ0DIkekvmXFv
 github.com/jenkins-x/lighthouse-client v0.0.438/go.mod h1:N7QjV8q6Pc72XiEWdEJAfx/HxO4XyiDj7H9l6ah6mcE=
 github.com/jenkins-x/lighthouse-client v0.0.439 h1:VLNaN0AEedIzvhp3wu65FCggTnyqQzE1K7fxDCSMfDU=
 github.com/jenkins-x/lighthouse-client v0.0.439/go.mod h1:N7QjV8q6Pc72XiEWdEJAfx/HxO4XyiDj7H9l6ah6mcE=
+github.com/jenkins-x/lighthouse-client v0.0.440 h1:IpYA4zcda5ez2Q9P+KqnXxuXzUEF5N1BsH2LqBRQj7c=
+github.com/jenkins-x/lighthouse-client v0.0.440/go.mod h1:N7QjV8q6Pc72XiEWdEJAfx/HxO4XyiDj7H9l6ah6mcE=
 github.com/jenkins-x/logrus-stackdriver-formatter v0.2.3 h1:NuRWKUPCEX1wKlXA8ZYSG28qGKd41R7BK11YDQkPwqo=
 github.com/jenkins-x/logrus-stackdriver-formatter v0.2.3/go.mod h1:litPp7VZWDRCl8LvXuqGngy+65kkg/+T23TgFnDmfTk=
 github.com/jessevdk/go-flags v1.4.0/go.mod h1:4FA24M0QyGHXBuZZK/XkWh8h0e1EYbRYJSGM75WSRxI=
