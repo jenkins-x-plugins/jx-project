@@ -22,13 +22,9 @@ const testUsername = "derek_zoolander"
 
 func TestCreateProwOwnersFileExistsDoNothing(t *testing.T) {
 	t.Parallel()
-	path, err := ioutil.TempDir("", "prow")
-	if err != nil {
-		panic(err)
-	}
-	defer os.RemoveAll(path)
+	path := t.TempDir()
 	ownerFilePath := filepath.Join(path, "OWNERS")
-	_, err = os.Create(ownerFilePath)
+	_, err := os.Create(ownerFilePath)
 	if err != nil {
 		panic(err)
 	}
@@ -44,11 +40,7 @@ func TestCreateProwOwnersFileExistsDoNothing(t *testing.T) {
 
 func TestCreateProwOwnersFileCreateWhenDoesNotExist(t *testing.T) {
 	t.Parallel()
-	path, err := ioutil.TempDir("", "prow")
-	if err != nil {
-		panic(err)
-	}
-	defer os.RemoveAll(path)
+	path := t.TempDir()
 
 	cmd := &importcmd.ImportOptions{
 		Dir: path,
@@ -58,7 +50,7 @@ func TestCreateProwOwnersFileCreateWhenDoesNotExist(t *testing.T) {
 	}
 	cmd.ScmFactory.NoWriteGitCredentialsFile = true
 
-	err = cmd.CreateProwOwnersFile()
+	err := cmd.CreateProwOwnersFile()
 	assert.NoError(t, err, "There should be no error")
 
 	wantFile := filepath.Join(path, "OWNERS")
@@ -80,30 +72,22 @@ func TestCreateProwOwnersFileCreateWhenDoesNotExist(t *testing.T) {
 
 func TestCreateProwOwnersFileCreateWhenDoesNotExistAndNoGitUserSet(t *testing.T) {
 	t.Parallel()
-	path, err := ioutil.TempDir("", "prow")
-	if err != nil {
-		panic(err)
-	}
-	defer os.RemoveAll(path)
+	path := t.TempDir()
 
 	cmd := &importcmd.ImportOptions{
 		Dir: path,
 	}
 	cmd.ScmFactory.NoWriteGitCredentialsFile = true
 
-	err = cmd.CreateProwOwnersFile()
+	err := cmd.CreateProwOwnersFile()
 	assert.Error(t, err, "There should an error")
 }
 
 func TestCreateProwOwnersAliasesFileExistsDoNothing(t *testing.T) {
 	t.Parallel()
-	path, err := ioutil.TempDir("", "prow")
-	if err != nil {
-		panic(err)
-	}
-	defer os.RemoveAll(path)
+	path := t.TempDir()
 	ownerFilePath := filepath.Join(path, "OWNERS_ALIASES")
-	_, err = os.Create(ownerFilePath)
+	_, err := os.Create(ownerFilePath)
 	if err != nil {
 		panic(err)
 	}
@@ -119,11 +103,7 @@ func TestCreateProwOwnersAliasesFileExistsDoNothing(t *testing.T) {
 
 func TestCreateProwOwnersAliasesFileCreateWhenDoesNotExist(t *testing.T) {
 	t.Parallel()
-	path, err := ioutil.TempDir("", "prow")
-	if err != nil {
-		panic(err)
-	}
-	defer os.RemoveAll(path)
+	path := t.TempDir()
 	cmd := &importcmd.ImportOptions{
 		Dir: path,
 		ScmFactory: scmhelpers.Factory{
@@ -132,7 +112,7 @@ func TestCreateProwOwnersAliasesFileCreateWhenDoesNotExist(t *testing.T) {
 	}
 	cmd.ScmFactory.NoWriteGitCredentialsFile = true
 
-	err = cmd.CreateProwOwnersAliasesFile()
+	err := cmd.CreateProwOwnersAliasesFile()
 	assert.NoError(t, err, "There should be no error")
 
 	wantFile := filepath.Join(path, "OWNERS_ALIASES")
@@ -155,11 +135,7 @@ func TestCreateProwOwnersAliasesFileCreateWhenDoesNotExist(t *testing.T) {
 
 func TestCreateProwOwnersAliasesFileCreateWhenDoesNotExistAndNoGitUserSet(t *testing.T) {
 	t.Parallel()
-	path, err := ioutil.TempDir("", "prow")
-	if err != nil {
-		panic(err)
-	}
-	defer os.RemoveAll(path)
+	path := t.TempDir()
 
 	cmd := &importcmd.ImportOptions{
 		Dir: path,
@@ -169,7 +145,7 @@ func TestCreateProwOwnersAliasesFileCreateWhenDoesNotExistAndNoGitUserSet(t *tes
 	fakeScmData, _, _ := testimports.SetFakeClients(t, cmd, false)
 	fakeScmData.CurrentUser = scm.User{}
 
-	err = cmd.CreateProwOwnersAliasesFile()
+	err := cmd.CreateProwOwnersAliasesFile()
 	assert.Error(t, err, "There should an error")
 }
 

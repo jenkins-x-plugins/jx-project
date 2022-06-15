@@ -27,8 +27,7 @@ func TestImportProjectNextGenPipelineWithDeploy(t *testing.T) {
 	t.SkipNow()
 
 	t.Parallel()
-	tmpDir, err := ioutil.TempDir("", "test-import-deploy-projects-")
-	assert.NoError(t, err)
+	tmpDir := t.TempDir()
 	require.DirExists(t, tmpDir, "could not create temp dir for running tests")
 
 	srcDir := path.Join("test_data", "import_projects", "nodejs")
@@ -98,7 +97,7 @@ func TestImportProjectNextGenPipelineWithDeploy(t *testing.T) {
 		}
 		dir := filepath.Join(tmpDir, name)
 
-		err = files.CopyDir(srcDir, dir, true)
+		err := files.CopyDir(srcDir, dir, true)
 		require.NoError(t, err, "failed to copy source to %s", dir)
 
 		_, io := importcmd.NewCmdImportAndOptions()

@@ -3,37 +3,24 @@
 package gitresolver
 
 import (
-	"github.com/jenkins-x/jx-helpers/v3/pkg/testhelpers"
 	"io/ioutil"
 	"os"
 	"path/filepath"
 	"testing"
 
-	"github.com/google/uuid"
 	"github.com/jenkins-x/jx-helpers/v3/pkg/gitclient"
 	"github.com/jenkins-x/jx-helpers/v3/pkg/gitclient/cli"
-	"github.com/jenkins-x/jx-logging/v3/pkg/log"
+	"github.com/jenkins-x/jx-helpers/v3/pkg/testhelpers"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestBuildPackInitClone(t *testing.T) {
 	defaultBranch := testhelpers.GetDefaultBranch(t)
 
-	mainRepo, err := ioutil.TempDir("", uuid.New().String())
-	assert.NoError(t, err)
+	mainRepo := t.TempDir()
+	remoteRepo := t.TempDir()
 
-	remoteRepo, err := ioutil.TempDir("", uuid.New().String())
-	assert.NoError(t, err)
-
-	defer func() {
-		err := os.RemoveAll(mainRepo)
-		err2 := os.RemoveAll(remoteRepo)
-		if err != nil || err2 != nil {
-			log.Logger().Errorf("Error cleaning up tmpdirs because %v", err)
-		}
-	}()
-
-	err = os.Setenv("JX_HOME", mainRepo)
+	err := os.Setenv("JX_HOME", mainRepo)
 	assert.NoError(t, err)
 	gitDir := mainRepo + "/draft/packs"
 	err = os.MkdirAll(gitDir, 0755)

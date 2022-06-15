@@ -4,7 +4,6 @@ package importcmd_test
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path"
 	"path/filepath"
@@ -27,11 +26,10 @@ func TestImportOldProject(t *testing.T) {
 	// 'jx pipeline convert' command
 	useRealJXConvert := false
 
-	tempDir, err := ioutil.TempDir("", "test-import-jx-gha-")
-	assert.NoError(t, err)
+	tempDir := t.TempDir()
 
 	testData := path.Join("test_data", "import_projects")
-	_, err = os.Stat(testData)
+	_, err := os.Stat(testData)
 	assert.NoError(t, err)
 
 	name := "maven_custom_build_pack"

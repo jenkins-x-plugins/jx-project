@@ -3,7 +3,6 @@
 package root_test
 
 import (
-	"io/ioutil"
 	"path/filepath"
 	"testing"
 
@@ -13,8 +12,7 @@ import (
 )
 
 func TestCreateMLQuickstartProjects(t *testing.T) {
-	testDir, err := ioutil.TempDir("", "test-create-mlquickstart")
-	assert.NoError(t, err)
+	testDir := t.TempDir()
 
 	appName := "mymlapp"
 
@@ -31,7 +29,7 @@ func TestCreateMLQuickstartProjects(t *testing.T) {
 	o.Repository = appName
 	o.WaitForSourceRepositoryPullRequest = false
 
-	err = o.Run()
+	err := o.Run()
 	assert.NoError(t, err)
 	if err == nil {
 		appName1 := appName + "-service"

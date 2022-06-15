@@ -3,7 +3,6 @@
 package importcmd_test
 
 import (
-	"io/ioutil"
 	"path"
 	"path/filepath"
 	"strings"
@@ -20,8 +19,7 @@ import (
 )
 
 func TestImportRemoteCluster(t *testing.T) {
-	tempDir, err := ioutil.TempDir("", "test-import-jx-remote-")
-	assert.NoError(t, err)
+	tempDir := t.TempDir()
 
 	srcDir := path.Join("test_data", "remote-cluster")
 	require.DirExists(t, srcDir)
@@ -40,7 +38,7 @@ func TestImportRemoteCluster(t *testing.T) {
 	o.WaitForSourceRepositoryPullRequest = false
 	o.Destination.JenkinsX.Enabled = true
 
-	err = o.Run()
+	err := o.Run()
 	require.NoError(t, err, "Failed %s with %s", dirName, err)
 
 	assert.NoFileExists(t, filepath.Join(testDir, "Dockerfile"))

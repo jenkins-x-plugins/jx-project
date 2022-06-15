@@ -4,7 +4,6 @@ package importcmd_test
 
 import (
 	"context"
-	"io/ioutil"
 	"os"
 	"path"
 	"path/filepath"
@@ -23,11 +22,10 @@ import (
 )
 
 func TestImportTektonCatalogProject(t *testing.T) {
-	tempDir, err := ioutil.TempDir("", "test-import-jx-gha-")
-	assert.NoError(t, err)
+	tempDir := t.TempDir()
 
 	testData := path.Join("test_data", "import_projects")
-	_, err = os.Stat(testData)
+	_, err := os.Stat(testData)
 	assert.NoError(t, err)
 
 	name := "nodejs"
@@ -79,7 +77,7 @@ func TestImportTektonCatalogProject(t *testing.T) {
 	assert.True(t, flag, "should be a collaborator for repo %s user %s", repoFullName, testimports.PipelineUsername)
 
 	envRepo := "jenkins-x-labs-bdd-tests/jx3-gke-gsm"
-	prs, _, err := o.ScmFactory.ScmClient.PullRequests.List(ctx, envRepo, scm.PullRequestListOptions{})
+	prs, _, err := o.ScmFactory.ScmClient.PullRequests.List(ctx, envRepo, &scm.PullRequestListOptions{})
 	require.NoError(t, err, "failed to find dev env repo %s", envRepo)
 	require.Len(t, prs, 1, "should have found a Pull Request for dev env repo %s", envRepo)
 

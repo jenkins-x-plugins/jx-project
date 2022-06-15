@@ -1041,7 +1041,7 @@ func (o *ImportOptions) addAppNameToGeneratedFile(filename, field, value string)
 	lines := strings.Split(string(input), "\n")
 
 	for i, line := range lines {
-		if strings.Contains(line, field) {
+		if strings.HasPrefix(line, field) {
 			lines[i] = fmt.Sprintf("%s%s", field, value)
 		}
 	}
