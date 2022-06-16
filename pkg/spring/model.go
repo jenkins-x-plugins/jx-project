@@ -19,8 +19,8 @@ import (
 	"github.com/jenkins-x/jx-logging/v3/pkg/log"
 	"github.com/pkg/errors"
 
+	survey "github.com/AlecAivazis/survey/v2"
 	"github.com/jenkins-x-plugins/jx-project/pkg/cmd/root/version"
-	survey "gopkg.in/AlecAivazis/survey.v1"
 )
 
 const (
