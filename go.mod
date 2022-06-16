@@ -136,6 +136,8 @@ replace (
 	// override the go-scm from tekton
 	github.com/jenkins-x/go-scm => github.com/jenkins-x/go-scm v1.11.5
 	github.com/jenkins-x/jx-helpers/v3 => github.com/jenkins-x/jx-helpers/v3 v3.2.5
+	// for the PipelineRun debug fix see: https://github.com/tektoncd/pipeline/pull/4145
+	github.com/tektoncd/pipeline => github.com/jstrachan/pipeline v0.21.1-0.20210811150720-45a86a5488af
 	k8s.io/api => k8s.io/api v0.20.7
 	k8s.io/apimachinery => k8s.io/apimachinery v0.20.7
 	k8s.io/client-go => k8s.io/client-go v0.20.7
