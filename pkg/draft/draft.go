@@ -3,7 +3,7 @@ package draft
 import (
 	"fmt"
 	"io"
-	"io/ioutil"
+	"os"
 	"path"
 	"path/filepath"
 	"strings"
@@ -34,13 +34,13 @@ func DoPackDetection(home draftpath.Home, out io.Writer, dir string) (string, er
 		fmt.Fprintf(out, "--> Draft detected %s (%f%%)\n", detectedLang.Language, detectedLang.Percent)
 		for _, repository := range repo.FindRepositories(home.Packs()) {
 			packDir := path.Join(repository.Dir, repo.PackDirName)
-			packs, err := ioutil.ReadDir(packDir)
+			packs, err := os.ReadDir(packDir)
 			if err != nil {
 				return "", fmt.Errorf("there was an error reading %s: %v", packDir, err)
 			}
 			for _, file := range packs {
 				if file.IsDir() {
-					if strings.Compare(strings.ToLower(detectedLang.Language), strings.ToLower(file.Name())) == 0 {
+					if strings.EqualFold(detectedLang.Language, file.Name()) {
 						packPath := filepath.Join(packDir, file.Name())
 						return packPath, nil
 					}
@@ -65,13 +65,13 @@ func DoPackDetectionForBuildPack(out io.Writer, dir, packDir string) (string, er
 	for _, lang := range langs {
 		detectedLang := linguist.Alias(lang)
 		fmt.Fprintf(out, "--> Draft detected %s (%f%%)\n", detectedLang.Language, detectedLang.Percent)
-		packs, err := ioutil.ReadDir(packDir)
+		packs, err := os.ReadDir(packDir)
 		if err != nil {
 			return "", fmt.Errorf("there was an error reading %s: %v", packDir, err)
 		}
 		for _, file := range packs {
 			if file.IsDir() {
-				if strings.Compare(strings.ToLower(detectedLang.Language), strings.ToLower(file.Name())) == 0 {
+				if strings.EqualFold(detectedLang.Language, file.Name()) {
 					packPath := filepath.Join(packDir, file.Name())
 					return packPath, nil
 				}

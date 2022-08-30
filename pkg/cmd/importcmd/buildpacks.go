@@ -2,7 +2,6 @@ package importcmd
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"sort"
@@ -17,11 +16,10 @@ import (
 	"github.com/jenkins-x/jx-helpers/v3/pkg/termcolor"
 	"github.com/jenkins-x/jx-helpers/v3/pkg/yamls"
 
-	"github.com/pkg/errors"
-
 	jxdraft "github.com/jenkins-x-plugins/jx-project/pkg/draft"
 	"github.com/jenkins-x-plugins/jx-project/pkg/jenkinsfile"
 	"github.com/jenkins-x/jx-logging/v3/pkg/log"
+	"github.com/pkg/errors"
 )
 
 // InvokeDraftPack used to pass arguments into the draft pack invocation
@@ -148,7 +146,7 @@ func (o *ImportOptions) InvokeDraftPack(i *InvokeDraftPack) (string, error) {
 		return "", err
 	}
 
-	// lets assume Jenkins X import mode
+	// let's assume Jenkins X import mode
 	//
 	// was:
 	// lets configure the draft pack mode based on the team settings
@@ -192,7 +190,7 @@ func (o *ImportOptions) InvokeDraftPack(i *InvokeDraftPack) (string, error) {
 
 	if lpack == "" {
 		if exists, err := files.FileExists(pomName); err == nil && exists {
-			pack, err := PomFlavour(pomName)
+			pack, err := PomFlavour(packsDir, pomName)
 			if err != nil {
 				return "", err
 			}
@@ -217,7 +215,7 @@ func (o *ImportOptions) InvokeDraftPack(i *InvokeDraftPack) (string, error) {
 
 			if err != nil {
 				if lpack == "" {
-					// lets detect docker and/or helm
+					// let's detect docker and/or helm
 
 					// TODO one day when our pipelines can include steps conditional on the presence of a file glob
 					// we can just use a single docker/helm package that does docker and/or helm
@@ -229,18 +227,18 @@ func (o *ImportOptions) InvokeDraftPack(i *InvokeDraftPack) (string, error) {
 						hasDocker = true
 					}
 
-					// lets check for a helm pack
-					files, err2 := filepath.Glob(filepath.Join(dir, "charts", "*", "Chart.yaml"))
+					// let's check for a helm pack
+					glob, err2 := filepath.Glob(filepath.Join(dir, "charts", "*", "Chart.yaml"))
 					if err2 != nil {
 						return "", errors.Wrapf(err, "failed to detect if there was a chart file in dir %s", dir)
 					}
-					if len(files) == 0 {
-						files, err2 = filepath.Glob(filepath.Join(dir, "*", "Chart.yaml"))
+					if len(glob) == 0 {
+						glob, err2 = filepath.Glob(filepath.Join(dir, "*", "Chart.yaml"))
 						if err2 != nil {
 							return "", errors.Wrapf(err, "failed to detect if there was a chart file in dir %s", dir)
 						}
 					}
-					if len(files) > 0 {
+					if len(glob) > 0 {
 						hasHelm = true
 					}
 
@@ -272,7 +270,7 @@ func (o *ImportOptions) InvokeDraftPack(i *InvokeDraftPack) (string, error) {
 	}
 
 	pack := filepath.Base(lpack)
-	pack, err = o.PickCatalogFolderName(i, packsDir, pack)
+	pack, err = o.PickCatalogFolderName(packsDir, pack)
 	if err != nil {
 		return "", err
 	}
@@ -299,11 +297,11 @@ func (o *ImportOptions) InvokeDraftPack(i *InvokeDraftPack) (string, error) {
 	// lets delete empty charts dir if a draft pack created one
 	exists, err := files.DirExists(chartsDir)
 	if err == nil && exists {
-		files, err := ioutil.ReadDir(chartsDir)
+		fileList, err := os.ReadDir(chartsDir)
 		if err != nil {
 			return pack, errors.Wrapf(err, "failed to read charts dir %s", chartsDir)
 		}
-		if len(files) == 0 {
+		if len(fileList) == 0 {
 			err = os.Remove(chartsDir)
 			if err != nil {
 				return pack, errors.Wrapf(err, "failed to remove empty charts dir %s", chartsDir)
@@ -388,10 +386,10 @@ func copyBuildPack(dest, src string, filter func(*Pack)) error {
 	if exists {
 		p.Charts = nil
 
-		// lets move the charts folder to charts/$name so its a real chart layout
+		// let's move the charts folder to charts/$name so its a real chart layout
 		_, appName := filepath.Split(dest)
 
-		fs, err := ioutil.ReadDir(chartsDir)
+		fs, err := os.ReadDir(chartsDir)
 		if err != nil {
 			return errors.Wrapf(err, "failed to read dir %s", chartsDir)
 		}
@@ -412,7 +410,7 @@ func copyBuildPack(dest, src string, filter func(*Pack)) error {
 		}
 	}
 
-	// lets remove any files we think should be zapped
+	// let's remove any files we think should be zapped
 	for _, file := range []string{jenkinsfile.PipelineConfigFileName, jenkinsfile.PipelineTemplateFileName} {
 		delete(p.Files, file)
 	}

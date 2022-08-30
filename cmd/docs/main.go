@@ -15,7 +15,6 @@ package main
 
 import (
 	"fmt"
-	"io/ioutil"
 	"log"
 	"os"
 	"path/filepath"
@@ -29,21 +28,21 @@ import (
 const descriptionSourcePath = "docs/reference/cmd/"
 
 func generateCliYaml(opts *options) error {
-	root, _ := root.NewCmdMain()
-	disableFlagsInUseLine(root)
+	cmdMain, _ := root.NewCmdMain()
+	disableFlagsInUseLine(cmdMain)
 	source := filepath.Join(opts.source, descriptionSourcePath)
-	if err := loadLongDescription(root, source); err != nil {
+	if err := loadLongDescription(cmdMain, source); err != nil {
 		return err
 	}
 
 	switch opts.kind {
 	case "markdown":
-		return GenMarkdownTree(root, opts.target)
+		return GenMarkdownTree(cmdMain, opts.target)
 	case "man":
 		header := &GenManHeader{
 			Section: "1",
 		}
-		return GenManTree(root, header, opts.target)
+		return GenManTree(cmdMain, header, opts.target)
 	default:
 		return fmt.Errorf("invalid docs kind : %s", opts.kind)
 	}
@@ -83,7 +82,7 @@ func loadLongDescription(cmd *cobra.Command, path ...string) error {
 			continue
 		}
 
-		content, err := ioutil.ReadFile(fullpath)
+		content, err := os.ReadFile(fullpath)
 		if err != nil {
 			return err
 		}

@@ -1,9 +1,9 @@
+//go:build unit
 // +build unit
 
 package importcmd_test
 
 import (
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"testing"
@@ -62,7 +62,7 @@ func TestCreateProwOwnersFileCreateWhenDoesNotExist(t *testing.T) {
 		Approvers: []string{testUsername},
 		Reviewers: []string{testUsername},
 	}
-	data, err := ioutil.ReadFile(wantFile)
+	data, err := os.ReadFile(wantFile)
 	assert.NoError(t, err, "It should read the OWNERS file without error")
 	owners := prow.Owners{}
 	err = yaml.Unmarshal(data, &owners)
@@ -125,7 +125,7 @@ func TestCreateProwOwnersAliasesFileCreateWhenDoesNotExist(t *testing.T) {
 		BestApprovers: []string{testUsername},
 		BestReviewers: []string{testUsername},
 	}
-	data, err := ioutil.ReadFile(wantFile)
+	data, err := os.ReadFile(wantFile)
 	assert.NoError(t, err, "It should read the OWNERS_ALIASES file without error")
 	ownersAliases := prow.OwnersAliases{}
 	err = yaml.Unmarshal(data, &ownersAliases)
