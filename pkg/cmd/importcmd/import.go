@@ -16,7 +16,6 @@ import (
 	"github.com/jenkins-x-plugins/jx-project/pkg/config"
 	"github.com/jenkins-x-plugins/jx-project/pkg/constants"
 	"github.com/jenkins-x-plugins/jx-project/pkg/maven"
-	"github.com/jenkins-x-plugins/jx-project/pkg/prow"
 	"github.com/jenkins-x/go-scm/scm"
 	v1 "github.com/jenkins-x/jx-api/v4/pkg/apis/jenkins.io/v1"
 	"github.com/jenkins-x/jx-api/v4/pkg/client/clientset/versioned"
@@ -39,6 +38,7 @@ import (
 	"github.com/jenkins-x/jx-helpers/v3/pkg/scmhelpers"
 	"github.com/jenkins-x/jx-helpers/v3/pkg/termcolor"
 	"github.com/jenkins-x/jx-logging/v3/pkg/log"
+	"github.com/jenkins-x/lighthouse-client/pkg/repoowners"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"k8s.io/client-go/kubernetes"
@@ -1144,9 +1144,11 @@ func (o *ImportOptions) CreateProwOwnersFile() error {
 	if userName == "" {
 		return errors.Errorf("no git username")
 	}
-	data := prow.Owners{
-		Approvers: []string{userName},
-		Reviewers: []string{userName},
+	data := repoowners.SimpleConfig{
+		Config: repoowners.Config{
+			Approvers: []string{userName},
+			Reviewers: []string{userName},
+		},
 	}
 	yamlBytes, err := yaml.Marshal(&data)
 	if err != nil {
@@ -1173,10 +1175,11 @@ func (o *ImportOptions) CreateProwOwnersAliasesFile() error {
 	if gitUser == "" {
 		return errors.Errorf("no git username")
 	}
-	data := prow.OwnersAliases{
-		Aliases:       []string{gitUser},
-		BestApprovers: []string{gitUser},
-		BestReviewers: []string{gitUser},
+	data := repoowners.OwnerAliases{
+		Aliases: map[string][]string{
+			"best-approvers": {gitUser},
+			"best-reviewers": {gitUser},
+		},
 	}
 	yamlBytes, err := yaml.Marshal(&data)
 	if err != nil {
