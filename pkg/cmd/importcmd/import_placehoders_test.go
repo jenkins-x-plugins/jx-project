@@ -1,10 +1,10 @@
+//go:build unit
 // +build unit
 
 package importcmd_test
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path"
 	"path/filepath"
@@ -69,7 +69,7 @@ func TestReplacePlaceholders(t *testing.T) {
 // loads a file
 func LoadBytes(dir, name string) ([]byte, error) {
 	path := filepath.Join(dir, name) // relative path
-	bytes, err := ioutil.ReadFile(path)
+	bytes, err := os.ReadFile(path)
 	if err != nil {
 		return nil, fmt.Errorf("error loading file %s in directory %s, %v", name, dir, err)
 	}

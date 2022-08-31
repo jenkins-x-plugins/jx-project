@@ -3,7 +3,7 @@ package spring
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/url"
 	"os"
@@ -108,7 +108,7 @@ type errorResponse struct {
 func LoadSpringBoot(cacheDir string) (*BootModel, error) {
 	loader := func() ([]byte, error) {
 		client := http.Client{}
-		req, err := http.NewRequest(http.MethodGet, startSpringURL, nil)
+		req, err := http.NewRequest(http.MethodGet, startSpringURL, http.NoBody)
 		if err != nil {
 			return nil, err
 		}
@@ -120,7 +120,7 @@ func LoadSpringBoot(cacheDir string) (*BootModel, error) {
 			return nil, err
 		}
 		defer res.Body.Close()
-		return ioutil.ReadAll(res.Body)
+		return io.ReadAll(res.Body)
 	}
 
 	cacheFileName := ""
@@ -354,7 +354,7 @@ func (data *BootForm) CreateProject(workDir string) (string, error) {
 	}
 	defer res.Body.Close()
 	if res.StatusCode == 400 {
-		errorBody, err := ioutil.ReadAll(res.Body)
+		errorBody, err := io.ReadAll(res.Body)
 		if err != nil {
 			return answer, err
 		}
@@ -369,14 +369,14 @@ func (data *BootForm) CreateProject(workDir string) (string, error) {
 		return answer, errors.New("unable to create spring quickstart")
 	}
 
-	body, err := ioutil.ReadAll(res.Body)
+	body, err := io.ReadAll(res.Body)
 	if err != nil {
 		return answer, err
 	}
 
 	dir := filepath.Join(workDir, dirName)
 	zipFile := dir + ".zip"
-	err = ioutil.WriteFile(zipFile, body, files.DefaultFileWritePermissions)
+	err = os.WriteFile(zipFile, body, files.DefaultFileWritePermissions)
 	if err != nil {
 		return answer, fmt.Errorf("failed to download file %s due to %s", zipFile, err)
 	}

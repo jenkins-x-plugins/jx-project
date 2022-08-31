@@ -2,7 +2,6 @@ package importcmd
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
@@ -40,7 +39,7 @@ upstream:
 // createMissingLighthouseKptFiles lets create any missing Kptfile for any .lighthouse/somedir directories
 // so that after the pipeline folder has been added we can later on upgrade it from its source via kpt
 func (o *ImportOptions) createMissingLighthouseKptFiles(lighthouseDir, packName string) error {
-	fileSlice, err := ioutil.ReadDir(lighthouseDir)
+	fileSlice, err := os.ReadDir(lighthouseDir)
 	if err != nil {
 		return errors.Wrapf(err, "failed to read dir %s", lighthouseDir)
 	}
@@ -104,7 +103,7 @@ func (o *ImportOptions) createMissingLighthouseKptFiles(lighthouseDir, packName 
 		fromDir := filepath.Join("/packs", packName, ".lighthouse", name) //nolint:gocritic
 		gitURL = strings.TrimSuffix(gitURL, ".git")
 		text := fmt.Sprintf(kptFile, name, sha, gitURL, fromDir)
-		err = ioutil.WriteFile(localKptFile, []byte(text), files.DefaultFileWritePermissions)
+		err = os.WriteFile(localKptFile, []byte(text), files.DefaultFileWritePermissions)
 		if err != nil {
 			return errors.Wrapf(err, "failed to save file %s", localKptFile)
 		}
@@ -156,7 +155,7 @@ func CheckForUsesImage(dir, triggersFile string) (bool, error) {
 }
 
 func loadJobBaseFromSourcePath(path string) (bool, error) {
-	data, err := ioutil.ReadFile(path)
+	data, err := os.ReadFile(path)
 	if err != nil {
 		return false, errors.Wrapf(err, "failed to load file %s", path)
 	}

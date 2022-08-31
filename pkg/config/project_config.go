@@ -2,6 +2,9 @@ package config
 
 import (
 	"fmt"
+	"os"
+	"path/filepath"
+	"reflect"
 	"strings"
 
 	"github.com/jenkins-x-plugins/jx-project/pkg/jenkinsfile"
@@ -10,10 +13,6 @@ import (
 	"github.com/jenkins-x/jx-helpers/v3/pkg/yamls/validate"
 	"github.com/pkg/errors"
 	"sigs.k8s.io/yaml"
-
-	"io/ioutil"
-	"path/filepath"
-	"reflect"
 
 	corev1 "k8s.io/api/core/v1"
 )
@@ -90,7 +89,7 @@ func LoadProjectConfigFile(fileName string) (*ProjectConfig, error) {
 	if err != nil || !exists {
 		return &config, err
 	}
-	data, err := ioutil.ReadFile(fileName)
+	data, err := os.ReadFile(fileName)
 	if err != nil {
 		return &config, fmt.Errorf("Failed to load file %s due to %s", fileName, err)
 	}
@@ -120,7 +119,7 @@ func (c *ProjectConfig) SaveConfig(fileName string) error {
 	if err != nil {
 		return err
 	}
-	err = ioutil.WriteFile(fileName, data, files.DefaultFileWritePermissions)
+	err = os.WriteFile(fileName, data, files.DefaultFileWritePermissions)
 	if err != nil {
 		return errors.Wrapf(err, "failed to save file %s", fileName)
 	}

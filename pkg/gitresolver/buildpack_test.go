@@ -1,9 +1,9 @@
+//go:build unit
 // +build unit
 
 package gitresolver
 
 import (
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"testing"
@@ -37,7 +37,7 @@ func TestBuildPackInitClone(t *testing.T) {
 	initialReadme := "Cheesy!"
 
 	readmePath := filepath.Join(remoteRepo, readme)
-	err = ioutil.WriteFile(readmePath, []byte(initialReadme), 0600)
+	err = os.WriteFile(readmePath, []byte(initialReadme), 0600)
 	assert.NoError(t, err)
 	_, err = gitclient.AddAndCommitFiles(gitter, remoteRepo, "chore: Initial Commit")
 	assert.NoError(t, err, "failed to add and commit files")
@@ -65,7 +65,6 @@ func TestBuildPackInitClone(t *testing.T) {
 	output, err := gitter.Command(gitDir, "status", "-sb")
 	assert.NoError(t, err)
 	// Check the current branch is tracking the origin/master one
-	// TODO
 	assert.Equal(t, "## master", output)
 	//assert.Equal(t, "## master...origin/master", output)
 }

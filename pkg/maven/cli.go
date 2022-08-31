@@ -2,7 +2,6 @@ package maven
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
@@ -83,7 +82,7 @@ func InstallMavenIfRequired(runner cmdrunner.CommandRunner) error {
 
 	// lets find a directory inside the unzipped folder
 	log.Logger().Info("\nReadDir")
-	files, err := ioutil.ReadDir(mvnTmpDir)
+	files, err := os.ReadDir(mvnTmpDir)
 	if err != nil {
 		err = m.Unlock()
 		if err != nil {

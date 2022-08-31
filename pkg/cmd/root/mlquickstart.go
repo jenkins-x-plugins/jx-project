@@ -3,7 +3,7 @@ package root
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -260,7 +260,7 @@ func (o *CreateMLQuickstartOptions) getMLProjectSet(q *quickstarts.Quickstart) (
 		return nil, err
 	}
 	defer res.Body.Close()
-	body, err := ioutil.ReadAll(res.Body)
+	body, err := io.ReadAll(res.Body)
 	if err != nil {
 		return nil, err
 	}

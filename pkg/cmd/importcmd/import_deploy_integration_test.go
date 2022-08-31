@@ -1,10 +1,11 @@
+//go:build integration
 // +build integration
 
 package importcmd_test
 
 import (
 	"fmt"
-	"io/ioutil"
+	"os"
 	"path"
 	"path/filepath"
 	"testing"
@@ -23,7 +24,6 @@ import (
 )
 
 func TestImportProjectNextGenPipelineWithDeploy(t *testing.T) {
-	// TODO
 	t.SkipNow()
 
 	t.Parallel()
@@ -176,8 +176,8 @@ func assertImportHasDeploy(t *testing.T, o *importcmd.ImportOptions, testDir str
 		t.Logf("completed test in dir %s", testDir)
 
 		// lets validate the resulting values.yaml
-		//yamlData, err := ioutil.ReadFile(valuesFile)
-		_, err := ioutil.ReadFile(valuesFile)
+		//yamlData, err := os.ReadFile(valuesFile)
+		_, err := os.ReadFile(valuesFile)
 		assert.NoError(t, err, "Failed to load file %s", valuesFile)
 
 		/* TODO

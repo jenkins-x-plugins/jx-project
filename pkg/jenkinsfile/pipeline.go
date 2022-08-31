@@ -2,7 +2,6 @@ package jenkinsfile
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"reflect"
@@ -489,7 +488,7 @@ func LoadPipelineConfigAndMaybeValidate(fileName string, resolver ImportFileReso
 	if err != nil || !exists {
 		return &config, err
 	}
-	data, err := ioutil.ReadFile(fileName)
+	data, err := os.ReadFile(fileName)
 	if err != nil {
 		return &config, errors.Wrapf(err, "Failed to load file %s", fileName)
 	}
@@ -594,7 +593,7 @@ func (c *PipelineConfig) SaveConfig(fileName string) error {
 	if err != nil {
 		return err
 	}
-	return ioutil.WriteFile(fileName, data, files.DefaultFileWritePermissions)
+	return os.WriteFile(fileName, data, files.DefaultFileWritePermissions)
 }
 
 // ExtendPipeline inherits this pipeline from the given base pipeline
@@ -768,7 +767,7 @@ func (a *CreateJenkinsfileArguments) GenerateJenkinsfile(resolver ImportFileReso
 
 	templateFile := a.TemplateFile
 
-	data, err := ioutil.ReadFile(templateFile)
+	data, err := os.ReadFile(templateFile)
 	if err != nil {
 		return errors.Wrapf(err, "failed to load template %s", templateFile)
 	}

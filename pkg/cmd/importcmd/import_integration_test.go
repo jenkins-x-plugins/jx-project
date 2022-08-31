@@ -1,9 +1,9 @@
+//go:build integration
 // +build integration
 
 package importcmd_test
 
 import (
-	"io/ioutil"
 	"os"
 	"path"
 	"path/filepath"
@@ -46,7 +46,7 @@ func TestImportProjectsToJenkins(t *testing.T) {
 	_, err := os.Stat(testData)
 	assert.NoError(t, err)
 
-	files, err := ioutil.ReadDir(testData)
+	files, err := os.ReadDir(testData)
 	assert.NoError(t, err)
 
 	for _, f := range files {
@@ -65,7 +65,7 @@ func TestImportProjectToJenkinsX(t *testing.T) {
 	_, err := os.Stat(testData)
 	assert.NoError(t, err)
 
-	files, err := ioutil.ReadDir(testData)
+	files, err := os.ReadDir(testData)
 	assert.NoError(t, err)
 
 	for _, f := range files {
@@ -131,7 +131,7 @@ func assertImport(t *testing.T, testDir string, testcase string, importToJenkins
 		exists, err := files.FileExists(jenkinsfile)
 		require.NoError(t, err, "could not check for file %s", jenkinsfile)
 		if !exists {
-			err = ioutil.WriteFile(jenkinsfile, []byte("node {}"), files.DefaultFileWritePermissions)
+			err = os.WriteFile(jenkinsfile, []byte("node {}"), files.DefaultFileWritePermissions)
 			require.NoError(t, err, "failed to write dummy Jenkinsfile to %s", jenkinsfile)
 		}
 	}
@@ -220,7 +220,7 @@ func assertImport(t *testing.T, testDir string, testcase string, importToJenkins
 
 func assertProbePathEquals(t *testing.T, fileName string, expectedProbe string) {
 	if assert.FileExists(t, fileName) {
-		data, err := ioutil.ReadFile(fileName)
+		data, err := os.ReadFile(fileName)
 		assert.NoError(t, err, "Failed to read file %s", fileName)
 		if err == nil {
 			text := string(data)

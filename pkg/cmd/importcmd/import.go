@@ -3,7 +3,6 @@ package importcmd
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
 	"net/url"
 	"os"
 	"path/filepath"
@@ -177,7 +176,7 @@ func NewCmdImport() *cobra.Command {
 
 // NewCmdImportAndOptions creates the cobra command for jx-project import and the options
 func NewCmdImportAndOptions() (*cobra.Command, *ImportOptions) {
-	options := &ImportOptions{}
+	opts := &ImportOptions{}
 
 	cmd := &cobra.Command{
 		Use:     "import",
@@ -185,16 +184,16 @@ func NewCmdImportAndOptions() (*cobra.Command, *ImportOptions) {
 		Long:    importLong,
 		Example: fmt.Sprintf(importExample, common.BinaryName, common.BinaryName, common.BinaryName, common.BinaryName, common.BinaryName, common.BinaryName),
 		Run: func(cmd *cobra.Command, args []string) {
-			err := options.Run()
+			err := opts.Run()
 			helper.CheckErr(err)
 		},
 	}
-	cmd.Flags().StringVarP(&options.RepoURL, "url", "u", "", "The git clone URL to clone into the current directory and then import")
-	cmd.Flags().BoolVarP(&options.GitHub, "github", "", false, "If you wish to pick the repositories from GitHub to import")
-	cmd.Flags().BoolVarP(&options.SelectAll, "all", "", false, "If selecting projects to import from a Git provider this defaults to selecting them all")
+	cmd.Flags().StringVarP(&opts.RepoURL, "url", "u", "", "The git clone URL to clone into the current directory and then import")
+	cmd.Flags().BoolVarP(&opts.GitHub, "github", "", false, "If you wish to pick the repositories from GitHub to import")
+	cmd.Flags().BoolVarP(&opts.SelectAll, "all", "", false, "If selecting projects to import from a Git provider this defaults to selecting them all")
 
-	options.AddImportFlags(cmd, false)
-	return cmd, options
+	opts.AddImportFlags(cmd, false)
+	return cmd, opts
 }
 
 func (o *ImportOptions) AddImportFlags(cmd *cobra.Command, createProject bool) {
@@ -682,26 +681,26 @@ func (o *ImportOptions) CreateNewRemoteRepository() error {
 
 // CloneRepository clones a repository
 func (o *ImportOptions) CloneRepository() error {
-	url := o.RepoURL
-	if url == "" {
+	repoURL := o.RepoURL
+	if repoURL == "" {
 		return fmt.Errorf("no Git repository URL defined")
 	}
-	gitInfo, err := giturl.ParseGitURL(url)
+	gitInfo, err := giturl.ParseGitURL(repoURL)
 	if err != nil {
-		return fmt.Errorf("failed to parse Git URL %s due to: %s", url, err)
+		return fmt.Errorf("failed to parse Git URL %s due to: %s", repoURL, err)
 	}
 	if gitInfo.Host == giturl.GitHubHost && strings.HasPrefix(gitInfo.Scheme, "http") {
-		if !strings.HasSuffix(url, ".git") {
-			url += ".git"
+		if !strings.HasSuffix(repoURL, ".git") {
+			repoURL += ".git"
 		}
-		o.RepoURL = url
+		o.RepoURL = repoURL
 	}
 
 	cloneDir, err := files.CreateUniqueDirectory(o.Dir, gitInfo.Name, files.MaximumNewDirectoryAttempts)
 	if err != nil {
 		return errors.Wrapf(err, "failed to create unique directory for '%s'", o.Dir)
 	}
-	cloneDir, err = gitclient.CloneToDir(o.Git(), url, cloneDir)
+	cloneDir, err = gitclient.CloneToDir(o.Git(), repoURL, cloneDir)
 	if err != nil {
 		return errors.Wrapf(err, "failed to clone in directory '%s'", cloneDir)
 	}
@@ -795,7 +794,7 @@ func (o *ImportOptions) DefaultGitIgnore() error {
 	}
 	if !exists {
 		data := []byte(constants.DefaultGitIgnoreFile)
-		err = ioutil.WriteFile(name, data, files.DefaultFileWritePermissions)
+		err = os.WriteFile(name, data, files.DefaultFileWritePermissions)
 		if err != nil {
 			return fmt.Errorf("failed to write %s due to %s", name, err)
 		}
@@ -990,16 +989,16 @@ func (o *ImportOptions) skipPathForReplacement(path string, fi os.FileInfo, igno
 }
 
 func replacePlaceholdersInFile(replacer *strings.Replacer, file string) error {
-	input, err := ioutil.ReadFile(file)
+	fileContent, err := os.ReadFile(file)
 	if err != nil {
 		log.Logger().Errorf("failed to read file %s: %v", file, err)
 		return err
 	}
 
-	lines := string(input)
+	lines := string(fileContent)
 	if strings.Contains(lines, constants.PlaceHolderPrefix) { // Avoid unnecessarily rewriting files
 		output := replacer.Replace(lines)
-		err = ioutil.WriteFile(file, []byte(output), 0600)
+		err = os.WriteFile(file, []byte(output), 0600)
 		if err != nil {
 			log.Logger().Errorf("failed to write file %s: %v", file, err)
 			return err
@@ -1033,12 +1032,12 @@ func (o *ImportOptions) addAppNameToGeneratedFile(filename, field, value string)
 		// no file so lets ignore this
 		return nil
 	}
-	input, err := ioutil.ReadFile(file)
+	fileContent, err := os.ReadFile(file)
 	if err != nil {
 		return err
 	}
 
-	lines := strings.Split(string(input), "\n")
+	lines := strings.Split(string(fileContent), "\n")
 
 	for i, line := range lines {
 		if strings.HasPrefix(line, field) {
@@ -1046,7 +1045,7 @@ func (o *ImportOptions) addAppNameToGeneratedFile(filename, field, value string)
 		}
 	}
 	output := strings.Join(lines, "\n")
-	err = ioutil.WriteFile(file, []byte(output), 0600)
+	err = os.WriteFile(file, []byte(output), 0600)
 	if err != nil {
 		return err
 	}
@@ -1064,7 +1063,7 @@ func (o *ImportOptions) renameChartToMatchAppName() error {
 	if !exists {
 		return nil
 	}
-	fileSlice, err := ioutil.ReadDir(chartsDir)
+	fileSlice, err := os.ReadDir(chartsDir)
 	if err != nil {
 		return fmt.Errorf("error matching a Jenkins X build pack name with chart folder %v", err)
 	}
@@ -1109,7 +1108,7 @@ func (o *ImportOptions) fixDockerIgnoreFile() error {
 	filename := filepath.Join(o.Dir, ".dockerignore")
 	exists, err := files.FileExists(filename)
 	if err == nil && exists {
-		data, err := ioutil.ReadFile(filename)
+		data, err := os.ReadFile(filename)
 		if err != nil {
 			return fmt.Errorf("failed to load %s: %s", filename, err)
 		}
@@ -1120,7 +1119,7 @@ func (o *ImportOptions) fixDockerIgnoreFile() error {
 			}
 			lines = append(lines[:i], lines[i+1:]...)
 			text := strings.Join(lines, "\n")
-			err = ioutil.WriteFile(filename, []byte(text), files.DefaultFileWritePermissions)
+			err = os.WriteFile(filename, []byte(text), files.DefaultFileWritePermissions)
 			if err != nil {
 				return err
 			}
@@ -1149,11 +1148,11 @@ func (o *ImportOptions) CreateProwOwnersFile() error {
 		Approvers: []string{userName},
 		Reviewers: []string{userName},
 	}
-	yaml, err := yaml.Marshal(&data)
+	yamlBytes, err := yaml.Marshal(&data)
 	if err != nil {
 		return err
 	}
-	err = ioutil.WriteFile(filename, yaml, 0600)
+	err = os.WriteFile(filename, yamlBytes, 0600)
 	if err != nil {
 		return err
 	}
@@ -1179,11 +1178,11 @@ func (o *ImportOptions) CreateProwOwnersAliasesFile() error {
 		BestApprovers: []string{gitUser},
 		BestReviewers: []string{gitUser},
 	}
-	yaml, err := yaml.Marshal(&data)
+	yamlBytes, err := yaml.Marshal(&data)
 	if err != nil {
 		return err
 	}
-	return ioutil.WriteFile(filename, yaml, 0600)
+	return os.WriteFile(filename, yamlBytes, 0600)
 }
 
 func (o *ImportOptions) fixMaven() error {
@@ -1291,10 +1290,6 @@ func (o *ImportOptions) ConfigureImportOptions(repoData *CreateRepoData) {
 	o.Repository = repoName
 	o.GitRepositoryOptions.Namespace = owner
 	o.GitRepositoryOptions.Name = repoName
-
-	// TODO
-	// options.GitDetails = *repoData
-	// options.GitServer = repoData.GitServer
 }
 
 // GetGitRepositoryDetails determines the git repository details to use during the import command
@@ -1448,16 +1443,16 @@ func (o *ImportOptions) enableJenkinsfileRunnerPipeline(destination ImportDestin
 */
 
 // PickCatalogFolderName if not in batch mode lets confirm to the user which catalog folder we are going to use
-func (o *ImportOptions) PickCatalogFolderName(i *InvokeDraftPack, dir, chosenPack string) (string, error) {
+func (o *ImportOptions) PickCatalogFolderName(dir, chosenPack string) (string, error) {
 	if o.BatchMode || o.Pack != "" {
 		return chosenPack, nil
 	}
-	files, err := ioutil.ReadDir(dir)
+	fileList, err := os.ReadDir(dir)
 	if err != nil {
 		return chosenPack, err
 	}
 	names := []string{}
-	for _, f := range files {
+	for _, f := range fileList {
 		name := f.Name()
 		if f.IsDir() && !strings.HasPrefix(name, ".") {
 			names = append(names, name)
@@ -1478,8 +1473,6 @@ func (o *ImportOptions) Git() gitclient.Interface {
 }
 
 func (o *ImportOptions) waitForSourceRepositoryPullRequest(pullRequestInfo *scm.PullRequest) error {
-	logNoMergeCommitSha := false
-	logHasMergeSha := false
 	start := time.Now()
 	end := start.Add(o.PullRequestPollTimeout)
 	durationString := o.PullRequestPollTimeout.String()
@@ -1504,22 +1497,14 @@ func (o *ImportOptions) waitForSourceRepositoryPullRequest(pullRequestInfo *scm.
 				elaspedString := time.Since(start).String()
 				if pr.Merged {
 					if pr.MergeSha == "" {
-						if !logNoMergeCommitSha {
-							log.Logger().Infof("Pull Request %s was merged but we didn't yet have a merge SHA after waiting %s", termcolor.ColorInfo(pr.Link), elaspedString)
-							return nil
-						}
-					} else {
-						mergeSha := pr.MergeSha
-						if !logHasMergeSha {
-							log.Logger().Infof("Pull Request %s was merged at sha %s after waiting %s", termcolor.ColorInfo(pr.Link), termcolor.ColorInfo(mergeSha), elaspedString)
-							return nil
-						}
-					}
-				} else {
-					if pr.Closed {
-						log.Logger().Warnf("Pull Request %s is closed after waiting %s", termcolor.ColorInfo(pr.Link), elaspedString)
+						log.Logger().Infof("Pull Request %s was merged but we didn't yet have a merge SHA after waiting %s", termcolor.ColorInfo(pr.Link), elaspedString)
 						return nil
 					}
+					log.Logger().Infof("Pull Request %s was merged at sha %s after waiting %s", termcolor.ColorInfo(pr.Link), termcolor.ColorInfo(pr.MergeSha), elaspedString)
+					return nil
+				} else if pr.Closed {
+					log.Logger().Warnf("Pull Request %s is closed after waiting %s", termcolor.ColorInfo(pr.Link), elaspedString)
+					return nil
 				}
 			}
 			if time.Now().After(end) {
@@ -1532,7 +1517,6 @@ func (o *ImportOptions) waitForSourceRepositoryPullRequest(pullRequestInfo *scm.
 }
 
 func (o *ImportOptions) IsGitHubAppMode() (bool, error) {
-	// TODO
 	return false, nil
 }
 
