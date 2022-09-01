@@ -10,10 +10,10 @@ import (
 
 	"github.com/jenkins-x-plugins/jx-project/pkg/cmd/importcmd"
 	"github.com/jenkins-x-plugins/jx-project/pkg/cmd/testimports"
-	"github.com/jenkins-x-plugins/jx-project/pkg/prow"
 	"github.com/jenkins-x/go-scm/scm"
 	"github.com/jenkins-x/jx-helpers/v3/pkg/files"
 	"github.com/jenkins-x/jx-helpers/v3/pkg/scmhelpers"
+	"github.com/jenkins-x/lighthouse-client/pkg/repoowners"
 	"github.com/stretchr/testify/assert"
 	"sigs.k8s.io/yaml"
 )
@@ -58,13 +58,13 @@ func TestCreateProwOwnersFileCreateWhenDoesNotExist(t *testing.T) {
 	assert.NoError(t, err, "It should find the OWNERS file without error")
 	assert.True(t, exists, "It should create an OWNERS file")
 
-	wantOwners := prow.Owners{
+	wantOwners := repoowners.Config{
 		Approvers: []string{testUsername},
 		Reviewers: []string{testUsername},
 	}
 	data, err := os.ReadFile(wantFile)
 	assert.NoError(t, err, "It should read the OWNERS file without error")
-	owners := prow.Owners{}
+	owners := repoowners.Config{}
 	err = yaml.Unmarshal(data, &owners)
 	assert.NoError(t, err, "It should unmarshal the OWNERS file without error")
 	assert.Equal(t, wantOwners, owners)
@@ -120,14 +120,15 @@ func TestCreateProwOwnersAliasesFileCreateWhenDoesNotExist(t *testing.T) {
 	assert.NoError(t, err, "It should find the OWNERS_ALIASES file without error")
 	assert.True(t, exists, "It should create an OWNERS_ALIASES file")
 
-	wantOwnersAliases := prow.OwnersAliases{
-		Aliases:       []string{testUsername},
-		BestApprovers: []string{testUsername},
-		BestReviewers: []string{testUsername},
+	wantOwnersAliases := repoowners.OwnerAliases{
+		Aliases: map[string][]string{
+			"best-approvers": {testUsername},
+			"best-reviewers": {testUsername},
+		},
 	}
 	data, err := os.ReadFile(wantFile)
 	assert.NoError(t, err, "It should read the OWNERS_ALIASES file without error")
-	ownersAliases := prow.OwnersAliases{}
+	ownersAliases := repoowners.OwnerAliases{}
 	err = yaml.Unmarshal(data, &ownersAliases)
 	assert.NoError(t, err, "It should unmarshal the OWNERS_ALIASES file without error")
 	assert.Equal(t, wantOwnersAliases, ownersAliases)
