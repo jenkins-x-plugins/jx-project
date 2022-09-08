@@ -375,37 +375,48 @@ func copyBuildPack(dest, src string, filter func(*Pack)) error {
 		return fmt.Errorf("could not load %s: %s", src, err)
 	}
 
-	// if we already have a Charts dir lets move it instead
 	chartsDir := filepath.Join(dest, "charts")
-	chartFile := filepath.Join(chartsDir, "Chart.yaml")
-	exists, err := files.FileExists(chartFile)
+	_, appName := filepath.Split(dest)
+	newDir := filepath.Join(chartsDir, appName)
+	exists, err := files.DirExists(newDir)
 	if err != nil {
-		return errors.Wrapf(err, "failed to check if chart file exists %s", chartFile)
+		return errors.Wrapf(err, "failed to check if chart directory exists %s", newDir)
 	}
 
 	if exists {
+		// If there already is a chart for this application let's skip copying it from the pack
 		p.Charts = nil
-
-		// let's move the charts folder to charts/$name so its a real chart layout
-		_, appName := filepath.Split(dest)
-
-		fs, err := os.ReadDir(chartsDir)
+	} else {
+		// if we already have a Charts dir lets move it instead
+		chartFile := filepath.Join(chartsDir, "Chart.yaml")
+		exists, err := files.FileExists(chartFile)
 		if err != nil {
-			return errors.Wrapf(err, "failed to read dir %s", chartsDir)
-		}
-		newDir := filepath.Join(dest, "charts", appName)
-		err = os.MkdirAll(newDir, files.DefaultDirWritePermissions)
-		if err != nil {
-			return errors.Wrapf(err, "failed to create dir %s", newDir)
+			return errors.Wrapf(err, "failed to check if chart file exists %s", chartFile)
 		}
 
-		for _, f := range fs {
-			name := f.Name()
-			oldPath := filepath.Join(chartsDir, name)
-			newPath := filepath.Join(newDir, name)
-			err = os.Rename(oldPath, newPath)
+		if exists {
+			// If there already is a chart for this application let's skip copying it from the pack
+			p.Charts = nil
+
+			// let's move the charts folder to charts/$name so its a real chart layout
+
+			fs, err := os.ReadDir(chartsDir)
 			if err != nil {
-				return errors.Wrapf(err, "failed to move file %s to %s", oldPath, newPath)
+				return errors.Wrapf(err, "failed to read dir %s", chartsDir)
+			}
+			err = os.MkdirAll(newDir, files.DefaultDirWritePermissions)
+			if err != nil {
+				return errors.Wrapf(err, "failed to create dir %s", newDir)
+			}
+
+			for _, f := range fs {
+				name := f.Name()
+				oldPath := filepath.Join(chartsDir, name)
+				newPath := filepath.Join(newDir, name)
+				err = os.Rename(oldPath, newPath)
+				if err != nil {
+					return errors.Wrapf(err, "failed to move file %s to %s", oldPath, newPath)
+				}
 			}
 		}
 	}
