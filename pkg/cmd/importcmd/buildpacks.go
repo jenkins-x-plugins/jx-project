@@ -289,7 +289,7 @@ func (o *ImportOptions) InvokeDraftPack(i *InvokeDraftPack) (string, error) {
 		return pack, err
 	}
 
-	err = copyBuildPack(dir, lpack, o.PackFilter)
+	err = o.copyBuildPack(dir, lpack)
 	if err != nil {
 		log.Logger().Warnf("Failed to apply the build pack in %s due to %s", dir, err)
 	}
@@ -368,7 +368,7 @@ func (o *ImportOptions) DiscoverBuildPack(dir string, projectConfig *config.Proj
 
 // Refactor: taken from jx so we can also bring in the draft pack and not fail when copying buildpacks without a charts dir
 // CopyBuildPack copies the build pack from the source dir to the destination dir
-func copyBuildPack(dest, src string, filter func(*Pack)) error {
+func (o *ImportOptions) copyBuildPack(dest, src string) error {
 	// first do some validation that we are copying from a valid pack directory
 	p, err := FromDir(src)
 	if err != nil {
@@ -376,8 +376,7 @@ func copyBuildPack(dest, src string, filter func(*Pack)) error {
 	}
 
 	chartsDir := filepath.Join(dest, "charts")
-	_, appName := filepath.Split(dest)
-	newDir := filepath.Join(chartsDir, appName)
+	newDir := filepath.Join(chartsDir, o.AppName)
 	exists, err := files.DirExists(newDir)
 	if err != nil {
 		return errors.Wrapf(err, "failed to check if chart directory exists %s", newDir)
@@ -426,8 +425,8 @@ func copyBuildPack(dest, src string, filter func(*Pack)) error {
 		delete(p.Files, file)
 	}
 
-	if filter != nil {
-		filter(p)
+	if o.PackFilter != nil {
+		o.PackFilter(p)
 	}
 
 	_, packName := filepath.Split(src)
