@@ -182,6 +182,16 @@ func assertImport(t *testing.T, testDir string, testcase string, importToJenkins
 					testhelpers.AssertFileDoesNotContain(t, jfname, "helm")
 				}
 			} else {
+				chartEntries, err := os.ReadDir(filepath.Join(testDir, "charts"))
+				assert.NoError(t, err, "can't read charts directory")
+				t.Logf("Content of chart %s:", filepath.Join(testDir, "charts"))
+				for _, d := range chartEntries {
+					t.Log(d.Name())
+
+					if d.IsDir() {
+						assert.Equal(t, dirName, d.Name(), "Expect only application chart in charts directory")
+					}
+				}
 				assert.FileExists(t, filepath.Join(testDir, "charts", dirName, "Chart.yaml"))
 			}
 		} else {

@@ -289,7 +289,7 @@ func (o *ImportOptions) InvokeDraftPack(i *InvokeDraftPack) (string, error) {
 		return pack, err
 	}
 
-	err = copyBuildPack(dir, lpack, o.PackFilter)
+	err = o.copyBuildPack(dir, lpack)
 	if err != nil {
 		log.Logger().Warnf("Failed to apply the build pack in %s due to %s", dir, err)
 	}
@@ -368,44 +368,54 @@ func (o *ImportOptions) DiscoverBuildPack(dir string, projectConfig *config.Proj
 
 // Refactor: taken from jx so we can also bring in the draft pack and not fail when copying buildpacks without a charts dir
 // CopyBuildPack copies the build pack from the source dir to the destination dir
-func copyBuildPack(dest, src string, filter func(*Pack)) error {
+func (o *ImportOptions) copyBuildPack(dest, src string) error {
 	// first do some validation that we are copying from a valid pack directory
 	p, err := FromDir(src)
 	if err != nil {
 		return fmt.Errorf("could not load %s: %s", src, err)
 	}
 
-	// if we already have a Charts dir lets move it instead
 	chartsDir := filepath.Join(dest, "charts")
-	chartFile := filepath.Join(chartsDir, "Chart.yaml")
-	exists, err := files.FileExists(chartFile)
+	newDir := filepath.Join(chartsDir, o.AppName)
+	exists, err := files.DirExists(newDir)
 	if err != nil {
-		return errors.Wrapf(err, "failed to check if chart file exists %s", chartFile)
+		return errors.Wrapf(err, "failed to check if chart directory exists %s", newDir)
 	}
 
 	if exists {
+		// If there already is a chart for this application let's skip copying it from the pack
 		p.Charts = nil
-
-		// let's move the charts folder to charts/$name so its a real chart layout
-		_, appName := filepath.Split(dest)
-
-		fs, err := os.ReadDir(chartsDir)
+	} else {
+		// if we already have a Charts dir lets move it instead
+		chartFile := filepath.Join(chartsDir, "Chart.yaml")
+		exists, err := files.FileExists(chartFile)
 		if err != nil {
-			return errors.Wrapf(err, "failed to read dir %s", chartsDir)
-		}
-		newDir := filepath.Join(dest, "charts", appName)
-		err = os.MkdirAll(newDir, files.DefaultDirWritePermissions)
-		if err != nil {
-			return errors.Wrapf(err, "failed to create dir %s", newDir)
+			return errors.Wrapf(err, "failed to check if chart file exists %s", chartFile)
 		}
 
-		for _, f := range fs {
-			name := f.Name()
-			oldPath := filepath.Join(chartsDir, name)
-			newPath := filepath.Join(newDir, name)
-			err = os.Rename(oldPath, newPath)
+		if exists {
+			// If there already is a chart for this application let's skip copying it from the pack
+			p.Charts = nil
+
+			// let's move the charts folder to charts/$name so its a real chart layout
+
+			fs, err := os.ReadDir(chartsDir)
 			if err != nil {
-				return errors.Wrapf(err, "failed to move file %s to %s", oldPath, newPath)
+				return errors.Wrapf(err, "failed to read dir %s", chartsDir)
+			}
+			err = os.MkdirAll(newDir, files.DefaultDirWritePermissions)
+			if err != nil {
+				return errors.Wrapf(err, "failed to create dir %s", newDir)
+			}
+
+			for _, f := range fs {
+				name := f.Name()
+				oldPath := filepath.Join(chartsDir, name)
+				newPath := filepath.Join(newDir, name)
+				err = os.Rename(oldPath, newPath)
+				if err != nil {
+					return errors.Wrapf(err, "failed to move file %s to %s", oldPath, newPath)
+				}
 			}
 		}
 	}
@@ -415,8 +425,8 @@ func copyBuildPack(dest, src string, filter func(*Pack)) error {
 		delete(p.Files, file)
 	}
 
-	if filter != nil {
-		filter(p)
+	if o.PackFilter != nil {
+		o.PackFilter(p)
 	}
 
 	_, packName := filepath.Split(src)
