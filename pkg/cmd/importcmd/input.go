@@ -70,7 +70,7 @@ func (o *ImportOptions) getOwners(userName string) ([]string, error) {
 	}
 
 	ctx := context.Background()
-	orgs, _, err := o.ScmFactory.ScmClient.Organizations.List(ctx, scm.ListOptions{
+	orgs, _, err := o.ScmFactory.ScmClient.Organizations.List(ctx, &scm.ListOptions{
 		Size: 500,
 	})
 	if err != nil {

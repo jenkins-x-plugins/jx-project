@@ -12,17 +12,17 @@ require (
 	github.com/danwakefield/fnmatch v0.0.0-20160403171240-cbb64ac3d964 // indirect
 	github.com/denormal/go-gitignore v0.0.0-20180713143441-75ce8f3e513c
 	github.com/jbrukh/bayesian v0.0.0-20200318221351-d726b684ca4a // indirect
-	github.com/jenkins-x-plugins/jx-gitops v0.7.22
-	github.com/jenkins-x-plugins/jx-promote v0.2.10
-	github.com/jenkins-x/go-scm v1.11.16
-	github.com/jenkins-x/jx-api/v4 v4.3.7
-	github.com/jenkins-x/jx-helpers/v3 v3.2.16
-	github.com/jenkins-x/jx-logging/v3 v3.0.9
-	github.com/jenkins-x/lighthouse-client v0.0.504
+	github.com/jenkins-x-plugins/jx-gitops v0.7.33
+	github.com/jenkins-x-plugins/jx-promote v0.4.1
+	github.com/jenkins-x/go-scm v1.11.18
+	github.com/jenkins-x/jx-api/v4 v4.6.1
+	github.com/jenkins-x/jx-helpers/v3 v3.4.0
+	github.com/jenkins-x/jx-logging/v3 v3.0.10
+	github.com/jenkins-x/lighthouse-client v0.0.580
 	github.com/pkg/errors v0.9.1
 	github.com/spf13/cobra v1.3.0
 	github.com/spf13/pflag v1.0.5
-	github.com/stretchr/testify v1.7.0
+	github.com/stretchr/testify v1.8.0
 	github.com/tektoncd/pipeline v0.29.0
 	helm.sh/helm/v3 v3.8.1
 	k8s.io/api v0.23.8
@@ -89,7 +89,7 @@ require (
 	github.com/iancoleman/orderedmap v0.0.0-20190318233801-ac98e3ecb4b0 // indirect
 	github.com/imdario/mergo v0.3.13 // indirect
 	github.com/inconshreveable/mousetrap v1.0.0 // indirect
-	github.com/jenkins-x/jx-kube-client/v3 v3.0.3 // indirect
+	github.com/jenkins-x/jx-kube-client/v3 v3.0.4 // indirect
 	github.com/jenkins-x/logrus-stackdriver-formatter v0.2.4 // indirect
 	github.com/josharian/intern v1.0.0 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
@@ -116,7 +116,7 @@ require (
 	github.com/shurcooL/graphql v0.0.0-20181231061246-d48a9a75455f // indirect
 	github.com/sirupsen/logrus v1.8.1 // indirect
 	github.com/src-d/gcfg v1.4.0 // indirect
-	github.com/stretchr/objx v0.2.0 // indirect
+	github.com/stretchr/objx v0.4.0 // indirect
 	github.com/vrischmann/envconfig v1.3.0 // indirect
 	github.com/xeipuuv/gojsonpointer v0.0.0-20190905194746-02993c407bfb // indirect
 	github.com/xeipuuv/gojsonreference v0.0.0-20180127040603-bd5ef7bd5415 // indirect
@@ -139,7 +139,6 @@ require (
 	google.golang.org/genproto v0.0.0-20220222213610-43724f9ea8cf // indirect
 	google.golang.org/grpc v1.44.0 // indirect
 	google.golang.org/protobuf v1.27.1 // indirect
-	gopkg.in/AlecAivazis/survey.v1 v1.8.8 // indirect
 	gopkg.in/inf.v0 v0.9.1 // indirect
 	gopkg.in/robfig/cron.v2 v2.0.0-20150107220207-be2e0b0deed5 // indirect
 	gopkg.in/src-d/go-git.v4 v4.13.1 // indirect
@@ -156,12 +155,6 @@ require (
 )
 
 replace (
-	// helm dependencies
-	github.com/docker/distribution => github.com/docker/distribution v0.0.0-20191216044856-a8371794149d
-	github.com/docker/docker => github.com/moby/moby v17.12.0-ce-rc1.0.20200618181300-9dc6525e6118+incompatible
-	// override the go-scm from tekton
-	github.com/jenkins-x/go-scm => github.com/jenkins-x/go-scm v1.11.5
-	github.com/jenkins-x/jx-helpers/v3 => github.com/jenkins-x/jx-helpers/v3 v3.2.5
 	k8s.io/api => k8s.io/api v0.21.5
 	k8s.io/apimachinery => k8s.io/apimachinery v0.21.5
 	k8s.io/client-go => k8s.io/client-go v0.21.5
