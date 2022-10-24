@@ -3,6 +3,7 @@ package root
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 
 	"github.com/jenkins-x-plugins/jx-project/pkg/cmd/common"
 	"github.com/jenkins-x-plugins/jx-project/pkg/cmd/importcmd"
@@ -113,20 +114,23 @@ func (o *CreateSpringOptions) Run() error {
 	if err != nil {
 		return fmt.Errorf("Failed to load Spring Boot model %s", err)
 	}
-	err = model.CreateSurvey(&o.SpringForm, o.Advanced, o.BatchMode)
+	err = model.CreateSurvey(data, o.Advanced, o.BatchMode)
 	if err != nil {
 		return err
 	}
 
-	// always add in actuator as its required for health checking
-	if stringhelpers.StringArrayIndex(o.SpringForm.Dependencies, "actuator") < 0 {
-		o.SpringForm.Dependencies = append(o.SpringForm.Dependencies, "actuator")
+	// always add in actuator as it's required for health checking
+	if stringhelpers.StringArrayIndex(data.Dependencies, "actuator") < 0 {
+		data.Dependencies = append(data.Dependencies, "actuator")
 	}
-	// always add web as the JVM tends to terminate if its not added
-	if stringhelpers.StringArrayIndex(o.SpringForm.Dependencies, "web") < 0 {
-		o.SpringForm.Dependencies = append(o.SpringForm.Dependencies, "web")
+	// always add web as the JVM tends to terminate if it's not added
+	if stringhelpers.StringArrayIndex(data.Dependencies, "web") < 0 {
+		data.Dependencies = append(data.Dependencies, "web")
 	}
-
+	if (data.Type == "gradle-project" || data.Type == "") && data.Language == "java" && data.JavaVersion == "" {
+		// Work around since we at the moment only have a java 11 gradle pack
+		data.JavaVersion = "11"
+	}
 	dir := o.OutDir
 	if dir == "" {
 		dir, err = os.Getwd()
@@ -139,6 +143,12 @@ func (o *CreateSpringOptions) Run() error {
 	if err != nil {
 		return err
 	}
+	if data.Type == "gradle-project" || data.Type == "" {
+		err = o.DisableExecutableJar(outDir)
+		if err != nil {
+			return err
+		}
+	}
 	log.Logger().Infof("Created Spring Boot project at %s", termcolor.ColorInfo(outDir))
 
 	if details != nil {
@@ -146,4 +156,17 @@ func (o *CreateSpringOptions) Run() error {
 	}
 
 	return o.ImportCreatedProject(outDir)
+}
+
+func (o *CreateSpringOptions) DisableExecutableJar(outDir string) error {
+	file, err := os.OpenFile(filepath.Join(outDir, "build.gradle"), os.O_APPEND|os.O_WRONLY, 0)
+	if err != nil {
+		return err
+	}
+	_, err = file.WriteString(`
+jar {
+    enabled = false
+}
+`)
+	return err
 }
