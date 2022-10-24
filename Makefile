@@ -97,7 +97,7 @@ make-reports-dir:
 test: ## Run tests with the "unit" build tag
 	# lets reuse a tmp home dir to avoid modifying the real ~/.git-credentials
 	mkdir -p $(TMP_HOME)
-	KUBECONFIG=/cluster/connections/not/allowed XDG_CONFIG_HOME==$(TMP_HOME) CGO_ENABLED=$(CGO_ENABLED) $(GOTEST) --tags="integration unit" -failfast -short ./... $(TEST_BUILDFLAGS)
+	KUBECONFIG=/cluster/connections/not/allowed XDG_CONFIG_HOME=$(TMP_HOME) CGO_ENABLED=$(CGO_ENABLED) $(GOTEST) --tags="integration unit" -failfast -short ./... $(TEST_BUILDFLAGS)
 
 # lets use a tmp dir for HOME to avoid the tests breaking the actual git creds
 test-release: ## Run tests with the "unit" build tag
