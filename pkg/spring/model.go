@@ -185,25 +185,25 @@ func (model *BootModel) CreateSurvey(data *BootForm, advanced, batchMode bool) e
 		return nil
 	}
 	if data.Language == "" {
-		qs = append(qs, CreateValueSelect("Language", "language", &model.Language, data))
+		qs = append(qs, CreateValueSelect("Language", "language", &model.Language))
 	}
 	if data.BootVersion == "" && advanced {
-		qs = append(qs, CreateValueSelect("Spring Boot version", "bootVersion", &model.BootVersion, data))
+		qs = append(qs, CreateValueSelect("Spring Boot version", "bootVersion", &model.BootVersion))
 	}
 	if data.JavaVersion == "" && advanced {
-		qs = append(qs, CreateValueSelect("Java version", "javaVersion", &model.JavaVersion, data))
+		qs = append(qs, CreateValueSelect("Java version", "javaVersion", &model.JavaVersion))
 	}
 	if data.Packaging == "" && advanced {
-		qs = append(qs, CreateValueSelect("Packaging", "packaging", &model.Packaging, data))
+		qs = append(qs, CreateValueSelect("Packaging", "packaging", &model.Packaging))
 	}
 	if data.Type == "" && advanced {
-		qs = append(qs, CreateValueSelect("Build Tool", "type", &model.Type, data))
+		qs = append(qs, CreateValueSelect("Build Tool", "type", &model.Type))
 	}
 	if data.GroupID == "" {
-		qs = append(qs, CreateValueInput("Group", "groupId", &model.GroupID, data))
+		qs = append(qs, CreateValueInput("Group", "groupId", &model.GroupID))
 	}
 	if data.ArtifactID == "" {
-		qs = append(qs, CreateValueInput("Artifact", "artifactId", &model.ArtifactID, data))
+		qs = append(qs, CreateValueInput("Artifact", "artifactId", &model.ArtifactID))
 	}
 	if emptyArray(data.Dependencies) {
 		qs = append(qs, CreateTreeSelect("Dependencies", "dependencies", &model.Dependencies, data))
@@ -271,7 +271,7 @@ func (model *BootModel) ValidateTreeInput(name string, o *TreeSelect, values []s
 	return nil
 }
 
-func CreateValueSelect(message, name string, options *Options, data *BootForm) *survey.Question {
+func CreateValueSelect(message, name string, options *Options) *survey.Question {
 	values := options.StringArray()
 	return &survey.Question{
 		Name: name,
@@ -284,7 +284,7 @@ func CreateValueSelect(message, name string, options *Options, data *BootForm) *
 	}
 }
 
-func CreateValueInput(message, name string, value *Value, data *BootForm) *survey.Question {
+func CreateValueInput(message, name string, value *Value) *survey.Question {
 	return &survey.Question{
 		Name: name,
 		Prompt: &survey.Input{
@@ -337,6 +337,7 @@ func (data *BootForm) CreateProject(workDir string) (string, error) {
 
 	form := url.Values{}
 	data.AddFormValues(&form)
+	log.Logger().Debugf("SpringForm: %+v", form)
 
 	parameters := form.Encode()
 	if parameters != "" {
