@@ -49,7 +49,7 @@ func (o *ImportOptions) AddAndAcceptCollaborator(newRepository bool) error {
 	permission := "admin"
 	pipelineUserName := o.PipelineUserName
 	if !newRepository {
-		// lets check if the pipeline user is already a collaborator
+		// let's check if the pipeline user is already a collaborator
 		collaborator, _, err := scmClient.Repositories.IsCollaborator(ctx, fullRepoName, pipelineUserName)
 		if err != nil {
 			return errors.Wrapf(err, "failed to check if %s is a collaborator on %s", pipelineUserName, fullRepoName)

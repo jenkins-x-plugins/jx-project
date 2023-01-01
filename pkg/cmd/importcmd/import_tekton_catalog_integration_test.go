@@ -1,3 +1,4 @@
+//go:build integration
 // +build integration
 
 package importcmd_test
@@ -66,7 +67,7 @@ func TestImportTektonCatalogProject(t *testing.T) {
 	assert.FileExists(t, filepath.Join(testDir, "charts", dirName, "Chart.yaml"))
 	assert.FileExists(t, filepath.Join(testDir, "charts", dirName, "templates", "deployment.yaml"))
 
-	// lets verify the pipeline bot user is a collaborator on the repository
+	// let's verify the pipeline bot user is a collaborator on the repository
 	require.NotNil(t, o.BootScmClient, "should have created a boot SCM client")
 
 	ctx := context.Background()

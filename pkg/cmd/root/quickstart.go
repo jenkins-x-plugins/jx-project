@@ -3,7 +3,6 @@ package root
 import (
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -320,7 +319,7 @@ func (o *CreateQuickstartOptions) createQuickstart(f *quickstarts.QuickstartForm
 	if err != nil {
 		return answer, fmt.Errorf("failed to download file %s due to %s", zipFile, err)
 	}
-	tmpDir, err := ioutil.TempDir("", "jx-source-")
+	tmpDir, err := os.MkdirTemp("", "jx-source-")
 	if err != nil {
 		return answer, fmt.Errorf("failed to create temporary directory: %s", err)
 	}

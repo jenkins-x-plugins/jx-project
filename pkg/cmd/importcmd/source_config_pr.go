@@ -35,7 +35,7 @@ func (o *ImportOptions) addSourceConfigPullRequest(gitURL, gitKind string) (bool
 		return remoteCluster, errors.Errorf("no git source URL for Environment %s", devEnv.Name)
 	}
 
-	// lets generate a PR
+	// let's generate a PR
 	if o.SchedulerName == "" {
 		g := filepath.Join(o.Dir, ".lighthouse", "*", "triggers.yaml")
 		matches, err := filepath.Glob(g)

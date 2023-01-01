@@ -1,3 +1,4 @@
+//go:build integration
 // +build integration
 
 package importcmd_test
@@ -46,7 +47,7 @@ func TestImportOldProject(t *testing.T) {
 
 	testimports.SetFakeClients(t, o, useRealJXConvert)
 
-	// lets setup git
+	// let's setup git
 	g := o.Git()
 	_, err = g.Command(tempDir, "init")
 	require.NoError(t, err, "failed to git init dir %s", tempDir)

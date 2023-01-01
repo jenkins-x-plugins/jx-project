@@ -401,13 +401,13 @@ func (o *ImportOptions) Run() error {
 	}
 
 	if jenkinsfile != "" {
-		// lets pick the import destination for the jenkinsfile
+		// let's pick the import destination for the jenkinsfile
 		o.Destination, err = o.PickImportDestination(devEnvCloneDir, jenkinsfile)
 		if err != nil {
 			return err
 		}
 		if o.Destination.Jenkins.Server != "" {
-			// lets not run the Jenkins X build packs
+			// let's not run the Jenkins X build packs
 			o.DisableBuildPack = true
 		} else if o.Destination.JenkinsfileRunner.Enabled {
 			o.DisableBuildPack = false
@@ -415,7 +415,7 @@ func (o *ImportOptions) Run() error {
 		}
 	}
 
-	// lets disable the build pack if we have a jenkins-x.yml or a .lighthouse/*/triggers.yaml file
+	// let's disable the build pack if we have a jenkins-x.yml or a .lighthouse/*/triggers.yaml file
 	jxProjectFile := filepath.Join(o.Dir, config.ProjectConfigFileName)
 	jxProjectFileExists, err := files.FileExists(jxProjectFile)
 	if err != nil {
@@ -639,7 +639,7 @@ func (o *ImportOptions) CreateNewRemoteRepository() error {
 		repo.Clone = repo.Link
 	}
 
-	// lets allow a BDD test to switch the git host to push to
+	// let's allow a BDD test to switch the git host to push to
 	// e.g. if using kind and gitea and running tests inside k8s without public access to the gitea server
 	gitPushHost := os.Getenv("JX_GIT_PUSH_HOST")
 	if repo.Clone != "" && gitPushHost != "" {
@@ -662,7 +662,7 @@ func (o *ImportOptions) CreateNewRemoteRepository() error {
 		return err
 	}
 
-	// lets use a retry loop to push in case the repository is not yet setup quite yet
+	// let's use a retry loop to push in case the repository is not yet setup quite yet
 	f := func() error {
 		return gitclient.Push(o.Git(), dir, "origin", false, "HEAD")
 	}
@@ -731,7 +731,7 @@ func (o *ImportOptions) DiscoverGit() error {
 		return fmt.Errorf("no directory specified")
 	}
 
-	// lets prompt the user to initialise the Git repository
+	// let's prompt the user to initialise the Git repository
 	if !o.BatchMode {
 		o.GetReporter().Trace("The directory %s is not yet using git", termcolor.ColorInfo(dir))
 
@@ -855,7 +855,7 @@ func (o *ImportOptions) doImport() error {
 		}
 	}
 
-	// lets git push the build pack changes now to trigger a release
+	// let's git push the build pack changes now to trigger a release
 	//
 	// TODO we could make this an optional Pull request etc?
 	if o.OnCompleteCallback != nil {
@@ -1205,7 +1205,7 @@ func (o *ImportOptions) fixMaven() error {
 			return err
 		}
 
-		// lets ensure the mvn plugins are ok
+		// let's ensure the mvn plugins are ok
 		out, err := o.CommandRunner(cmdrunner.NewCommand(dir, "mvn", "io.jenkins.updatebot:updatebot-maven-plugin:"+updateBotMavenPluginVersion+":plugin", "-Dartifact=maven-deploy-plugin", "-Dversion="+constants.MinimumMavenDeployVersion))
 		if err != nil {
 			return fmt.Errorf("failed to update maven deploy plugin: %s output: %s", err, out)
@@ -1219,7 +1219,7 @@ func (o *ImportOptions) fixMaven() error {
 			return err
 		}
 
-		// lets ensure the probe paths are ok
+		// let's ensure the probe paths are ok
 		out, err = o.CommandRunner(cmdrunner.NewCommand(dir, "mvn", "io.jenkins.updatebot:updatebot-maven-plugin:"+updateBotMavenPluginVersion+":chart"))
 		if err != nil {
 			return fmt.Errorf("failed to update chart: %s output: %s", err, out)
@@ -1255,7 +1255,7 @@ func (o *ImportOptions) DefaultValuesFromTeamSettings(settings *v1.TeamSettings)
 		o.DeployKind = settings.DeployKind
 	}
 
-	// lets override any deploy o from the team settings if they are not specified
+	// let's override any deploy o from the team settings if they are not specified
 	/* TODO
 	teamDeployOptions := settings.GetDeployOptions()
 	if !o.FlagChanged(OptionCanary) {
@@ -1325,7 +1325,7 @@ func (o *ImportOptions) modifyDeployKind() error {
 	cmd, eo := edit.NewCmdEditDeployKindAndOption(&copy)
 	eo.Dir = o.Dir
 
-	// lets parse the CLI arguments so that the flags are marked as specified to force them to be overridden
+	// let's parse the CLI arguments so that the flags are marked as specified to force them to be overridden
 	err := cmd.Flags().Parse(edit.ToDeployArguments(OptionKind, deployKind, dopts.Canary, dopts.HPA))
 	if err != nil {
 		return err
@@ -1340,7 +1340,7 @@ func (o *ImportOptions) modifyDeployKind() error {
 */
 
 // enableTriggerPipelineJenkinsXPipeline lets generate the jenkins-x.yml if one doesn't exist
-// lets use JENKINS_SERVER to point to the jenkins server to use
+// let's use JENKINS_SERVER to point to the jenkins server to use
 /* TODO
 func (o *ImportOptions) enableTriggerPipelineJenkinsXPipeline(destination ImportDestination) error {
 	projectConfig, fileName, err := config.LoadProjectConfig(o.Dir)
@@ -1395,7 +1395,7 @@ func (o *ImportOptions) enableJenkinsfileRunnerPipeline(destination ImportDestin
 	}
 	imageName := destination.JenkinsfileRunner.Image
 	if imageName != "" {
-		// lets add override for the run steps image
+		// let's add override for the run steps image
 		if projectConfig.PipelineConfig == nil {
 			projectConfig.PipelineConfig = &jenkinsfile.PipelineConfig{}
 		}
@@ -1530,7 +1530,7 @@ func (o *ImportOptions) defaultGitServerURLFromDevEnv() (string, error) {
 		gitURL = o.DevEnv.Spec.Source.URL
 	}
 	if gitURL == "" {
-		// lets default to github
+		// let's default to github
 		return giturl.GitHubURL, nil
 	}
 	gitInfo, err := giturl.ParseGitURL(gitURL)

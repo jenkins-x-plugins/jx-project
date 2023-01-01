@@ -54,7 +54,7 @@ func (o *Options) LoadQuickStartsModel(gitHubOrganisations []string, ignoreTeam 
 		return model, errors.Wrapf(err, "failed to check if file exists %s", quickstartsFile)
 	}
 	if !exists {
-		// lets default to using the version stream file
+		// let's default to using the version stream file
 		versionStreamFile := filepath.Join(o.VersionsDir, v1alpha1.QuickstartsFileName)
 		exists, err = files.FileExists(versionStreamFile)
 		if err != nil {
@@ -142,7 +142,7 @@ func (o *Options) loadQuickStartLocations(gitHubOrganisations []string) []v1.Qui
 		}
 	}
 	*/
-	// lets add any extra github organisations if they are not already configured
+	// let's add any extra github organisations if they are not already configured
 	for _, org := range gitHubOrganisations {
 		found := false
 		for _, loc := range locations {
@@ -191,7 +191,7 @@ func (o *Options) LoadMLProjectSetsModel(gitHubOrganisations []string, ignoreTea
 	}
 	if !exists {
 		log.Logger().Debugf("No quickstarts file so trying versionStream\n")
-		// lets default to using the version stream file
+		// let's default to using the version stream file
 		versionStreamFile := filepath.Join(o.VersionsDir, v1alpha1.MLProjectSetsFileName)
 		log.Logger().Debugf("versionStreamFile: %s\n", versionStreamFile)
 		exists, err = files.FileExists(versionStreamFile)
