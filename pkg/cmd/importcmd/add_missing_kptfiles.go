@@ -59,7 +59,7 @@ func (o *ImportOptions) createMissingLighthouseKptFiles(lighthouseDir, packName 
 			continue
 		}
 
-		// lets check if we have a local Kptfile for this trigger folder
+		// let's check if we have a local Kptfile for this trigger folder
 		localKptDir := filepath.Join(o.Dir, ".lighthouse", name)
 		localKptFile := filepath.Join(localKptDir, "Kptfile")
 		exists, err = files.FileExists(localKptFile)
@@ -88,7 +88,7 @@ func (o *ImportOptions) createMissingLighthouseKptFiles(lighthouseDir, packName 
 			return errors.Wrapf(err, "failed to discover git URL in dir %s", lighthouseDir)
 		}
 
-		// lets remove any user/passwords just in case
+		// let's remove any user/passwords just in case
 		gitURL = stringhelpers.SanitizeURL(gitURL)
 
 		if gitURL == "" {

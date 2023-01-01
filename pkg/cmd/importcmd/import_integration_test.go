@@ -126,7 +126,7 @@ func assertImport(t *testing.T, testDir string, testcase string, importToJenkins
 		o.Destination.Jenkins.Enabled = true
 		o.Destination.Jenkins.Server = "myjenkins"
 
-		// lets generate a dummy Jenkinsfile so that we know we don't run the build packs
+		// let's generate a dummy Jenkinsfile so that we know we don't run the build packs
 		jenkinsfile := filepath.Join(testDir, "Jenkinsfile")
 		exists, err := files.FileExists(jenkinsfile)
 		require.NoError(t, err, "could not check for file %s", jenkinsfile)
@@ -201,7 +201,7 @@ func assertImport(t *testing.T, testDir string, testcase string, importToJenkins
 			}
 		}
 
-		// lets test we modified the deployment kind
+		// let's test we modified the deployment kind
 		if dirName == "maven-camel" {
 			testhelpers.AssertFileContains(t, filepath.Join(testDir, "charts", "maven-camel", "values.yaml"), "knativeDeploy: true")
 		}

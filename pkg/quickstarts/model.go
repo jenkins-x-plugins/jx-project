@@ -124,7 +124,7 @@ func (model *QuickstartModel) CreateSurvey(filter *QuickstartFilter, batchMode b
 	if language != "" {
 		languages := model.Languages()
 		if len(languages) == 0 {
-			// lets ignore this filter as there are none available
+			// let's ignore this filter as there are none available
 			filter.Language = ""
 		} else {
 			lower := strings.ToLower(language)

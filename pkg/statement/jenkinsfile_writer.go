@@ -113,7 +113,7 @@ func (w *Writer) combineSimilarContexts(statements []*Statement) []*Statement {
 	for i := 0; i < len(answer)-1; {
 		s1 := answer[i]
 		s2 := answer[i+1]
-		// lets combine the children to the first node if the contexts are equal
+		// let's combine the children to the first node if the contexts are equal
 		if s1.ContextEquals(s2) {
 			s1.Children = append(s1.Children, s2.Children...)
 			answer = append(answer[0:i+1], answer[i+2:]...)

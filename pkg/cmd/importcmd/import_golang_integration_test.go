@@ -1,3 +1,4 @@
+//go:build integration
 // +build integration
 
 package importcmd_test
@@ -54,7 +55,7 @@ func TestImportGoLangProject(t *testing.T) {
 	assert.NoFileExists(t, filepath.Join(testDir, config.ProjectConfigFileName))
 	assert.FileExists(t, filepath.Join(testDir, ".lighthouse", "jenkins-x", "triggers.yaml"))
 
-	// lets verify we have comments still in the values yaml
+	// let's verify we have comments still in the values yaml
 	valuesFile := filepath.Join(testDir, "charts", dirName, "values.yaml")
 	assert.FileExists(t, valuesFile)
 	valuesYaml, _ := testhelpers.AssertLoadFileText(t, valuesFile)

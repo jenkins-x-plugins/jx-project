@@ -47,7 +47,7 @@ func (o *ImportOptions) PickImportDestination(devEnvCloneDir, jenkinsfile string
 		return o.Destination, errors.Wrapf(err, "failed to load the source config")
 	}
 
-	// lets check CLI arguments to pick the destination
+	// let's check CLI arguments to pick the destination
 	if o.Destination.JenkinsX.Enabled {
 		return o.Destination, nil
 	}
@@ -116,7 +116,7 @@ func (o *ImportOptions) PickImportDestination(devEnvCloneDir, jenkinsfile string
 		}
 	}
 
-	// lets add a list of choices...
+	// let's add a list of choices...
 	actionChoices := []string{jenkinsXDestination}
 	actions := map[string]ImportDestination{
 		jenkinsXDestination: {JenkinsX: JenkinsXDestination{Enabled: true}},

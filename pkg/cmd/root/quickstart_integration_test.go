@@ -1,3 +1,4 @@
+//go:build integration
 // +build integration
 
 package root_test

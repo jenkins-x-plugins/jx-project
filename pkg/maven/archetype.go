@@ -152,7 +152,7 @@ func (m *ArchetypeModel) CreateSurvey(data *ArchetypeFilter, pickVersion bool, f
 			return options.InvalidOption("group-filter", data.GroupIDFilter, m.GroupIDs(""))
 		}
 
-		// lets pick from all groups
+		// let's pick from all groups
 		form.ArchetypeGroupID, err = i.PickNameWithDefault(filteredGroups, "Group ID:", form.ArchetypeGroupID, "please pick the maven Group ID")
 		if err != nil {
 			return errors.Wrapf(err, "failed to pick Group ID")

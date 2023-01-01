@@ -256,7 +256,7 @@ func (s PipelineLifecycleArray) Groovy() string {
 		}
 	}
 	text := statement.WriteJenkinsfileStatements(4, statements)
-	// lets remove the very last newline so its easier to compose in templates
+	// let's remove the very last newline so its easier to compose in templates
 	text = strings.TrimSuffix(text, "\n")
 	return text
 }
@@ -508,7 +508,7 @@ func LoadPipelineConfigAndMaybeValidate(fileName string, resolver ImportFileReso
 	pipelines := &config.Pipelines
 	pipelines.RemoveWhenStatements(isTekton)
 	if clearContainer {
-		// lets force any agent for prow / jenkinsfile runner
+		// let's force any agent for prow / jenkinsfile runner
 		config.Agent = clearContainerAndLabel(config.Agent)
 	}
 	config.PopulatePipelinesFromDefault()
@@ -861,7 +861,7 @@ func (c *PipelineConfig) createPipelineSteps(step *syntax.Step, prefixPath strin
 func replaceCommandText(step *syntax.Step) string {
 	answer := strings.Replace(step.GetFullCommand(), "\\$", "$", -1)
 
-	// lets replace the old way of setting versions
+	// let's replace the old way of setting versions
 	answer = strings.Replace(answer, "export VERSION=`cat VERSION` && ", "", 1)
 	answer = strings.Replace(answer, "export VERSION=$PREVIEW_VERSION && ", "", 1)
 
@@ -877,7 +877,7 @@ func (c *PipelineConfig) createStageForBuildPack(args *CreatePipelineArguments) 
 		return nil, args.StepCounter, errors.New("generatePipeline: no lifecycles")
 	}
 
-	// lets generate the pipeline using the build packs
+	// let's generate the pipeline using the build packs
 	container := ""
 	if c.Agent != nil {
 		container = c.Agent.GetImage()

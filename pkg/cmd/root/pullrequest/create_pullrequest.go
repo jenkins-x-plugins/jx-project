@@ -126,7 +126,7 @@ func (o *CreatePullRequestOptions) Run() error {
 		return errors.Wrapf(err, "failed to validate options")
 	}
 
-	// lets discover the git dir
+	// let's discover the git dir
 	if o.Dir == "" {
 		dir, err := os.Getwd()
 		if err != nil {

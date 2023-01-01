@@ -1,3 +1,4 @@
+//go:build integration
 // +build integration
 
 package importcmd_test
@@ -59,7 +60,7 @@ func TestImportJenkinsfileProject(t *testing.T) {
 	// lighthouse tekton pipelines...
 	//assert.FileExists(t, filepath.Join(testDir, ".lighthouse", "jenkins-x", "triggers.yaml"))
 
-	// lets verify the pipeline bot user is a collaborator on the repository
+	// let's verify the pipeline bot user is a collaborator on the repository
 	require.NotNil(t, o.BootScmClient, "should have created a boot SCM client")
 
 	ctx := context.Background()

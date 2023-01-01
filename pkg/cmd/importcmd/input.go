@@ -102,7 +102,7 @@ func (o *ImportOptions) PickNewOrExistingGitRepository() (*CreateRepoData, error
 				if len(config.Servers) == 0 {
 					return nil, fmt.Errorf("No Git servers are configured!")
 				}
-				// lets assume the first for now
+				// let's assume the first for now
 				server = config.Servers[0]
 				currentServer := config.CurrentServer
 				if currentServer != "" {

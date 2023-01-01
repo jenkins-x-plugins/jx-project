@@ -42,7 +42,7 @@ func InstallMavenIfRequired(runner cmdrunner.CommandRunner) error {
 		}
 		return nil
 	}
-	// lets assume maven is not installed so lets download it
+	// let's assume maven is not installed so lets download it
 	clientURL := fmt.Sprintf("https://repo1.maven.org/maven2/org/apache/maven/apache-maven/%s/apache-maven-%s-bin.zip", MavenVersion, MavenVersion)
 
 	log.Logger().Infof("Apache Maven is not installed so lets download: %s", termcolor.ColorInfo(clientURL))
@@ -80,7 +80,7 @@ func InstallMavenIfRequired(runner cmdrunner.CommandRunner) error {
 		return err
 	}
 
-	// lets find a directory inside the unzipped folder
+	// let's find a directory inside the unzipped folder
 	log.Logger().Info("\nReadDir")
 	files, err := os.ReadDir(mvnTmpDir)
 	if err != nil {

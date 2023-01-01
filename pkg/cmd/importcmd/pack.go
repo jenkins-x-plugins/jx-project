@@ -57,7 +57,7 @@ func (p *Pack) SaveDir(dest, packName string) error {
 				fullPath := filepath.Join(chartPath, chartName, path)
 				dir := filepath.Dir(fullPath)
 
-				// lets ensure the dir exists
+				// let's ensure the dir exists
 				err = os.MkdirAll(dir, files.DefaultDirWritePermissions)
 				if err != nil {
 					return errors.Wrapf(err, "failed to create dir %s", dir)
@@ -89,7 +89,7 @@ func (p *Pack) SaveDir(dest, packName string) error {
 }
 
 func saveFile(path string, f io.ReadCloser) error {
-	// lets make sure the parent dir exists
+	// let's make sure the parent dir exists
 	parent := filepath.Dir(path)
 	err := os.MkdirAll(parent, files.DefaultDirWritePermissions)
 	if err != nil {
@@ -123,7 +123,7 @@ func SaveDir(c *chart.Chart, dest, packName string) error {
 
 	// Save values.yaml
 	if c.Values != nil && len(c.Values) > 0 {
-		// lets find the raw file for values.yaml and use to that to preserve comments
+		// let's find the raw file for values.yaml and use to that to preserve comments
 		data := ""
 		for _, f := range c.Raw {
 			if f.Name == "values.yaml" {
@@ -221,7 +221,7 @@ func loadDirectory(pack *Pack, dir, relPath string) error {
 				}
 				pack.Charts = append(pack.Charts, localChart)
 
-				// lets see if there's a nested resources folder
+				// let's see if there's a nested resources folder
 				resourceDir := filepath.Join(dir, name, "resources")
 				exists, err := files.DirExists(resourceDir)
 				if err != nil {
