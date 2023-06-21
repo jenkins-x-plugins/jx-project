@@ -70,11 +70,11 @@ func (o *ImportOptions) getOwners(userName string) ([]string, error) {
 	}
 
 	ctx := context.Background()
-	orgs, _, err := o.ScmFactory.ScmClient.Organizations.List(ctx, scm.ListOptions{
+	orgs, _, err := o.ScmFactory.ScmClient.Organizations.List(ctx, &scm.ListOptions{
 		Size: 500,
 	})
 	if err != nil {
-		log.Logger().Warn("Please make sure that the file '$HOME/git/credentials' contains a valid API token in the format 'https://<Username>:<Personal Access Token>@github.com'")
+		log.Logger().Warn("Please make sure that the file '$HOME/git/credentials' contains a valid API token in the format 'https://<Username>:<Personal Access Token>@gitserverurl' where gitserver can be github.com, gitlab.com, bitbucket.org etc")
 		return nil, errors.Wrapf(err, "failed to list git organisations for user %s", userName)
 	}
 	for _, org := range orgs {
@@ -102,7 +102,7 @@ func (o *ImportOptions) PickNewOrExistingGitRepository() (*CreateRepoData, error
 				if len(config.Servers) == 0 {
 					return nil, fmt.Errorf("No Git servers are configured!")
 				}
-				// lets assume the first for now
+				// let's assume the first for now
 				server = config.Servers[0]
 				currentServer := config.CurrentServer
 				if currentServer != "" {

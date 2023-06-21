@@ -50,7 +50,7 @@ func (o *ImportOptions) modifyDevEnvironmentSource(importDir, promoteDir string,
 	}
 	requirements := &requirementsResource.Spec
 	if requirements != nil && requirementsFileName != "" {
-		// lets make sure we have an environment for this  environment
+		// let's make sure we have an environment for this  environment
 		repoOwner := gitInfo.Organisation
 		repoName := gitInfo.Name
 		for k := range requirements.Environments {
@@ -61,7 +61,7 @@ func (o *ImportOptions) modifyDevEnvironmentSource(importDir, promoteDir string,
 			}
 		}
 
-		// lets add a new environment
+		// let's add a new environment
 
 		if envName == "" {
 			envName = naming.ToValidName(repoName)

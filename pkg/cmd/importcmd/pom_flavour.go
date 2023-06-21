@@ -1,20 +1,24 @@
 package importcmd
 
 import (
-	"io/ioutil"
+	"fmt"
+	"os"
+	"path/filepath"
+	"regexp"
 	"strings"
+
+	"github.com/jenkins-x/jx-helpers/v3/pkg/files"
 )
 
 const (
-	MAVEN       = "maven"
-	MAVENJAVA11 = "maven-java11"
-	APPSERVER   = "appserver"
-	LIBERTY     = "liberty"
-	DROPWIZARD  = "dropwizard"
+	MAVEN      = "maven"
+	APPSERVER  = "appserver"
+	LIBERTY    = "liberty"
+	DROPWIZARD = "dropwizard"
 )
 
-func PomFlavour(path string) (string, error) {
-	b, err := ioutil.ReadFile(path)
+func PomFlavour(packsDir, pomPath string) (string, error) {
+	b, err := os.ReadFile(pomPath)
 	if err != nil {
 		return "", nil
 	}
@@ -30,9 +34,31 @@ func PomFlavour(path string) (string, error) {
 	if strings.Contains(s, "<groupId>org.apache.tomcat") {
 		return APPSERVER, nil
 	}
-	if strings.Contains(s, "<java.version>11</java.version>") {
-		return MAVENJAVA11, nil
+	// java.version is used by Spring Boot
+	version, ok := getProp(s, "java.version")
+	if !ok {
+		// maven-compiler-plugin 3.6 and later versions supports and recommends maven.compiler.release
+		version, ok = getProp(s, "maven.compiler.release")
+	}
+	if !ok {
+		// older versions of maven-compiler-plugin uses maven.compiler.target
+		version, ok = getProp(s, "maven.compiler.target")
+	}
+	if ok {
+		pack := "maven-java" + version
+		if exists, _ := files.DirExists(filepath.Join(packsDir, pack)); exists {
+			return pack, nil
+		}
 	}
 
 	return MAVEN, nil
+}
+
+func getProp(pom, prop string) (string, bool) {
+	propPattern := regexp.MustCompile(fmt.Sprintf("<%s>(\\d+)</%s>", prop, prop))
+	matches := propPattern.FindStringSubmatch(pom)
+	if matches != nil {
+		return matches[1], true
+	}
+	return "", false
 }

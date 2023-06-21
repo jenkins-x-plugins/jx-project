@@ -32,7 +32,7 @@ func SetFakeClients(t *testing.T, o *importcmd.ImportOptions, realJXConvert bool
 	client, fakeScmData := fakescm.NewDefault()
 	o.ScmFactory.ScmClient = client
 
-	// lets add a dummy token so we can create authenticated git URLs
+	// let's add a dummy token so we can create authenticated git URLs
 	o.ScmFactory.GitToken = "my.fake.token"
 	o.ScmFactory.NoWriteGitCredentialsFile = true
 
@@ -82,7 +82,7 @@ func NewFakeRunnerWithoutGitPush(t *testing.T, realJXConvert bool) *fakerunner.F
 					}
 				}
 			case "push":
-				// lets fake out git push
+				// let's fake out git push
 				t.Logf("faking command: %s\n", c.CLI())
 				return "", nil
 			}
@@ -90,7 +90,7 @@ func NewFakeRunnerWithoutGitPush(t *testing.T, realJXConvert bool) *fakerunner.F
 
 		if c.Name == "jx" && len(c.Args) > 0 && c.Args[0] == "pipeline" {
 			if !realJXConvert || len(c.Args) < 2 || c.Args[1] != "convert" {
-				// lets fake out starting pipelines
+				// let's fake out starting pipelines
 				t.Logf("faking command: %s\n", c.CLI())
 				return "", nil
 			}

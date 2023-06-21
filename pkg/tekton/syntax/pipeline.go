@@ -445,7 +445,7 @@ func (a *Agent) Groovy() string {
     label "%s"
   }`, a.Label)
 	}
-	// lets use any for Prow
+	// let's use any for Prow
 	return "any"
 }
 
@@ -461,7 +461,9 @@ func (a *Agent) GetImage() string {
 // MangleToRfc1035Label - Task/Step names need to be RFC 1035/1123 compliant DNS labels, so we mangle
 // them to make them compliant. Results should match the following regex and be
 // no more than 63 characters long:
-//     [a-z]([-a-z0-9]*[a-z0-9])?
+//
+//	[a-z]([-a-z0-9]*[a-z0-9])?
+//
 // cf. https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
 // body is assumed to have at least one ASCII letter.
 // suffix is assumed to be alphanumeric and non-empty.
@@ -1855,7 +1857,7 @@ func generateSteps(params *generateStepsParams) ([]tektonv1alpha1.Step, map[stri
 		return nil, nil, params.stepCounter, errors.New("syntactic sugar steps not yet supported")
 	}
 
-	// lets make sure if we've overloaded any environment variables we remove any remaining valueFrom structs
+	// let's make sure if we've overloaded any environment variables we remove any remaining valueFrom structs
 	// to avoid creating bad Tasks
 	for i := range steps {
 		for j, e := range steps[i].Env {

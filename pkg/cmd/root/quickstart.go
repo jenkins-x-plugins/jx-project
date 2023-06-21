@@ -2,7 +2,7 @@ package root
 
 import (
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -278,7 +278,7 @@ func (o *CreateQuickstartOptions) createQuickstart(f *quickstarts.QuickstartForm
 		return answer, err
 	}
 
-	// lets not pass in a token if we are not using a similar service (e.g. github.com or mygitserver.com)
+	// let's not pass in a token if we are not using a similar service (e.g. github.com or mygitserver.com)
 	sameDomain, err := SameRootDomain(o.ScmFactory.GitServerURL, u)
 	if err != nil {
 		return answer, errors.Wrapf(err, "failed to compare domains")
@@ -309,17 +309,17 @@ func (o *CreateQuickstartOptions) createQuickstart(f *quickstarts.QuickstartForm
 		return answer, err
 	}
 	defer res.Body.Close()
-	body, err := ioutil.ReadAll(res.Body)
+	body, err := io.ReadAll(res.Body)
 	if err != nil {
 		return answer, err
 	}
 
 	zipFile := filepath.Join(dir, "source.zip")
-	err = ioutil.WriteFile(zipFile, body, files.DefaultFileWritePermissions)
+	err = os.WriteFile(zipFile, body, files.DefaultFileWritePermissions)
 	if err != nil {
 		return answer, fmt.Errorf("failed to download file %s due to %s", zipFile, err)
 	}
-	tmpDir, err := ioutil.TempDir("", "jx-source-")
+	tmpDir, err := os.MkdirTemp("", "jx-source-")
 	if err != nil {
 		return answer, fmt.Errorf("failed to create temporary directory: %s", err)
 	}
@@ -344,11 +344,11 @@ func (o *CreateQuickstartOptions) createQuickstart(f *quickstarts.QuickstartForm
 }
 
 func findFirstDirectory(dir string) (string, error) {
-	files, err := ioutil.ReadDir(dir)
+	fileList, err := os.ReadDir(dir)
 	if err != nil {
 		return dir, err
 	}
-	for _, f := range files {
+	for _, f := range fileList {
 		if f.IsDir() {
 			return filepath.Join(dir, f.Name()), nil
 		}
@@ -379,7 +379,7 @@ func isMLProjectSet(q *quickstarts.Quickstart, username, token string) bool {
 		return false
 	}
 	defer res.Body.Close()
-	bodybytes, err := ioutil.ReadAll(res.Body)
+	bodybytes, err := io.ReadAll(res.Body)
 	if err != nil {
 		log.Logger().Warnf("Problem parsing response body from %s: %s ", u, err)
 		return false

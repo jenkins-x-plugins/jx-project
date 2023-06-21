@@ -52,7 +52,7 @@ func (o *ImportOptions) EvaluateBuildPack(devEnvCloneDir, jenkinsfile string) er
 		return err
 	}
 
-	// lets rename the chart to be the same as our app name
+	// let's rename the chart to be the same as our app name
 	err = o.renameChartToMatchAppName()
 	if err != nil {
 		return err

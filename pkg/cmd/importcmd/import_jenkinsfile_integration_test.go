@@ -1,10 +1,10 @@
+//go:build integration
 // +build integration
 
 package importcmd_test
 
 import (
 	"context"
-	"io/ioutil"
 	"os"
 	"path"
 	"path/filepath"
@@ -21,11 +21,10 @@ import (
 )
 
 func TestImportJenkinsfileProject(t *testing.T) {
-	tempDir, err := ioutil.TempDir("", "test-import-jx-gha-")
-	assert.NoError(t, err)
+	tempDir := t.TempDir()
 
 	testData := path.Join("test_data", "import_projects")
-	_, err = os.Stat(testData)
+	_, err := os.Stat(testData)
 	assert.NoError(t, err)
 
 	name := "custom_jenkins"
@@ -61,7 +60,7 @@ func TestImportJenkinsfileProject(t *testing.T) {
 	// lighthouse tekton pipelines...
 	//assert.FileExists(t, filepath.Join(testDir, ".lighthouse", "jenkins-x", "triggers.yaml"))
 
-	// lets verify the pipeline bot user is a collaborator on the repository
+	// let's verify the pipeline bot user is a collaborator on the repository
 	require.NotNil(t, o.BootScmClient, "should have created a boot SCM client")
 
 	ctx := context.Background()

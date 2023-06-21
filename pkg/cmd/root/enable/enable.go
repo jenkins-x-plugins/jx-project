@@ -51,7 +51,7 @@ func NewCmdPipelineEnable() (*cobra.Command, *Options) {
 
 	if o.RegenCharts {
 		o.ImportOptions.PackFilter = func(pack *importcmd.Pack) {
-			// lets exclude everything from the pack other than lighthouse files
+			// let's exclude everything from the pack other than lighthouse files
 			m := map[string]io.ReadCloser{}
 			for k, v := range pack.Files {
 				if strings.HasPrefix(k, ".lighthouse") {

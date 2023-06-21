@@ -3,7 +3,7 @@ package spring
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/url"
 	"os"
@@ -19,8 +19,8 @@ import (
 	"github.com/jenkins-x/jx-logging/v3/pkg/log"
 	"github.com/pkg/errors"
 
+	survey "github.com/AlecAivazis/survey/v2"
 	"github.com/jenkins-x-plugins/jx-project/pkg/cmd/root/version"
-	survey "gopkg.in/AlecAivazis/survey.v1"
 )
 
 const (
@@ -108,7 +108,7 @@ type errorResponse struct {
 func LoadSpringBoot(cacheDir string) (*BootModel, error) {
 	loader := func() ([]byte, error) {
 		client := http.Client{}
-		req, err := http.NewRequest(http.MethodGet, startSpringURL, nil)
+		req, err := http.NewRequest(http.MethodGet, startSpringURL, http.NoBody)
 		if err != nil {
 			return nil, err
 		}
@@ -120,7 +120,7 @@ func LoadSpringBoot(cacheDir string) (*BootModel, error) {
 			return nil, err
 		}
 		defer res.Body.Close()
-		return ioutil.ReadAll(res.Body)
+		return io.ReadAll(res.Body)
 	}
 
 	cacheFileName := ""
@@ -185,25 +185,25 @@ func (model *BootModel) CreateSurvey(data *BootForm, advanced, batchMode bool) e
 		return nil
 	}
 	if data.Language == "" {
-		qs = append(qs, CreateValueSelect("Language", "language", &model.Language, data))
+		qs = append(qs, CreateValueSelect("Language", "language", &model.Language))
 	}
 	if data.BootVersion == "" && advanced {
-		qs = append(qs, CreateValueSelect("Spring Boot version", "bootVersion", &model.BootVersion, data))
+		qs = append(qs, CreateValueSelect("Spring Boot version", "bootVersion", &model.BootVersion))
 	}
 	if data.JavaVersion == "" && advanced {
-		qs = append(qs, CreateValueSelect("Java version", "javaVersion", &model.JavaVersion, data))
+		qs = append(qs, CreateValueSelect("Java version", "javaVersion", &model.JavaVersion))
 	}
 	if data.Packaging == "" && advanced {
-		qs = append(qs, CreateValueSelect("Packaging", "packaging", &model.Packaging, data))
+		qs = append(qs, CreateValueSelect("Packaging", "packaging", &model.Packaging))
 	}
 	if data.Type == "" && advanced {
-		qs = append(qs, CreateValueSelect("Build Tool", "type", &model.Type, data))
+		qs = append(qs, CreateValueSelect("Build Tool", "type", &model.Type))
 	}
 	if data.GroupID == "" {
-		qs = append(qs, CreateValueInput("Group", "groupId", &model.GroupID, data))
+		qs = append(qs, CreateValueInput("Group", "groupId", &model.GroupID))
 	}
 	if data.ArtifactID == "" {
-		qs = append(qs, CreateValueInput("Artifact", "artifactId", &model.ArtifactID, data))
+		qs = append(qs, CreateValueInput("Artifact", "artifactId", &model.ArtifactID))
 	}
 	if emptyArray(data.Dependencies) {
 		qs = append(qs, CreateTreeSelect("Dependencies", "dependencies", &model.Dependencies, data))
@@ -271,7 +271,7 @@ func (model *BootModel) ValidateTreeInput(name string, o *TreeSelect, values []s
 	return nil
 }
 
-func CreateValueSelect(message, name string, options *Options, data *BootForm) *survey.Question {
+func CreateValueSelect(message, name string, options *Options) *survey.Question {
 	values := options.StringArray()
 	return &survey.Question{
 		Name: name,
@@ -284,7 +284,7 @@ func CreateValueSelect(message, name string, options *Options, data *BootForm) *
 	}
 }
 
-func CreateValueInput(message, name string, value *Value, data *BootForm) *survey.Question {
+func CreateValueInput(message, name string, value *Value) *survey.Question {
 	return &survey.Question{
 		Name: name,
 		Prompt: &survey.Input{
@@ -337,6 +337,7 @@ func (data *BootForm) CreateProject(workDir string) (string, error) {
 
 	form := url.Values{}
 	data.AddFormValues(&form)
+	log.Logger().Debugf("SpringForm: %+v", form)
 
 	parameters := form.Encode()
 	if parameters != "" {
@@ -354,7 +355,7 @@ func (data *BootForm) CreateProject(workDir string) (string, error) {
 	}
 	defer res.Body.Close()
 	if res.StatusCode == 400 {
-		errorBody, err := ioutil.ReadAll(res.Body)
+		errorBody, err := io.ReadAll(res.Body)
 		if err != nil {
 			return answer, err
 		}
@@ -369,14 +370,14 @@ func (data *BootForm) CreateProject(workDir string) (string, error) {
 		return answer, errors.New("unable to create spring quickstart")
 	}
 
-	body, err := ioutil.ReadAll(res.Body)
+	body, err := io.ReadAll(res.Body)
 	if err != nil {
 		return answer, err
 	}
 
 	dir := filepath.Join(workDir, dirName)
 	zipFile := dir + ".zip"
-	err = ioutil.WriteFile(zipFile, body, files.DefaultFileWritePermissions)
+	err = os.WriteFile(zipFile, body, files.DefaultFileWritePermissions)
 	if err != nil {
 		return answer, fmt.Errorf("failed to download file %s due to %s", zipFile, err)
 	}

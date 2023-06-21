@@ -2,7 +2,6 @@ package importcmd
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"sort"
@@ -17,11 +16,10 @@ import (
 	"github.com/jenkins-x/jx-helpers/v3/pkg/termcolor"
 	"github.com/jenkins-x/jx-helpers/v3/pkg/yamls"
 
-	"github.com/pkg/errors"
-
 	jxdraft "github.com/jenkins-x-plugins/jx-project/pkg/draft"
 	"github.com/jenkins-x-plugins/jx-project/pkg/jenkinsfile"
 	"github.com/jenkins-x/jx-logging/v3/pkg/log"
+	"github.com/pkg/errors"
 )
 
 // InvokeDraftPack used to pass arguments into the draft pack invocation
@@ -148,7 +146,7 @@ func (o *ImportOptions) InvokeDraftPack(i *InvokeDraftPack) (string, error) {
 		return "", err
 	}
 
-	// lets assume Jenkins X import mode
+	// let's assume Jenkins X import mode
 	//
 	// was:
 	// lets configure the draft pack mode based on the team settings
@@ -192,7 +190,7 @@ func (o *ImportOptions) InvokeDraftPack(i *InvokeDraftPack) (string, error) {
 
 	if lpack == "" {
 		if exists, err := files.FileExists(pomName); err == nil && exists {
-			pack, err := PomFlavour(pomName)
+			pack, err := PomFlavour(packsDir, pomName)
 			if err != nil {
 				return "", err
 			}
@@ -217,7 +215,7 @@ func (o *ImportOptions) InvokeDraftPack(i *InvokeDraftPack) (string, error) {
 
 			if err != nil {
 				if lpack == "" {
-					// lets detect docker and/or helm
+					// let's detect docker and/or helm
 
 					// TODO one day when our pipelines can include steps conditional on the presence of a file glob
 					// we can just use a single docker/helm package that does docker and/or helm
@@ -229,18 +227,18 @@ func (o *ImportOptions) InvokeDraftPack(i *InvokeDraftPack) (string, error) {
 						hasDocker = true
 					}
 
-					// lets check for a helm pack
-					files, err2 := filepath.Glob(filepath.Join(dir, "charts", "*", "Chart.yaml"))
+					// let's check for a helm pack
+					glob, err2 := filepath.Glob(filepath.Join(dir, "charts", "*", "Chart.yaml"))
 					if err2 != nil {
 						return "", errors.Wrapf(err, "failed to detect if there was a chart file in dir %s", dir)
 					}
-					if len(files) == 0 {
-						files, err2 = filepath.Glob(filepath.Join(dir, "*", "Chart.yaml"))
+					if len(glob) == 0 {
+						glob, err2 = filepath.Glob(filepath.Join(dir, "*", "Chart.yaml"))
 						if err2 != nil {
 							return "", errors.Wrapf(err, "failed to detect if there was a chart file in dir %s", dir)
 						}
 					}
-					if len(files) > 0 {
+					if len(glob) > 0 {
 						hasHelm = true
 					}
 
@@ -272,7 +270,7 @@ func (o *ImportOptions) InvokeDraftPack(i *InvokeDraftPack) (string, error) {
 	}
 
 	pack := filepath.Base(lpack)
-	pack, err = o.PickCatalogFolderName(i, packsDir, pack)
+	pack, err = o.PickCatalogFolderName(packsDir, pack)
 	if err != nil {
 		return "", err
 	}
@@ -291,7 +289,7 @@ func (o *ImportOptions) InvokeDraftPack(i *InvokeDraftPack) (string, error) {
 		return pack, err
 	}
 
-	err = copyBuildPack(dir, lpack, o.PackFilter)
+	err = o.copyBuildPack(dir, lpack)
 	if err != nil {
 		log.Logger().Warnf("Failed to apply the build pack in %s due to %s", dir, err)
 	}
@@ -299,11 +297,11 @@ func (o *ImportOptions) InvokeDraftPack(i *InvokeDraftPack) (string, error) {
 	// lets delete empty charts dir if a draft pack created one
 	exists, err := files.DirExists(chartsDir)
 	if err == nil && exists {
-		files, err := ioutil.ReadDir(chartsDir)
+		fileList, err := os.ReadDir(chartsDir)
 		if err != nil {
 			return pack, errors.Wrapf(err, "failed to read charts dir %s", chartsDir)
 		}
-		if len(files) == 0 {
+		if len(fileList) == 0 {
 			err = os.Remove(chartsDir)
 			if err != nil {
 				return pack, errors.Wrapf(err, "failed to remove empty charts dir %s", chartsDir)
@@ -370,55 +368,65 @@ func (o *ImportOptions) DiscoverBuildPack(dir string, projectConfig *config.Proj
 
 // Refactor: taken from jx so we can also bring in the draft pack and not fail when copying buildpacks without a charts dir
 // CopyBuildPack copies the build pack from the source dir to the destination dir
-func copyBuildPack(dest, src string, filter func(*Pack)) error {
+func (o *ImportOptions) copyBuildPack(dest, src string) error {
 	// first do some validation that we are copying from a valid pack directory
 	p, err := FromDir(src)
 	if err != nil {
 		return fmt.Errorf("could not load %s: %s", src, err)
 	}
 
-	// if we already have a Charts dir lets move it instead
 	chartsDir := filepath.Join(dest, "charts")
-	chartFile := filepath.Join(chartsDir, "Chart.yaml")
-	exists, err := files.FileExists(chartFile)
+	newDir := filepath.Join(chartsDir, o.AppName)
+	exists, err := files.DirExists(newDir)
 	if err != nil {
-		return errors.Wrapf(err, "failed to check if chart file exists %s", chartFile)
+		return errors.Wrapf(err, "failed to check if chart directory exists %s", newDir)
 	}
 
 	if exists {
+		// If there already is a chart for this application let's skip copying it from the pack
 		p.Charts = nil
-
-		// lets move the charts folder to charts/$name so its a real chart layout
-		_, appName := filepath.Split(dest)
-
-		fs, err := ioutil.ReadDir(chartsDir)
+	} else {
+		// if we already have a Charts dir lets move it instead
+		chartFile := filepath.Join(chartsDir, "Chart.yaml")
+		exists, err := files.FileExists(chartFile)
 		if err != nil {
-			return errors.Wrapf(err, "failed to read dir %s", chartsDir)
-		}
-		newDir := filepath.Join(dest, "charts", appName)
-		err = os.MkdirAll(newDir, files.DefaultDirWritePermissions)
-		if err != nil {
-			return errors.Wrapf(err, "failed to create dir %s", newDir)
+			return errors.Wrapf(err, "failed to check if chart file exists %s", chartFile)
 		}
 
-		for _, f := range fs {
-			name := f.Name()
-			oldPath := filepath.Join(chartsDir, name)
-			newPath := filepath.Join(newDir, name)
-			err = os.Rename(oldPath, newPath)
+		if exists {
+			// If there already is a chart for this application let's skip copying it from the pack
+			p.Charts = nil
+
+			// let's move the charts folder to charts/$name so its a real chart layout
+
+			fs, err := os.ReadDir(chartsDir)
 			if err != nil {
-				return errors.Wrapf(err, "failed to move file %s to %s", oldPath, newPath)
+				return errors.Wrapf(err, "failed to read dir %s", chartsDir)
+			}
+			err = os.MkdirAll(newDir, files.DefaultDirWritePermissions)
+			if err != nil {
+				return errors.Wrapf(err, "failed to create dir %s", newDir)
+			}
+
+			for _, f := range fs {
+				name := f.Name()
+				oldPath := filepath.Join(chartsDir, name)
+				newPath := filepath.Join(newDir, name)
+				err = os.Rename(oldPath, newPath)
+				if err != nil {
+					return errors.Wrapf(err, "failed to move file %s to %s", oldPath, newPath)
+				}
 			}
 		}
 	}
 
-	// lets remove any files we think should be zapped
+	// let's remove any files we think should be zapped
 	for _, file := range []string{jenkinsfile.PipelineConfigFileName, jenkinsfile.PipelineTemplateFileName} {
 		delete(p.Files, file)
 	}
 
-	if filter != nil {
-		filter(p)
+	if o.PackFilter != nil {
+		o.PackFilter(p)
 	}
 
 	_, packName := filepath.Split(src)

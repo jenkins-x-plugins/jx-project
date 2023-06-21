@@ -1,19 +1,18 @@
+//go:build integration
 // +build integration
 
 package importcmd_test
 
 import (
 	"context"
-	"io/ioutil"
 	"os"
 	"path"
 	"path/filepath"
 	"testing"
 
-	"github.com/jenkins-x/go-scm/scm"
-
 	"github.com/jenkins-x-plugins/jx-project/pkg/cmd/importcmd"
 	"github.com/jenkins-x-plugins/jx-project/pkg/cmd/testimports"
+	"github.com/jenkins-x/go-scm/scm"
 	v1 "github.com/jenkins-x/jx-api/v4/pkg/apis/jenkins.io/v1"
 	"github.com/jenkins-x/jx-helpers/v3/pkg/files"
 	"github.com/jenkins-x/jx-helpers/v3/pkg/kube/jxenv"
@@ -23,11 +22,10 @@ import (
 )
 
 func TestImportTektonCatalogProject(t *testing.T) {
-	tempDir, err := ioutil.TempDir("", "test-import-jx-gha-")
-	assert.NoError(t, err)
+	tempDir := t.TempDir()
 
 	testData := path.Join("test_data", "import_projects")
-	_, err = os.Stat(testData)
+	_, err := os.Stat(testData)
 	assert.NoError(t, err)
 
 	name := "nodejs"
@@ -69,7 +67,7 @@ func TestImportTektonCatalogProject(t *testing.T) {
 	assert.FileExists(t, filepath.Join(testDir, "charts", dirName, "Chart.yaml"))
 	assert.FileExists(t, filepath.Join(testDir, "charts", dirName, "templates", "deployment.yaml"))
 
-	// lets verify the pipeline bot user is a collaborator on the repository
+	// let's verify the pipeline bot user is a collaborator on the repository
 	require.NotNil(t, o.BootScmClient, "should have created a boot SCM client")
 
 	ctx := context.Background()
@@ -79,7 +77,7 @@ func TestImportTektonCatalogProject(t *testing.T) {
 	assert.True(t, flag, "should be a collaborator for repo %s user %s", repoFullName, testimports.PipelineUsername)
 
 	envRepo := "jenkins-x-labs-bdd-tests/jx3-gke-gsm"
-	prs, _, err := o.ScmFactory.ScmClient.PullRequests.List(ctx, envRepo, scm.PullRequestListOptions{})
+	prs, _, err := o.ScmFactory.ScmClient.PullRequests.List(ctx, envRepo, &scm.PullRequestListOptions{Open: true, Closed: true})
 	require.NoError(t, err, "failed to find dev env repo %s", envRepo)
 	require.Len(t, prs, 1, "should have found a Pull Request for dev env repo %s", envRepo)
 

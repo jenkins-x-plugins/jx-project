@@ -1,10 +1,10 @@
+//go:build integration
 // +build integration
 
 package importcmd_test
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path"
 	"path/filepath"
@@ -27,11 +27,10 @@ func TestImportOldProject(t *testing.T) {
 	// 'jx pipeline convert' command
 	useRealJXConvert := false
 
-	tempDir, err := ioutil.TempDir("", "test-import-jx-gha-")
-	assert.NoError(t, err)
+	tempDir := t.TempDir()
 
 	testData := path.Join("test_data", "import_projects")
-	_, err = os.Stat(testData)
+	_, err := os.Stat(testData)
 	assert.NoError(t, err)
 
 	name := "maven_custom_build_pack"
@@ -48,7 +47,7 @@ func TestImportOldProject(t *testing.T) {
 
 	testimports.SetFakeClients(t, o, useRealJXConvert)
 
-	// lets setup git
+	// let's setup git
 	g := o.Git()
 	_, err = g.Command(tempDir, "init")
 	require.NoError(t, err, "failed to git init dir %s", tempDir)
