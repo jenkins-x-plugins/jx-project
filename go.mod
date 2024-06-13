@@ -17,7 +17,7 @@ require (
 	github.com/jenkins-x/go-scm v1.11.18
 	github.com/jenkins-x/jx-api/v4 v4.6.1
 	github.com/jenkins-x/jx-helpers/v3 v3.4.12
-	github.com/jenkins-x/jx-logging/v3 v3.0.12
+	github.com/jenkins-x/jx-logging/v3 v3.0.15
 	github.com/jenkins-x/lighthouse-client v0.0.580
 	github.com/pkg/errors v0.9.1
 	github.com/spf13/cobra v1.6.1
@@ -57,7 +57,7 @@ require (
 	github.com/emicklei/go-restful v2.16.0+incompatible // indirect
 	github.com/evanphx/json-patch v5.6.0+incompatible // indirect
 	github.com/evanphx/json-patch/v5 v5.5.0 // indirect
-	github.com/fatih/color v1.13.0 // indirect
+	github.com/fatih/color v1.15.0 // indirect
 	github.com/ghodss/yaml v1.0.1-0.20190212211648-25d852aebe32 // indirect
 	github.com/go-errors/errors v1.0.1 // indirect
 	github.com/go-kit/log v0.2.0 // indirect
@@ -89,13 +89,13 @@ require (
 	github.com/imdario/mergo v0.3.13 // indirect
 	github.com/inconshreveable/mousetrap v1.0.1 // indirect
 	github.com/jenkins-x/jx-kube-client/v3 v3.0.4 // indirect
-	github.com/jenkins-x/logrus-stackdriver-formatter v0.2.4 // indirect
+	github.com/jenkins-x/logrus-stackdriver-formatter v0.2.6 // indirect
 	github.com/josharian/intern v1.0.0 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
 	github.com/kballard/go-shellquote v0.0.0-20180428030007-95032a82bc51 // indirect
 	github.com/mailru/easyjson v0.7.7 // indirect
-	github.com/mattn/go-colorable v0.1.12 // indirect
-	github.com/mattn/go-isatty v0.0.14 // indirect
+	github.com/mattn/go-colorable v0.1.13 // indirect
+	github.com/mattn/go-isatty v0.0.17 // indirect
 	github.com/matttproud/golang_protobuf_extensions v1.0.4 // indirect
 	github.com/mgutz/ansi v0.0.0-20200706080929-d51e80ef957d // indirect
 	github.com/mitchellh/copystructure v1.2.0 // indirect
