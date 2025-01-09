@@ -11,7 +11,6 @@ import (
 
 	"github.com/jenkins-x-plugins/jx-project/pkg/cmd/importcmd"
 	"github.com/jenkins-x-plugins/jx-project/pkg/cmd/testimports"
-	"github.com/jenkins-x-plugins/jx-project/pkg/config"
 	"github.com/jenkins-x/jx-helpers/v3/pkg/files"
 	"github.com/jenkins-x/jx-helpers/v3/pkg/kube/jxenv"
 	"github.com/jenkins-x/jx-helpers/v3/pkg/kube/naming"
@@ -62,10 +61,4 @@ func TestImportGitHubActionProject(t *testing.T) {
 	assert.FileExists(t, filepath.Join(testDir, "charts", dirName, "Chart.yaml"))
 	assert.FileExists(t, filepath.Join(testDir, ".github", "pullrequest", "task.yml"))
 	assert.FileExists(t, filepath.Join(testDir, ".github", "release", "task.yml"))
-	assert.FileExists(t, filepath.Join(testDir, config.ProjectConfigFileName))
-
-	projectConfig, projectFileName, err := config.LoadProjectConfig(testDir)
-	require.NoError(t, err, "could not load jenkins configuration at %s", testDir)
-
-	assert.Equal(t, "none", projectConfig.BuildPack, "buildPack property in file %s", projectFileName)
 }

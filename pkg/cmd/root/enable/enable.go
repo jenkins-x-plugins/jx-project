@@ -47,7 +47,6 @@ func NewCmdPipelineEnable() (*cobra.Command, *Options) {
 	o.ImportOptions.NoDevPullRequest = true
 	o.ImportOptions.DisableStartPipeline = true
 	o.ImportOptions.DisableStartPipeline = true
-	o.ImportOptions.IgnoreJenkinsXFile = true
 
 	if o.RegenCharts {
 		o.ImportOptions.PackFilter = func(pack *importcmd.Pack) {

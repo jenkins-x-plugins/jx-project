@@ -35,17 +35,13 @@ func TestCreateMLQuickstartProjects(t *testing.T) {
 	if err == nil {
 		appName1 := appName + "-service"
 		appDir1 := filepath.Join(testDir, appName1)
-		pipelineFile1 := filepath.Join(appDir1, "jenkins-x.yml")
 		assert.FileExists(t, filepath.Join(appDir1, "Dockerfile"))
 		assert.FileExists(t, filepath.Join(appDir1, "charts", appName1, "Chart.yaml"))
-		assert.NoFileExists(t, pipelineFile1)
 		assert.FileExists(t, filepath.Join(appDir1, ".lighthouse", "jenkins-x", "triggers.yaml"))
 
 		appName2 := appName + "-training"
 		appDir2 := filepath.Join(testDir, appName2)
-		pipelineFile2 := filepath.Join(appDir2, "jenkins-x.yml")
 		assert.FileExists(t, filepath.Join(appDir2, "Dockerfile"))
-		assert.NoFileExists(t, pipelineFile2)
 		assert.FileExists(t, filepath.Join(appDir2, ".lighthouse", "jenkins-x", "triggers.yaml"))
 	}
 }

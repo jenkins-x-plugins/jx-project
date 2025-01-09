@@ -13,7 +13,6 @@ import (
 
 	"github.com/denormal/go-gitignore"
 	"github.com/jenkins-x-plugins/jx-project/pkg/cmd/common"
-	"github.com/jenkins-x-plugins/jx-project/pkg/config"
 	"github.com/jenkins-x-plugins/jx-project/pkg/constants"
 	"github.com/jenkins-x-plugins/jx-project/pkg/maven"
 	"github.com/jenkins-x/go-scm/scm"
@@ -93,7 +92,6 @@ type ImportOptions struct {
 	NoDevPullRequest                   bool
 	IgnoreExistingRepository           bool
 	IgnoreCollaborator                 bool
-	IgnoreJenkinsXFile                 bool
 	PullRequestPollPeriod              time.Duration
 	PullRequestPollTimeout             time.Duration
 	DeployOptions                      v1.DeployOptions
@@ -129,7 +127,7 @@ type ImportOptions struct {
 const (
 	updateBotMavenPluginVersion = "RELEASE"
 
-	jenkinsfileName = "Jenkinsfile"
+	JenkinsfileName = "Jenkinsfile"
 )
 
 var (
@@ -415,34 +413,6 @@ func (o *ImportOptions) Run() error {
 		}
 	}
 
-	// let's disable the build pack if we have a jenkins-x.yml or a .lighthouse/*/triggers.yaml file
-	jxProjectFile := filepath.Join(o.Dir, config.ProjectConfigFileName)
-	jxProjectFileExists, err := files.FileExists(jxProjectFile)
-	if err != nil {
-		return errors.Wrapf(err, "failed to check if dir contains a %s file", jxProjectFile)
-	}
-	if jxProjectFileExists && !o.IgnoreJenkinsXFile {
-		converted, err := o.convertOldPipeline()
-		if err != nil {
-			return errors.Wrapf(err, "failed to convert old pipeline")
-		}
-
-		o.DisableBuildPack = true
-		if !converted {
-			// we may need to add a custom build pack to handle the old jenkins-x.yml build packs
-			projectConfig, projectConfigFile, err := config.LoadProjectConfig(o.Dir)
-			if err != nil {
-				return errors.Wrapf(err, "failed to load project oconfig file from %s", o.Dir)
-			}
-			if projectConfig.BuildPackGitURef == "" || strings.HasPrefix(projectConfig.BuildPackGitURef, "https://github.com/jenkins-x/jx3-pipeline-catalog") {
-				projectConfig.BuildPackGitURef = "https://github.com/jenkins-x/jxr-packs-kubernetes"
-				err = projectConfig.SaveConfig(projectConfigFile)
-				if err != nil {
-					return errors.Wrapf(err, "failed to save config file %s", projectConfigFile)
-				}
-			}
-		}
-	}
 	if !o.DisableBuildPack {
 		g := filepath.Join(o.Dir, ".lighthouse", "*", "triggers.yaml")
 		matches, err := filepath.Glob(g)
@@ -806,24 +776,6 @@ func (o *ImportOptions) DefaultGitIgnore() error {
 func (o *ImportOptions) doImport() error {
 	gitURL := o.DiscoveredGitURL
 
-	dockerfileLocation := ""
-	if o.Dir != "" {
-		dockerfileLocation = filepath.Join(o.Dir, "Dockerfile")
-	} else {
-		dockerfileLocation = "Dockerfile"
-	}
-	dockerfileExists, err := files.FileExists(dockerfileLocation)
-	if err != nil {
-		return err
-	}
-
-	if dockerfileExists {
-		err = o.ensureDockerRepositoryExists()
-		if err != nil {
-			return err
-		}
-	}
-
 	// TODO should we prompt the user for the git kind if we can't detect / find it?
 	gitKind := o.ScmFactory.GitKind
 
@@ -883,47 +835,6 @@ func (o *ImportOptions) doImport() error {
 	return nil
 }
 
-// ensureDockerRepositoryExists for some kinds of container registry we need to pre-initialise its use such as for ECR
-func (o *ImportOptions) ensureDockerRepositoryExists() error {
-	orgName := o.getOrganisationOrCurrentUser()
-	appName := o.AppName
-	if orgName == "" {
-		log.Logger().Warnf("Missing organisation name!")
-		return nil
-	}
-	if appName == "" {
-		log.Logger().Warnf("Missing application name!")
-		return nil
-	}
-
-	/* TODO
-	kubeClient, curNs, err := o.KubeClientAndNamespace()
-	if err != nil {
-		return err
-	}
-	ns, _, err := jxenv.GetDevNamespace(kubeClient, curNs)
-	if err != nil {
-		return err
-	}
-
-	region, _ := kube.ReadRegion(kubeClient, ns)
-	cm, err := kubeClient.CoreV1().ConfigMaps(ns).Get(kube.ConfigMapJenkinsDockerRegistry, metav1.GetOptions{})
-	if err != nil {
-		return fmt.Errorf("Could not find ConfigMap %s in namespace %s: %s", kube.ConfigMapJenkinsDockerRegistry, ns, err)
-	}
-	if cm.Data != nil {
-		dockerRegistry := cm.Data["docker.registry"]
-		if dockerRegistry != "" {
-			if strings.HasSuffix(dockerRegistry, ".amazonaws.com") && strings.Index(dockerRegistry, ".ecr.") > 0 {
-				return amazon.LazyCreateRegistry(kubeClient, ns, region, dockerRegistry, o.getDockerRegistryOrg(), appName)
-			}
-		}
-	}
-
-	*/
-	return nil
-}
-
 // ReplacePlaceholders replaces app name, git server name, git org, and docker registry org placeholders
 func (o *ImportOptions) ReplacePlaceholders(gitServerName, dockerRegistryOrg string) error {
 	safeOrganisationName := naming.ToValidName(strings.ToLower(o.Organisation))
@@ -951,6 +862,7 @@ func (o *ImportOptions) ReplacePlaceholders(gitServerName, dockerRegistryOrg str
 			pathsToRename = append([]string{f}, pathsToRename...)
 		}
 		if !fi.IsDir() {
+			// TODO: Apply  https://docs.gomplate.ca/ if .jx/gotemplate.yaml exists
 			if err := replacePlaceholdersInFile(replacer, f); err != nil {
 				return err
 			}
@@ -1311,140 +1223,6 @@ func (o *ImportOptions) GetGitRepositoryDetails() (*CreateRepoData, error) {
 	}
 	return details, nil
 }
-
-/** TODO
-// modifyDeployKind lets modify the deployment kind if the team settings or CLI settings are different
-func (o *ImportOptions) modifyDeployKind() error {
-	deployKind := o.DeployKind
-	if deployKind == "" {
-		return nil
-	}
-	dopts := o.DeployOptions
-
-	copy := *o.CommonOptions
-	cmd, eo := edit.NewCmdEditDeployKindAndOption(&copy)
-	eo.Dir = o.Dir
-
-	// let's parse the CLI arguments so that the flags are marked as specified to force them to be overridden
-	err := cmd.Flags().Parse(edit.ToDeployArguments(OptionKind, deployKind, dopts.Canary, dopts.HPA))
-	if err != nil {
-		return err
-	}
-	err = eo.Run()
-	if err != nil {
-		return errors.Wrapf(err, "failed to modify the deployment kind to %s", deployKind)
-	}
-	return nil
-}
-
-*/
-
-// enableTriggerPipelineJenkinsXPipeline lets generate the jenkins-x.yml if one doesn't exist
-// let's use JENKINS_SERVER to point to the jenkins server to use
-/* TODO
-func (o *ImportOptions) enableTriggerPipelineJenkinsXPipeline(destination ImportDestination) error {
-	projectConfig, fileName, err := config.LoadProjectConfig(o.Dir)
-	if err != nil {
-		return errors.Wrapf(err, "failed to load Jenkins X Pipeline in dir %s", o.Dir)
-	}
-	changed := false
-	if projectConfig.BuildPack != triggerPipelineBuildPack {
-		projectConfig.BuildPack = triggerPipelineBuildPack
-		changed = true
-	}
-	if projectConfig.PipelineConfig == nil {
-		projectConfig.PipelineConfig = &jenkinsfile.PipelineConfig{}
-	}
-	jenkinsServerName := destination.Jenkins.JenkinsName
-	found := false
-	for i, e := range projectConfig.PipelineConfig.Env {
-		if e.Name == jenkinsServerEnvVar {
-			if e.Value != jenkinsServerName {
-				projectConfig.PipelineConfig.Env[i].Value = jenkinsServerName
-				found = true
-				changed = true
-			}
-		}
-	}
-	if !found {
-		projectConfig.PipelineConfig.Env = append(projectConfig.PipelineConfig.Env, corev1.EnvVar{
-			Name:  jenkinsServerEnvVar,
-			Value: jenkinsServerName,
-		})
-		changed = true
-	}
-	if changed {
-		err := projectConfig.SaveConfig(fileName)
-		if err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
-// enableJenkinsfileRunnerPipeline lets enable the JenkinfileRunner pipeline
-func (o *ImportOptions) enableJenkinsfileRunnerPipeline(destination ImportDestination) error {
-	projectConfig, fileName, err := config.LoadProjectConfig(o.Dir)
-	if err != nil {
-		return errors.Wrapf(err, "failed to load Jenkins X Pipeline in dir %s", o.Dir)
-	}
-	changed := false
-	if projectConfig.BuildPack != jenkinsfileRunnerBuildPack {
-		projectConfig.BuildPack = jenkinsfileRunnerBuildPack
-		changed = true
-	}
-	imageName := destination.JenkinsfileRunner.Image
-	if imageName != "" {
-		// let's add override for the run steps image
-		if projectConfig.PipelineConfig == nil {
-			projectConfig.PipelineConfig = &jenkinsfile.PipelineConfig{}
-		}
-
-		stepType := syntax.StepOverrideReplace
-		found := false
-		for i, o := range projectConfig.PipelineConfig.Pipelines.Overrides {
-			if o.Name == "run" {
-				found = true
-				step := o.Step
-				if step == nil {
-					step = &syntax.Step{}
-				}
-				if o.Step.Image != imageName {
-					step.Image = imageName
-					// not really necessary but is until https://github.com/jenkins-x/jx/issues/6739 is fixed
-					step.Command = defaultJenkinsfileRunnerCommand
-
-					projectConfig.PipelineConfig.Pipelines.Overrides[i].Step = step
-					projectConfig.PipelineConfig.Pipelines.Overrides[i].Type = &stepType
-					changed = true
-				}
-				break
-			}
-		}
-		if !found {
-			o := &syntax.PipelineOverride{
-				Name: "run",
-				Type: &stepType,
-				Step: &syntax.Step{
-					Image: imageName,
-
-					// not really necessary but is until https://github.com/jenkins-x/jx/issues/6739 is fixed
-					Command: defaultJenkinsfileRunnerCommand,
-				},
-			}
-			projectConfig.PipelineConfig.Pipelines.Overrides = append(projectConfig.PipelineConfig.Pipelines.Overrides, o)
-			changed = true
-		}
-	}
-	if changed {
-		err := projectConfig.SaveConfig(fileName)
-		if err != nil {
-			return err
-		}
-	}
-	return nil
-}
-*/
 
 // PickCatalogFolderName if not in batch mode lets confirm to the user which catalog folder we are going to use
 func (o *ImportOptions) PickCatalogFolderName(dir, chosenPack string) (string, error) {

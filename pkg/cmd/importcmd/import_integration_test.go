@@ -12,14 +12,12 @@ import (
 
 	"github.com/jenkins-x-plugins/jx-project/pkg/cmd/importcmd"
 	"github.com/jenkins-x-plugins/jx-project/pkg/cmd/testimports"
-	"github.com/jenkins-x-plugins/jx-project/pkg/config"
 	"github.com/jenkins-x-plugins/jx-project/pkg/constants"
 	"github.com/jenkins-x/jx-helpers/v3/pkg/files"
 	"github.com/jenkins-x/jx-helpers/v3/pkg/kube/jxenv"
 	"github.com/jenkins-x/jx-helpers/v3/pkg/kube/naming"
 	"github.com/jenkins-x/jx-helpers/v3/pkg/testhelpers"
 
-	"github.com/jenkins-x-plugins/jx-project/pkg/jenkinsfile"
 	v1 "github.com/jenkins-x/jx-api/v4/pkg/apis/jenkins.io/v1"
 	"github.com/jenkins-x/jx-logging/v3/pkg/log"
 	"github.com/stretchr/testify/require"
@@ -143,18 +141,16 @@ func assertImport(t *testing.T, testDir string, testcase string, importToJenkins
 	err := o.Run()
 	assert.NoError(t, err, "Failed %s with %s", dirName, err)
 	if err == nil {
-		defaultJenkinsfileName := jenkinsfile.Name
-		defaultJenkinsfileBackupSuffix := jenkinsfile.BackupSuffix
-		defaultJenkinsfile := filepath.Join(testDir, defaultJenkinsfileName)
+		defaultJenkinsfileBackupSuffix := ".backup"
+		defaultJenkinsfile := filepath.Join(testDir, importcmd.JenkinsfileName)
 		jfname := defaultJenkinsfile
-		if o.Jenkinsfile != "" && o.Jenkinsfile != defaultJenkinsfileName {
+		if o.Jenkinsfile != "" && o.Jenkinsfile != importcmd.JenkinsfileName {
 			jfname = filepath.Join(testDir, o.Jenkinsfile)
 		}
 		if dirName == "custom-jenkins" {
-			assert.FileExists(t, filepath.Join(testDir, jenkinsfile.Name))
-			assert.NoFileExists(t, filepath.Join(testDir, jenkinsfile.Name+".backup"))
-			assert.NoFileExists(t, filepath.Join(testDir, jenkinsfile.Name+"-Renamed"))
-			assert.NoFileExists(t, filepath.Join(testDir, config.ProjectConfigFileName))
+			assert.FileExists(t, filepath.Join(testDir, importcmd.JenkinsfileName))
+			assert.NoFileExists(t, filepath.Join(testDir, importcmd.JenkinsfileName+defaultJenkinsfileBackupSuffix))
+			assert.NoFileExists(t, filepath.Join(testDir, importcmd.JenkinsfileName+"-Renamed"))
 		} else if importToJenkinsX {
 			assert.NoFileExists(t, jfname)
 		} else {

@@ -34,10 +34,8 @@ func TestCreateQuickstartProjects(t *testing.T) {
 	assert.NoError(t, err)
 	if err == nil {
 		appDir := filepath.Join(testDir, appName)
-		pipelineFile := filepath.Join(appDir, "jenkins-x.yml")
 		assert.FileExists(t, filepath.Join(appDir, "Dockerfile"))
 		assert.FileExists(t, filepath.Join(appDir, "charts", appName, "Chart.yaml"))
-		assert.NoFileExists(t, pipelineFile)
 		assert.FileExists(t, filepath.Join(appDir, ".lighthouse", "jenkins-x", "triggers.yaml"))
 	}
 }
@@ -64,11 +62,9 @@ func TestCreateQuickstartProjectWithChart(t *testing.T) {
 	assert.NoError(t, err)
 	if err == nil {
 		appDir := filepath.Join(testDir, appName)
-		pipelineFile := filepath.Join(appDir, "jenkins-x.yml")
 		assert.FileExists(t, filepath.Join(appDir, "Dockerfile"))
 		assert.FileExists(t, filepath.Join(appDir, "charts", appName, "Chart.yaml"))
 		assert.NoFileExists(t, filepath.Join(appDir, "charts", "Chart.yaml"))
-		assert.NoFileExists(t, pipelineFile)
 		assert.FileExists(t, filepath.Join(appDir, ".lighthouse", "jenkins-x", "triggers.yaml"))
 	}
 }
