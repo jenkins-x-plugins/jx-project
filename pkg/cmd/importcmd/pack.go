@@ -11,7 +11,6 @@ import (
 	"helm.sh/helm/v3/pkg/chart/loader"
 	"helm.sh/helm/v3/pkg/chartutil"
 
-	"github.com/Azure/draft/pkg/osutil"
 	"github.com/jenkins-x/jx-helpers/v3/pkg/files"
 	"github.com/pkg/errors"
 )
@@ -73,7 +72,7 @@ func (p *Pack) SaveDir(dest, packName string) error {
 	// save the rest of the files
 	for relPath, f := range p.Files {
 		path := filepath.Join(dest, relPath)
-		exists, err := osutil.Exists(path)
+		exists, err := files.FileExists(path)
 		if err != nil {
 			return errors.Wrapf(err, "failed to check if path exists %s", path)
 		}

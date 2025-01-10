@@ -31,7 +31,7 @@ type Options struct {
 }
 
 // NewCmdVersion creates a command object for the "version" command
-func NewCmdVersion() (*cobra.Command, *Options) {
+func NewCmdVersion() *cobra.Command {
 	o := &Options{}
 
 	cmd := &cobra.Command{
@@ -42,7 +42,7 @@ func NewCmdVersion() (*cobra.Command, *Options) {
 			helper.CheckErr(err)
 		},
 	}
-	return cmd, o
+	return cmd
 }
 
 // Run implements the command

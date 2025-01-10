@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/jenkins-x-plugins/jx-project/pkg/cmd/root/version"
+
 	"github.com/jenkins-x-plugins/jx-project/pkg/cmd/root/enable"
 
 	"github.com/jenkins-x-plugins/jx-project/pkg/cmd/common"
@@ -83,6 +85,7 @@ func NewCmdMain() (*cobra.Command, *WizardOptions) {
 	cmd.AddCommand(NewCmdCreateSpring())
 	cmd.AddCommand(importcmd.NewCmdImport())
 	cmd.AddCommand(pullrequest.NewCmdCreatePullRequest())
+	cmd.AddCommand(version.NewCmdVersion())
 
 	return cmd, options
 }
