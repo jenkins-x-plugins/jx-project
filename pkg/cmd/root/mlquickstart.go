@@ -54,7 +54,6 @@ type CreateMLQuickstartOptions struct {
 	Filter              quickstarts.QuickstartFilter
 	GitHost             string
 	QuickstartAuth      string
-	IgnoreTeam          bool
 }
 
 type projectset struct {
@@ -72,7 +71,7 @@ func NewCmdCreateMLQuickstart() (*cobra.Command, *CreateMLQuickstartOptions) {
 		Long:    createMLQuickstartLong,
 		Example: createMLQuickstartExample,
 		Aliases: []string{"arch"},
-		Run: func(cmd *cobra.Command, args []string) {
+		Run: func(_ *cobra.Command, args []string) {
 			options.Args = args
 			err := options.Run()
 			helper.CheckErr(err)
@@ -151,7 +150,7 @@ func (o *CreateMLQuickstartOptions) Run() error {
 	}
 
 	log.Logger().Debugf("About to LoadMLProjectSetsModel...\n")
-	model, err := qo.LoadMLProjectSetsModel(o.GitHubOrganisations, o.IgnoreTeam)
+	model, err := qo.LoadMLProjectSetsModel(o.GitHubOrganisations)
 	if err != nil {
 		return fmt.Errorf("failed to load mlprojectsets: %s", err)
 	}
@@ -192,7 +191,6 @@ func (o *CreateMLQuickstartOptions) Run() error {
 	w.Filter.Text = q.Quickstart.Name
 	w.QuickstartAuth = o.QuickstartAuth
 	w.GitHost = o.GitHost
-	w.IgnoreTeam = o.IgnoreTeam
 
 	// Switch to BatchMode from here on
 	o.BatchMode = true

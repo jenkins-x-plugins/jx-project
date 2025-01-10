@@ -39,7 +39,7 @@ type ArtifactData struct {
 }
 
 type ArchetypeFilter struct {
-	GroupIds         []string
+	GroupIDs         []string
 	GroupIDFilter    string
 	ArtifactIDFilter string
 	Version          string
@@ -144,9 +144,9 @@ func (m *ArchetypeModel) AddArtifact(a *ArtifactData) *ArtifactVersions {
 }
 
 func (m *ArchetypeModel) CreateSurvey(data *ArchetypeFilter, pickVersion bool, form *ArchetypeForm, i input.Interface) error {
-	groupIds := data.GroupIds
+	groupIDs := data.GroupIDs
 	var err error
-	if len(data.GroupIds) == 0 {
+	if len(data.GroupIDs) == 0 {
 		filteredGroups := m.GroupIDs(data.GroupIDFilter)
 		if len(filteredGroups) == 0 {
 			return options.InvalidOption("group-filter", data.GroupIDFilter, m.GroupIDs(""))
@@ -163,7 +163,7 @@ func (m *ArchetypeModel) CreateSurvey(data *ArchetypeFilter, pickVersion bool, f
 		}
 	} else {
 		// TODO for now lets just support a single group ID being passed in
-		form.ArchetypeGroupID = groupIds[0]
+		form.ArchetypeGroupID = groupIDs[0]
 
 		artifactsWithoutFilter := m.ArtifactIDs(form.ArchetypeGroupID, "")
 		if len(artifactsWithoutFilter) == 0 {
@@ -174,16 +174,16 @@ func (m *ArchetypeModel) CreateSurvey(data *ArchetypeFilter, pickVersion bool, f
 		return fmt.Errorf("no archetype groupId selected")
 	}
 
-	artifactIds := m.ArtifactIDs(form.ArchetypeGroupID, data.ArtifactIDFilter)
-	if len(artifactIds) == 0 {
+	artifactIDs := m.ArtifactIDs(form.ArchetypeGroupID, data.ArtifactIDFilter)
+	if len(artifactIDs) == 0 {
 		artifactsWithoutFilter := m.ArtifactIDs(form.ArchetypeGroupID, "")
 		return options.InvalidOption("artifact", data.ArtifactIDFilter, artifactsWithoutFilter)
 	}
 
-	if len(artifactIds) == 1 {
-		form.ArchetypeArtifactID = artifactIds[0]
+	if len(artifactIDs) == 1 {
+		form.ArchetypeArtifactID = artifactIDs[0]
 	} else {
-		form.ArchetypeArtifactID, err = i.PickNameWithDefault(artifactIds, "Artifact ID:", form.ArchetypeArtifactID, "please pick the maven Artifact ID")
+		form.ArchetypeArtifactID, err = i.PickNameWithDefault(artifactIDs, "Artifact ID:", form.ArchetypeArtifactID, "please pick the maven Artifact ID")
 		if err != nil {
 			return errors.Wrapf(err, "failed to pick Artifact ID")
 		}

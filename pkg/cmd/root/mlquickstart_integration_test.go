@@ -26,7 +26,6 @@ func TestCreateMLQuickstartProjects(t *testing.T) {
 	o.Dir = testDir
 	o.OutDir = testDir
 	o.DisableMaven = true
-	o.IgnoreTeam = true
 	o.Repository = appName
 	o.WaitForSourceRepositoryPullRequest = false
 

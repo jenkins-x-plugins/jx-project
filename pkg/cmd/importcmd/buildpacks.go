@@ -157,7 +157,7 @@ func (o *ImportOptions) InvokeDraftPack(i *InvokeDraftPack) (string, error) {
 	envChart := filepath.Join(dir, "env", "Chart.yaml")
 	lpack := ""
 
-	if len(customDraftPack) > 0 {
+	if customDraftPack != "" {
 		log.Logger().Infof("trying to use draft pack: %s", customDraftPack)
 		lpack = filepath.Join(packsDir, customDraftPack)
 		f, err := files.DirExists(lpack)

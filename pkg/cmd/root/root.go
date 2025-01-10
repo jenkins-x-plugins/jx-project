@@ -70,7 +70,7 @@ func NewCmdMain() (*cobra.Command, *WizardOptions) {
 		Short:   "Create a new project by importing code, creating a quickstart or custom wizard for spring",
 		Long:    createProjectLong,
 		Example: fmt.Sprintf(createProjectExample, common.BinaryName),
-		Run: func(cmd *cobra.Command, args []string) {
+		Run: func(cmd *cobra.Command, _ []string) {
 			setLoggingLevel(cmd)
 			err := options.Run()
 			helper.CheckErr(err)

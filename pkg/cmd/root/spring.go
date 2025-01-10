@@ -62,7 +62,7 @@ func NewCmdCreateSpring() *cobra.Command {
 		Short:   "Create a new Spring Boot application and import the generated code into Git and Jenkins for CI/CD",
 		Long:    createSpringLong,
 		Example: fmt.Sprintf(createSpringExample, common.BinaryName, common.BinaryName, common.BinaryName, common.BinaryName),
-		Run: func(cmd *cobra.Command, args []string) {
+		Run: func(_ *cobra.Command, args []string) {
 			options.Args = args
 			err := options.Run()
 			helper.CheckErr(err)

@@ -34,7 +34,7 @@ func (o *Options) Validate() error {
 }
 
 // LoadQuickStartsModel Load all quickstarts
-func (o *Options) LoadQuickStartsModel(gitHubOrganisations []string, ignoreTeam bool) (*QuickstartModel, error) {
+func (o *Options) LoadQuickStartsModel(gitHubOrganisations []string) (*QuickstartModel, error) {
 	err := o.Validate()
 	if err != nil {
 		return nil, errors.Wrapf(err, "failed to validate options")
@@ -165,7 +165,7 @@ func (o *Options) loadQuickStartLocations(gitHubOrganisations []string) []v1.Qui
 }
 
 // LoadMLProjectSetsModel Load all quickstarts
-func (o *Options) LoadMLProjectSetsModel(gitHubOrganisations []string, ignoreTeam bool) (*QuickstartModel, error) {
+func (o *Options) LoadMLProjectSetsModel(gitHubOrganisations []string) (*QuickstartModel, error) {
 	err := o.Validate()
 	if err != nil {
 		return nil, errors.Wrapf(err, "failed to validate options")

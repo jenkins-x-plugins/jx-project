@@ -181,7 +181,7 @@ func NewCmdImportAndOptions() (*cobra.Command, *ImportOptions) {
 		Short:   "Imports a local project or Git repository into Jenkins",
 		Long:    importLong,
 		Example: fmt.Sprintf(importExample, common.BinaryName, common.BinaryName, common.BinaryName, common.BinaryName, common.BinaryName, common.BinaryName),
-		Run: func(cmd *cobra.Command, args []string) {
+		Run: func(_ *cobra.Command, _ []string) {
 			err := opts.Run()
 			helper.CheckErr(err)
 		},
@@ -400,7 +400,7 @@ func (o *ImportOptions) Run() error {
 
 	if jenkinsfile != "" {
 		// let's pick the import destination for the jenkinsfile
-		o.Destination, err = o.PickImportDestination(devEnvCloneDir, jenkinsfile)
+		o.Destination, err = o.PickImportDestination(devEnvCloneDir)
 		if err != nil {
 			return err
 		}
@@ -853,7 +853,7 @@ func (o *ImportOptions) ReplacePlaceholders(gitServerName, dockerRegistryOrg str
 		constants.PlaceHolderDockerRegistryOrg, strings.ToLower(dockerRegistryOrg))
 
 	pathsToRename := []string{} // Renaming must be done post-Walk
-	if err := filepath.Walk(o.Dir, func(f string, fi os.FileInfo, err error) error {
+	if err := filepath.Walk(o.Dir, func(f string, fi os.FileInfo, _ error) error {
 		if skip, err := o.skipPathForReplacement(f, fi, ignore); skip {
 			return err
 		}
@@ -1137,7 +1137,7 @@ func (o *ImportOptions) fixMaven() error {
 			return fmt.Errorf("failed to update chart: %s output: %s", err, out)
 		}
 		if out != "" {
-			log.Logger().Infof(out)
+			log.Logger().Info(out)
 		}
 		exists, err := files.FileExists(filepath.Join(dir, "charts"))
 		if err != nil {

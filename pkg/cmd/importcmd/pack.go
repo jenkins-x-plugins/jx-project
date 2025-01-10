@@ -122,7 +122,7 @@ func SaveDir(c *chart.Chart, dest, packName string) error {
 	}
 
 	// Save values.yaml
-	if c.Values != nil && len(c.Values) > 0 {
+	if len(c.Values) > 0 {
 		// let's find the raw file for values.yaml and use to that to preserve comments
 		data := ""
 		for _, f := range c.Raw {
