@@ -1,13 +1,19 @@
 package importcmd
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"net/url"
 	"os"
 	"path/filepath"
 	"strings"
+	"text/template"
 	"time"
+
+	"github.com/Masterminds/sprig/v3"
+	"github.com/jenkins-x/jx-helpers/v3/pkg/yamls"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/cenkalti/backoff"
 
@@ -352,12 +358,6 @@ func (o *ImportOptions) Run() error {
 		return err
 	}
 
-	/* TODO
-	if o.GitHub {
-		return o.ImportProjectsFromGitHub()
-	}
-	*/
-
 	checkForJenkinsfile := o.Jenkinsfile == ""
 	shouldClone := checkForJenkinsfile || !o.DisableBuildPack
 
@@ -425,7 +425,7 @@ func (o *ImportOptions) Run() error {
 	}
 
 	if !o.DisableBuildPack {
-		err = o.EvaluateBuildPack(devEnvCloneDir, jenkinsfile)
+		err = o.EvaluateBuildPack(devEnvCloneDir)
 		if err != nil {
 			return err
 		}
@@ -501,58 +501,8 @@ func (o *ImportOptions) Run() error {
 		return errors.Errorf("no git URL could be found")
 	}
 
-	/* TODO github app support
-	if !o.GithubAppInstalled {
-		githubAppMode, err := o.IsGitHubAppMode()
-		if err != nil {
-			return err
-		}
-
-		if githubAppMode {
-			githubApp := &github.GithubApp{
-				Factory: o.GetFactory(),
-			}
-
-			installed, err := githubApp.Install(o.Organisation, o.Repository, o.GetIOFileHandles(), false)
-			if err != nil {
-				return err
-			}
-			o.GithubAppInstalled = installed
-		}
-	}
-	*/
 	return o.doImport()
 }
-
-// ImportProjectsFromGitHub import projects from github
-/** TODO
-func (o *ImportOptions) ImportProjectsFromGitHub() error {
-	repos, err := gits.PickRepositories(o.ScmClient, o.Organisation, "Which repositories do you want to import", o.SelectAll, o.SelectFilter, o.GetIOFileHandles())
-	if err != nil {
-		return err
-	}
-
-	log.Logger().Info("Selected repositories")
-	for _, r := range repos {
-		o2 := ImportOptions{
-			CommonOptions: o.CommonOptions,
-			Dir:           o.Dir,
-			RepoURL:       r.CloneURL,
-			Organisation:  o.Organisation,
-			Repository:    r.Name,
-			//Jenkins:          o.Jenkins,
-			ScmClient:        o.ScmClient,
-			DisableBuildPack: o.DisableBuildPack,
-		}
-		log.Logger().Infof("Importing repository %s", termcolor.ColorInfo(r.Name))
-		err = o2.Run()
-		if err != nil {
-			return err
-		}
-	}
-	return nil
-}
-*/
 
 // GetReporter returns the reporter interface
 func (o *ImportOptions) GetReporter() ImportReporter {
@@ -845,6 +795,29 @@ func (o *ImportOptions) ReplacePlaceholders(gitServerName, dockerRegistryOrg str
 	if err != nil {
 		return err
 	}
+	var tmpl *template.Template
+	vals := make(Values)
+
+	goTemplateFile := filepath.Join(o.Dir, ".jx", "gotemplate.yaml")
+	config := &goTemplateConfig{}
+	err = yamls.LoadFile(goTemplateFile, config)
+	if err != nil {
+		return err
+	}
+	useGoTemplate := false
+	if config.Kind == "GoTemplate" {
+		config.applyDefaults()
+		tmpl = config.setupGoTemplate(o.Dir)
+		vals["AppName"] = strings.ToLower(o.AppName)
+		vals["GitProvider"] = strings.ToLower(gitServerName)
+		vals["Org"] = safeOrganisationName
+		vals["DockerRegistryOrg"] = strings.ToLower(dockerRegistryOrg)
+		// TODO: Put gotemplate functionality in separate file
+		// TODO: Handle templating separately for quickstart and pack, so they can have different settings
+		// TODO: Add more useful values
+		// TODO: Support custom values asked from user
+		useGoTemplate = true
+	}
 
 	replacer := strings.NewReplacer(
 		constants.PlaceHolderAppName, strings.ToLower(o.AppName),
@@ -862,7 +835,12 @@ func (o *ImportOptions) ReplacePlaceholders(gitServerName, dockerRegistryOrg str
 			pathsToRename = append([]string{f}, pathsToRename...)
 		}
 		if !fi.IsDir() {
-			// TODO: Apply  https://docs.gomplate.ca/ if .jx/gotemplate.yaml exists
+			if useGoTemplate {
+				err := expandGoTemplateInFile(vals, tmpl, f)
+				if err != nil {
+					log.Logger().Warnf("Failed to apply go templating in file %s: %v", f, err)
+				}
+			}
 			if err := replacePlaceholdersInFile(replacer, f); err != nil {
 				return err
 			}
@@ -878,6 +856,58 @@ func (o *ImportOptions) ReplacePlaceholders(gitServerName, dockerRegistryOrg str
 		}
 	}
 	return nil
+}
+
+type Values map[string]interface{}
+
+type goTemplateConfig struct {
+	metav1.TypeMeta `json:",inline"`
+	// +optional
+	metav1.ObjectMeta `json:"metadata"`
+
+	LDelim     string
+	RDelim     string
+	MissingKey string
+}
+
+func (c *goTemplateConfig) applyDefaults() {
+	if c.LDelim == "" {
+		c.LDelim = "[["
+	}
+	if c.RDelim == "" {
+		c.RDelim = "]]"
+	}
+	if c.MissingKey == "" {
+		c.MissingKey = "error"
+	}
+}
+
+func expandGoTemplateInFile(vals Values, tmpl *template.Template, templateFile string) error {
+	templateStr, err := os.ReadFile(templateFile)
+	if err != nil {
+		return err
+	}
+	_, err = tmpl.Parse(string(templateStr))
+	if err != nil {
+		return err
+	}
+
+	out := new(bytes.Buffer)
+	err = tmpl.Execute(out, vals)
+	if err != nil {
+		return err
+	}
+	return os.WriteFile(templateFile, out.Bytes(), 0600)
+}
+
+func (c *goTemplateConfig) setupGoTemplate(dir string) *template.Template {
+	tmpl := template.New("SelfTemplate")
+	tmpl.Delims(c.LDelim, c.RDelim)
+	tmpl.Option("missingkey=" + c.MissingKey)
+	tmpl.Funcs(sprig.FuncMap())
+	_, _ = tmpl.ParseGlob(filepath.Join(dir, ".jx", "*.tpl"))
+
+	return tmpl
 }
 
 func (o *ImportOptions) skipPathForReplacement(path string, fi os.FileInfo, ignore gitignore.GitIgnore) (bool, error) {

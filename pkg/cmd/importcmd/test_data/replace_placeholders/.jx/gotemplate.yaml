@@ -1,0 +1,2 @@
+apiVersion: jenkins-x/v1
+kind: GoTemplate
