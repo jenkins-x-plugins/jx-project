@@ -50,7 +50,7 @@ func TestBuildPackInitClone(t *testing.T) {
 	assert.NoError(t, err)
 	err = gitclient.FetchBranch(gitter, gitDir, "origin", defaultBranch)
 	assert.NoError(t, err)
-	err = gitclient.Merge(gitter, gitDir, "origin/master")
+	err = gitclient.Merge(gitter, gitDir, "origin/"+defaultBranch)
 	assert.NoError(t, err)
 
 	// Removing the remote tracking information, after executing InitBuildPack, it should have not failed and it should've set a remote tracking branch
@@ -65,6 +65,6 @@ func TestBuildPackInitClone(t *testing.T) {
 	output, err := gitter.Command(gitDir, "status", "-sb")
 	assert.NoError(t, err)
 	// Check the current branch is tracking the origin/master one
-	assert.Equal(t, "## master", output)
+	assert.Equal(t, "## "+defaultBranch, output)
 	//assert.Equal(t, "## master...origin/master", output)
 }

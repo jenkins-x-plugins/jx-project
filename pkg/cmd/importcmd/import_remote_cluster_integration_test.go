@@ -11,7 +11,6 @@ import (
 
 	"github.com/jenkins-x-plugins/jx-project/pkg/cmd/importcmd"
 	"github.com/jenkins-x-plugins/jx-project/pkg/cmd/testimports"
-	"github.com/jenkins-x-plugins/jx-project/pkg/config"
 	"github.com/jenkins-x/jx-helpers/v3/pkg/files"
 	"github.com/jenkins-x/jx-helpers/v3/pkg/kube/naming"
 
@@ -45,7 +44,6 @@ func TestImportRemoteCluster(t *testing.T) {
 	assert.NoFileExists(t, filepath.Join(testDir, "Dockerfile"))
 	assert.NoFileExists(t, filepath.Join(testDir, "charts", dirName, "Chart.yaml"))
 	assert.NoFileExists(t, filepath.Join(testDir, "preview", "helmfile.yaml"))
-	assert.NoFileExists(t, filepath.Join(testDir, config.ProjectConfigFileName))
 	assert.FileExists(t, filepath.Join(testDir, ".lighthouse", "jenkins-x", "triggers.yaml"))
 
 	for _, c := range runner.OrderedCommands {

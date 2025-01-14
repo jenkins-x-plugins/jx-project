@@ -30,7 +30,7 @@ func TestLoadQuickStartsNoExtensions(t *testing.T) {
 	}
 	o.JXClient = fakejx.NewSimpleClientset()
 
-	model, err := o.LoadQuickStartsModel(nil, false)
+	model, err := o.LoadQuickStartsModel(nil)
 	require.NoError(t, err, "LoadQuickStartsModel")
 
 	assert.True(t, len(model.Quickstarts) > 0, "quickstart model should not be empty")
@@ -51,7 +51,7 @@ func TestLoadLocalExtensionQuickStarts(t *testing.T) {
 	}
 	o.JXClient = fakejx.NewSimpleClientset()
 
-	model, err := o.LoadQuickStartsModel(nil, false)
+	model, err := o.LoadQuickStartsModel(nil)
 	require.NoError(t, err, "LoadQuickStartsModel")
 
 	assert.True(t, len(model.Quickstarts) > 0, "quickstart model should not be empty")

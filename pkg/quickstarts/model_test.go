@@ -6,10 +6,8 @@ package quickstarts_test
 import (
 	"testing"
 
-	"github.com/blang/semver"
 	"github.com/jenkins-x-plugins/jx-project/pkg/quickstarts"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 )
 
 func TestquickstartsQuickstartModelFilterText(t *testing.T) {
@@ -227,14 +225,4 @@ func TestquickstartsQuickstartModelFilterDefaultsToNoMachineLearning(t *testing.
 	assert.Contains(t, results, quickstart1)
 	assert.Contains(t, results, quickstart2)
 	assert.NotContains(t, results, quickstart3)
-}
-
-func TestquickstartsQuickstartCreateVersion(t *testing.T) {
-	t.Parallel()
-
-	sha := "d9e925718"
-	v := quickstarts.QuickStartVersion(sha)
-	sv, err := semver.Parse(v)
-	require.NoError(t, err, "failed to parse semantic version %s for quickstart", v)
-	t.Logf("parsed semantic version %s for quickstart", sv.String())
 }

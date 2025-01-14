@@ -17,7 +17,7 @@ func (o *ImportOptions) HasJenkinsfile() (string, error) {
 	dir := o.Dir
 	var err error
 
-	jenkinsfile := jenkinsfileName
+	jenkinsfile := JenkinsfileName
 	if o.Jenkinsfile != "" {
 		jenkinsfile = o.Jenkinsfile
 	}
@@ -58,13 +58,6 @@ func (o *ImportOptions) EvaluateBuildPack(devEnvCloneDir, jenkinsfile string) er
 		return err
 	}
 
-	/* TODO
-	err = o.modifyDeployKind()
-	if err != nil {
-		return err
-	}
-
-	*/
 	if o.PostDraftPackCallback != nil {
 		err = o.PostDraftPackCallback()
 		if err != nil {
