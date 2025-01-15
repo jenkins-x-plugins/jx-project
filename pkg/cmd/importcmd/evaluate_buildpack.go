@@ -35,7 +35,7 @@ func (o *ImportOptions) HasJenkinsfile() (string, error) {
 }
 
 // EvaluateBuildPack performs an evaluation of the build pack on the current source
-func (o *ImportOptions) EvaluateBuildPack(devEnvCloneDir, jenkinsfile string) error {
+func (o *ImportOptions) EvaluateBuildPack(devEnvCloneDir string) error {
 	// TODO this is a workaround of this draft issue:
 	// https://github.com/Azure/draft/issues/476
 	var err error
@@ -44,7 +44,6 @@ func (o *ImportOptions) EvaluateBuildPack(devEnvCloneDir, jenkinsfile string) er
 		Dir:             o.Dir,
 		DevEnvCloneDir:  devEnvCloneDir,
 		CustomDraftPack: o.Pack,
-		Jenkinsfile:     jenkinsfile,
 		InitialisedGit:  o.InitialisedGit,
 	}
 	o.Pack, err = o.InvokeDraftPack(args)
