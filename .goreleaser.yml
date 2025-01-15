@@ -1,3 +1,4 @@
+version: 2
 env:
   - GO111MODULE=on
   - CGO_ENABLED=0
@@ -60,4 +61,3 @@ release:
   # You can change the name of the GitHub release.
   # Default is `{{.Tag}}`
   name_template: "{{.Env.VERSION}}"
-version: "2"
