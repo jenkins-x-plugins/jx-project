@@ -16,7 +16,7 @@ require (
 	github.com/jenkins-x/jx-api/v4 v4.7.9
 	github.com/jenkins-x/jx-helpers/v3 v3.9.1
 	github.com/jenkins-x/jx-logging/v3 v3.0.17
-	github.com/jenkins-x/lighthouse-client v0.0.1286
+	github.com/jenkins-x/lighthouse-client v0.0.1437
 	github.com/pkg/errors v0.9.1
 	github.com/spf13/cobra v1.8.1
 	github.com/spf13/pflag v1.0.5
