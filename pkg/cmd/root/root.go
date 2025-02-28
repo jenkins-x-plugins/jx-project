@@ -68,7 +68,9 @@ type WizardOptions struct {
 func NewCmdMain() (*cobra.Command, *WizardOptions) {
 	options := &WizardOptions{}
 	cmd := &cobra.Command{
-		Use:     common.BinaryName,
+		Annotations: map[string]string{
+			cobra.CommandDisplayNameAnnotation: common.BinaryName,
+		},
 		Short:   "Create a new project by importing code, creating a quickstart or custom wizard for spring",
 		Long:    createProjectLong,
 		Example: fmt.Sprintf(createProjectExample, common.BinaryName),
