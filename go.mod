@@ -32,7 +32,7 @@ require (
 
 require (
 	github.com/jenkins-x-plugins/jx-gitops v0.23.11
-	github.com/jenkins-x-plugins/jx-promote v0.6.11
+	github.com/jenkins-x-plugins/jx-promote v0.6.15
 )
 
 require (
