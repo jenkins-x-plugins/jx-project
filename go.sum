@@ -276,12 +276,14 @@ github.com/jenkins-x-plugins/jx-gitops v0.23.11 h1:qhLUuZvPosWqL0wg4yUVKDAdcTqOC
 github.com/jenkins-x-plugins/jx-gitops v0.23.11/go.mod h1:47MZvC74MXfudouBDZRe8GpZXg7neVuL2W2D1cH1aXE=
 github.com/jenkins-x-plugins/jx-promote v0.6.11 h1:1psfVDXdm6hQ40/pB0svSvvPxB2KQepnxPLqEB9aitc=
 github.com/jenkins-x-plugins/jx-promote v0.6.11/go.mod h1:K818frWgYYeuO/Njzf3DWQOJiy3/2YGo7lw5jyRY40U=
+github.com/jenkins-x-plugins/jx-promote v0.6.15 h1:kLnQobS2fBjUpnirCz9VPI2nJ3RWIB9FY/mGzAe/Dhw=
+github.com/jenkins-x-plugins/jx-promote v0.6.15/go.mod h1:FPZJZTpwBWo7XKx0mqbG69usptJcdV/RLSfBs5RNnsQ=
 github.com/jenkins-x/go-scm v1.14.53 h1:Utc9FbHzCuyXQ9F7gmXxNLUwG70Fp2niNS+m8+eGXcY=
 github.com/jenkins-x/go-scm v1.14.53/go.mod h1:1RPxLZndnvu31XhFZ+RTvXiHmMX70HkQ17bRupTQxGs=
 github.com/jenkins-x/jx-api/v4 v4.7.9 h1:Z9NQ0/SY1XYafa9i0fq8td1E+OtBc/U3zlx/Bj204RA=
 github.com/jenkins-x/jx-api/v4 v4.7.9/go.mod h1:OkFVnM/pXCtGBBhitGaU6TlB9qyP2w2EjmzaFglYmDA=
-github.com/jenkins-x/jx-helpers/v3 v3.9.2 h1:kCo9KtpZbLAwJSQrPJf8DqDKJxmbSnZVb7OUMaxZlbI=
-github.com/jenkins-x/jx-helpers/v3 v3.9.2/go.mod h1:chG9iMC0yhKJsF4LFZW+MLhl66w8muuIBMs9RtG8hJ8=
+github.com/jenkins-x/jx-helpers/v3 v3.9.4 h1:l3c6045hWrIE+U8QEB2VKYdQWUmKztfhFUPoc8KvP1k=
+github.com/jenkins-x/jx-helpers/v3 v3.9.4/go.mod h1:chG9iMC0yhKJsF4LFZW+MLhl66w8muuIBMs9RtG8hJ8=
 github.com/jenkins-x/jx-kube-client/v3 v3.0.8 h1:AzXuXCdv4DQf8wqR5c1UL0uXVu6KrAjdPtPb6wrG0Hs=
 github.com/jenkins-x/jx-kube-client/v3 v3.0.8/go.mod h1:ELgPjZhMqYiCKml4L16GREF6bkC890KRKfpNCz+aIgE=
 github.com/jenkins-x/jx-logging/v3 v3.0.17 h1:0qpgKfpxl4uks6vZZV5LCGCOOD3axgMxoK3m6X74kpQ=
