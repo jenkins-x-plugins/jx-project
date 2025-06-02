@@ -61,7 +61,7 @@ func TestShouldReturnErrorWhenErrorReturnedAndResponseIsSuccessful(t *testing.T)
 	res := new(scm.Response)
 	res.Status = 200
 	rep := new(scm.Repository)
-	err := scm.ErrNotAuthorized
+	err := scm.ErrNotFound
 	m.On("Find", mock.Anything, o+"/"+r).Return(rep, res, err)
 
 	result := cmd.ValidateRepositoryName(o, r)
