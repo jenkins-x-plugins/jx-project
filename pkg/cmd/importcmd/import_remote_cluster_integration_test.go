@@ -34,7 +34,6 @@ func TestImportRemoteCluster(t *testing.T) {
 	o.RepoURL = "https://github.com/jx3-gitops-repositories/jx3-kubernetes-production"
 	o.Dir = testDir
 	o.DisableMaven = true
-	o.UseDefaultGit = true
 	o.WaitForSourceRepositoryPullRequest = false
 	o.Destination.JenkinsX.Enabled = true
 

@@ -10,7 +10,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestquickstartsQuickstartModelFilterText(t *testing.T) {
+func TestQuickstartModelFilterText(t *testing.T) {
 	t.Parallel()
 
 	quickstart1 := &quickstarts.Quickstart{
@@ -45,7 +45,7 @@ func TestquickstartsQuickstartModelFilterText(t *testing.T) {
 	assert.Contains(t, results, quickstart3)
 }
 
-func TestquickstartsQuickstartModelFilterTextMatchesMoreThanOne(t *testing.T) {
+func TestQuickstartModelFilterTextMatchesMoreThanOne(t *testing.T) {
 	t.Parallel()
 
 	quickstart1 := &quickstarts.Quickstart{
@@ -81,7 +81,7 @@ func TestquickstartsQuickstartModelFilterTextMatchesMoreThanOne(t *testing.T) {
 	assert.Contains(t, results, quickstart2)
 }
 
-func TestquickstartsQuickstartModelFilterTextMatchesOneExactly(t *testing.T) {
+func TestQuickstartModelFilterTextMatchesOneExactly(t *testing.T) {
 	t.Parallel()
 
 	quickstart1 := &quickstarts.Quickstart{
@@ -116,7 +116,7 @@ func TestquickstartsQuickstartModelFilterTextMatchesOneExactly(t *testing.T) {
 	assert.Contains(t, results, quickstart1)
 }
 
-func TestquickstartsQuickstartModelFilterExcludesMachineLearning(t *testing.T) {
+func TestQuickstartModelFilterExcludesMachineLearning(t *testing.T) {
 	t.Parallel()
 
 	quickstart1 := &quickstarts.Quickstart{
@@ -153,7 +153,7 @@ func TestquickstartsQuickstartModelFilterExcludesMachineLearning(t *testing.T) {
 	assert.NotContains(t, results, quickstart3)
 }
 
-func TestquickstartsQuickstartModelFilterIncludesMachineLearning(t *testing.T) {
+func TestQuickstartModelFilterIncludesMachineLearning(t *testing.T) {
 	t.Parallel()
 
 	quickstart1 := &quickstarts.Quickstart{
@@ -190,7 +190,7 @@ func TestquickstartsQuickstartModelFilterIncludesMachineLearning(t *testing.T) {
 	assert.Contains(t, results, quickstart3)
 }
 
-func TestquickstartsQuickstartModelFilterDefaultsToNoMachineLearning(t *testing.T) {
+func TestQuickstartModelFilterDefaultsToNoMachineLearning(t *testing.T) {
 	t.Parallel()
 
 	quickstart1 := &quickstarts.Quickstart{

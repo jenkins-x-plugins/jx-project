@@ -78,7 +78,6 @@ type ImportOptions struct {
 	BootSecretName                     string
 	PipelineCatalogDir                 string
 	DisableMaven                       bool
-	UseDefaultGit                      bool
 	GithubAppInstalled                 bool
 	GitHub                             bool
 	DryRun                             bool
@@ -178,7 +177,7 @@ func NewCmdImportAndOptions() (*cobra.Command, *ImportOptions) {
 
 	cmd := &cobra.Command{
 		Use:     "import",
-		Short:   "Imports a local project or Git repository into Jenkins",
+		Short:   "Imports a local project or Git repository into Jenkins X",
 		Long:    importLong,
 		Example: fmt.Sprintf(importExample, common.BinaryName, common.BinaryName, common.BinaryName, common.BinaryName, common.BinaryName, common.BinaryName),
 		Run: func(_ *cobra.Command, _ []string) {
@@ -214,7 +213,6 @@ func (o *ImportOptions) AddImportFlags(cmd *cobra.Command, createProject bool) {
 	cmd.Flags().StringVarP(&o.DockerRegistryOrg, "docker-registry-org", "", "", "The name of the docker registry organisation to use. If not specified then the Git provider organisation will be used")
 	cmd.Flags().StringVarP(&o.OperatorNamespace, "operator-namespace", "", boot.GitOperatorNamespace, "The namespace where the git operator is installed")
 	cmd.Flags().StringVarP(&o.BootSecretName, "boot-secret-name", "", boot.SecretName, "The name of the boot secret")
-	cmd.Flags().BoolVarP(&o.UseDefaultGit, "use-default-git", "", false, "use default git account")
 	cmd.Flags().StringVarP(&o.DeployKind, "deploy-kind", "", "", fmt.Sprintf("The kind of deployment to use for the project. Should be one of %s", strings.Join(deployKinds, ", ")))
 	cmd.Flags().BoolVarP(&o.DeployOptions.Canary, constants.OptionCanary, "", false, "should we use canary rollouts (progressive delivery) by default for this application. e.g. using a Canary deployment via flagger. Requires the installation of flagger and istio/gloo in your cluster")
 	cmd.Flags().BoolVarP(&o.DeployOptions.HPA, constants.OptionHPA, "", false, "should we enable the Horizontal Pod Autoscaler for this application.")

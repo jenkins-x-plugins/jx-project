@@ -43,7 +43,6 @@ func TestImportTektonCatalogProject(t *testing.T) {
 
 	o.Dir = testDir
 	o.DisableMaven = true
-	o.UseDefaultGit = true
 	o.WaitForSourceRepositoryPullRequest = false
 
 	o.Destination.JenkinsX.Enabled = true

@@ -44,7 +44,6 @@ func TestImportGitHubActionProject(t *testing.T) {
 	testimports.SetFakeClients(t, o, false)
 	o.Dir = testDir
 	o.DisableMaven = true
-	o.UseDefaultGit = true
 
 	o.Destination.JenkinsX.Enabled = true
 	callback := func(env *v1.Environment) error {

@@ -5,7 +5,7 @@
 
 .SH NAME
 .PP
-jx\-project\-import \- Imports a local project or Git repository into Jenkins
+jx\-project\-import \- Imports a local project or Git repository into Jenkins X
 
 
 .SH SYNOPSIS
@@ -138,6 +138,10 @@ For more documentation see:
     disables generating a Pull Request on the cluster git repository
 
 .PP
+\fB\-\-no\-maven\-fix\fP[=false]
+    Disable trying to fix existing pom.xml
+
+.PP
 \fB\-\-no\-pack\fP[=false]
     Disable trying to default a Dockerfile and Helm Chart from the pipeline catalog pack
 
@@ -181,10 +185,6 @@ For more documentation see:
 .PP
 \fB\-u\fP, \fB\-\-url\fP=""
     The git clone URL to clone into the current directory and then import
-
-.PP
-\fB\-\-use\-default\-git\fP[=false]
-    use default git account
 
 .PP
 \fB\-\-verbose\fP[=false]
