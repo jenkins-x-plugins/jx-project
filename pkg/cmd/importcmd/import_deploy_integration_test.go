@@ -165,7 +165,6 @@ func assertImportHasDeploy(t *testing.T, o *importcmd.ImportOptions, testDir str
 	testName = naming.ToValidName(testName)
 
 	testimports.SetFakeClients(t, o, false)
-	o.UseDefaultGit = true
 
 	err := o.Run()
 	assert.NoError(t, err, "Failed %s with %s", testName, err)

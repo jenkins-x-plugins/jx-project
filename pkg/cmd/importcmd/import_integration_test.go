@@ -107,7 +107,6 @@ func assertImport(t *testing.T, testDir string, testcase string, importToJenkins
 	testimports.SetFakeClients(t, o, false)
 	o.Dir = testDir
 	o.DisableMaven = true
-	o.UseDefaultGit = true
 	o.WaitForSourceRepositoryPullRequest = false
 
 	if dirName == "maven-camel" {

@@ -177,6 +177,10 @@ jx create project :
     Disable import after the creation
 
 .PP
+\fB\-\-no\-maven\-fix\fP[=false]
+    Disable trying to fix existing pom.xml
+
+.PP
 \fB\-\-no\-pack\fP[=false]
     Disable trying to default a Dockerfile and Helm Chart from the pipeline catalog pack
 
@@ -228,10 +232,6 @@ jx create project :
 .PP
 \fB\-\-type\fP=""
     Project Type (such as maven\-project or gradle\-project)
-
-.PP
-\fB\-\-use\-default\-git\fP[=false]
-    use default git account
 
 .PP
 \fB\-\-verbose\fP[=false]

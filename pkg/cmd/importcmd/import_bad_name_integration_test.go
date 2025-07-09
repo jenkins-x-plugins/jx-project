@@ -42,7 +42,6 @@ func TestImportBadNameProject(t *testing.T) {
 	_, _, runner := testimports.SetFakeClients(t, o, false)
 	o.Dir = testDir
 	o.DisableMaven = true
-	o.UseDefaultGit = true
 	o.WaitForSourceRepositoryPullRequest = false
 	o.Destination.JenkinsX.Enabled = true
 
