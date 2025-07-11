@@ -296,8 +296,6 @@ github.com/jenkins-x/jx-kube-client/v3 v3.0.8 h1:AzXuXCdv4DQf8wqR5c1UL0uXVu6KrAj
 github.com/jenkins-x/jx-kube-client/v3 v3.0.8/go.mod h1:ELgPjZhMqYiCKml4L16GREF6bkC890KRKfpNCz+aIgE=
 github.com/jenkins-x/jx-logging/v3 v3.0.17 h1:0qpgKfpxl4uks6vZZV5LCGCOOD3axgMxoK3m6X74kpQ=
 github.com/jenkins-x/jx-logging/v3 v3.0.17/go.mod h1:vUW4EJxE8TowVsFhcwcpKag189ZS5J25a3kyMPq1mYM=
-github.com/jenkins-x/lighthouse-client v0.0.1609 h1:IdJr/zx+ICFAesg3kmF/TZfSIzfZQp/5eGSNlowLn3s=
-github.com/jenkins-x/lighthouse-client v0.0.1609/go.mod h1:2Uxrt4hpxOj1TlM3E5ExsCed9M1wutV8XZwHGJyLP1o=
 github.com/jenkins-x/lighthouse-client v0.0.1610 h1:TWJAT4Cli5CwmMNjIsV3kSegWVPRVxblTGvNAA5GvUk=
 github.com/jenkins-x/lighthouse-client v0.0.1610/go.mod h1:2Uxrt4hpxOj1TlM3E5ExsCed9M1wutV8XZwHGJyLP1o=
 github.com/jenkins-x/logrus-stackdriver-formatter v0.2.7 h1:waTRYQoVXfRZXs1SVGgk8hcHdlBZOP8rJJLYg33up6k=
