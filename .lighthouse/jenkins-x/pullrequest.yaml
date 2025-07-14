@@ -1,7 +1,6 @@
-apiVersion: tekton.dev/v1beta1
+apiVersion: tekton.dev/v1
 kind: PipelineRun
 metadata:
-  creationTimestamp: null
   name: pullrequest
 spec:
   pipelineSpec:
@@ -27,7 +26,8 @@ spec:
           resources: {}
         - name: build-container-build
           resources: {}
-  podTemplate: {}
-  serviceAccountName: tekton-bot
-  timeout: 30m0s
-status: {}
+  taskRunTemplate:
+    serviceAccountName: tekton-bot
+  timeouts:
+    pipeline: 24h0m0s
+    tasks: 24h0m0s
