@@ -33,7 +33,7 @@ var (
 		This will create a new project for you from the selected template.
 		It will exclude any work-in-progress repos (containing the "WIP-" pattern)
 
-		For more documentation see: [https://jenkins-x.io/developing/create-quickstart/](https://jenkins-x.io/developing/create-quickstart/)
+		For more documentation see: https://jenkins-x.io/v3/develop/create-project/
 `)
 
 	createQuickstartExample = templates.Examples(`
