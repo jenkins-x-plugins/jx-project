@@ -827,8 +827,6 @@ func (o *ImportOptions) doImport() error {
 	log.Logger().Infof("You can list the pipelines via: %s", info("jx get pipelines"))
 	log.Logger().Infof("When the pipeline is complete:  %s", info("jx get applications"))
 	log.Logger().Info("")
-	log.Logger().Infof("For more help on available commands see: %s", info("https://jenkins-x.io/developing/browsing/"))
-	log.Logger().Info("")
 
 	return nil
 }
