@@ -16,7 +16,7 @@ const (
 	// PlaceHolderDockerRegistryOrg placeholder for docker registry
 	PlaceHolderDockerRegistryOrg = PlaceHolderPrefix + "_DOCKER_REGISTRY_ORG"
 
-	MinimumMavenDeployVersion = "2.8.2"
+	MinimumMavenDeployVersion = "3.1.4"
 
 	// DeployKindKnative for knative serve based deployments
 	DeployKindKnative = "knative"
