@@ -14,7 +14,7 @@ require (
 	github.com/jbrukh/bayesian v0.0.0-20200318221351-d726b684ca4a // indirect
 	github.com/jenkins-x/go-scm v1.15.1
 	github.com/jenkins-x/jx-api/v4 v4.8.1
-	github.com/jenkins-x/jx-helpers/v3 v3.9.8
+	github.com/jenkins-x/jx-helpers/v3 v3.10.0
 	github.com/jenkins-x/jx-logging/v3 v3.1.2
 	github.com/jenkins-x/lighthouse-client v0.0.1610
 	github.com/pkg/errors v0.9.1
