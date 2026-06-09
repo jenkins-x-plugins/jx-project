@@ -15,12 +15,12 @@ require (
 	github.com/jenkins-x/go-scm v1.15.1
 	github.com/jenkins-x/jx-api/v4 v4.8.1
 	github.com/jenkins-x/jx-helpers/v3 v3.10.1
-	github.com/jenkins-x/jx-logging/v3 v3.1.3
+	github.com/jenkins-x/jx-logging/v3 v3.1.4
 	github.com/jenkins-x/lighthouse-client v0.0.1610
 	github.com/pkg/errors v0.9.1
 	github.com/spf13/cobra v1.9.1
 	github.com/spf13/pflag v1.0.6
-	github.com/stretchr/testify v1.10.0
+	github.com/stretchr/testify v1.11.1
 	github.com/tektoncd/pipeline v1.1.0 // indirect
 	helm.sh/helm/v3 v3.18.4
 	k8s.io/api v0.33.2
