@@ -33,7 +33,7 @@ var (
 		This will create a new project for you from the selected template.
 		It will exclude any work-in-progress repos (containing the "WIP-" pattern)
 
-		For more documentation see: [https://jenkins-x.io/developing/create-quickstart/](https://jenkins-x.io/developing/create-quickstart/)
+		For more documentation see: https://jenkins-x.io/v3/develop/create-project/
 `)
 
 	createQuickstartExample = templates.Examples(`
@@ -53,7 +53,6 @@ type CreateQuickstartOptions struct {
 	Filter              quickstarts.QuickstartFilter
 	GitHost             string
 	QuickstartAuth      string
-	IgnoreTeam          bool
 }
 
 // NewCmdCreateQuickstart creates a command object for the "create" command
@@ -66,7 +65,7 @@ func NewCmdCreateQuickstart() (*cobra.Command, *CreateQuickstartOptions) {
 		Long:    createQuickstartLong,
 		Example: fmt.Sprintf(createQuickstartExample, common.BinaryName, common.BinaryName),
 		Aliases: []string{"arch"},
-		Run: func(cmd *cobra.Command, args []string) {
+		Run: func(_ *cobra.Command, args []string) {
 			o.Args = args
 			err := o.Run()
 			helper.CheckErr(err)
@@ -119,7 +118,7 @@ func (o *CreateQuickstartOptions) Run() error {
 		JXClient:    o.JXClient,
 		ScmClient:   o.ScmFactory.ScmClient,
 	}
-	model, err := qo.LoadQuickStartsModel(o.GitHubOrganisations, o.IgnoreTeam)
+	model, err := qo.LoadQuickStartsModel(o.GitHubOrganisations)
 	if err != nil {
 		return fmt.Errorf("failed to load quickstarts: %s", err)
 	}

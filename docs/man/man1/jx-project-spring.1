@@ -18,23 +18,12 @@ jx\-project\-spring \- Create a new Spring Boot application and import the gener
 Creates a new Spring Boot application and then optionally setups CI/CD pipelines and GitOps promotion.
 
 .PP
-.RS
-
-.nf
-  You can see a demo of this command here: [https://jenkins\-x.io/demos/create\_spring/](https://jenkins\-x.io/demos/create\_spring/)
-
-  For more documentation see: [https://jenkins\-x.io/developing/create\-spring/](https://jenkins\-x.io/developing/create\-spring/)
-
-.fi
-.RE
-
-.PP
 See Also:
 
 .RS
 .IP \(bu 2
-jx create project : 
-\[la]https://jenkins-x.io/commands/jx_create_project\[ra]
+jx project : 
+\[la]https://jenkins-x.io/commands/jx_project\[ra]
 
 .RE
 
@@ -177,6 +166,10 @@ jx create project :
     Disable import after the creation
 
 .PP
+\fB\-\-no\-maven\-fix\fP[=false]
+    Disable trying to fix existing pom.xml
+
+.PP
 \fB\-\-no\-pack\fP[=false]
     Disable trying to default a Dockerfile and Helm Chart from the pipeline catalog pack
 
@@ -228,10 +221,6 @@ jx create project :
 .PP
 \fB\-\-type\fP=""
     Project Type (such as maven\-project or gradle\-project)
-
-.PP
-\fB\-\-use\-default\-git\fP[=false]
-    use default git account
 
 .PP
 \fB\-\-verbose\fP[=false]

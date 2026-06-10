@@ -30,16 +30,11 @@ var (
 		This will create two new projects for you from the selected template. One for training and one for deploying a model as a service.
 		It will exclude any work-in-progress repos (containing the "WIP-" pattern)
 
-		For more documentation see: [https://jenkins-x.io/developing/create-mlquickstart/](https://jenkins-x.io/developing/create-mlquickstart/)
+		For more documentation see: https://jenkins-x.io/v3/mlops/
 
 ` + helper.SeeAlsoText("jx project"))
 
 	createMLQuickstartExample = templates.Examples(`
-		Create a new machine learning project from a sample/starter (found in https://github.com/machine-learning-quickstarts)
-
-		This will create a new machine learning project for you from the selected template.
-		It will exclude any work-in-progress repos (containing the "WIP-" pattern)
-
 		jx project mlquickstart
 
 		jx project mlquickstart -f pytorch
@@ -54,7 +49,6 @@ type CreateMLQuickstartOptions struct {
 	Filter              quickstarts.QuickstartFilter
 	GitHost             string
 	QuickstartAuth      string
-	IgnoreTeam          bool
 }
 
 type projectset struct {
@@ -72,7 +66,7 @@ func NewCmdCreateMLQuickstart() (*cobra.Command, *CreateMLQuickstartOptions) {
 		Long:    createMLQuickstartLong,
 		Example: createMLQuickstartExample,
 		Aliases: []string{"arch"},
-		Run: func(cmd *cobra.Command, args []string) {
+		Run: func(_ *cobra.Command, args []string) {
 			options.Args = args
 			err := options.Run()
 			helper.CheckErr(err)
@@ -151,7 +145,7 @@ func (o *CreateMLQuickstartOptions) Run() error {
 	}
 
 	log.Logger().Debugf("About to LoadMLProjectSetsModel...\n")
-	model, err := qo.LoadMLProjectSetsModel(o.GitHubOrganisations, o.IgnoreTeam)
+	model, err := qo.LoadMLProjectSetsModel(o.GitHubOrganisations)
 	if err != nil {
 		return fmt.Errorf("failed to load mlprojectsets: %s", err)
 	}
@@ -192,7 +186,6 @@ func (o *CreateMLQuickstartOptions) Run() error {
 	w.Filter.Text = q.Quickstart.Name
 	w.QuickstartAuth = o.QuickstartAuth
 	w.GitHost = o.GitHost
-	w.IgnoreTeam = o.IgnoreTeam
 
 	// Switch to BatchMode from here on
 	o.BatchMode = true

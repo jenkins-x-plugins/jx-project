@@ -203,7 +203,7 @@ func (o *ImportOptions) PickNewOrExistingGitRepository() (*CreateRepoData, error
 			return nil, err
 		}
 	} else {
-		log.Logger().Infof(QuestionAnswer("Using organisation", owner))
+		log.Logger().Info(QuestionAnswer("Using organisation", owner))
 	}
 
 	defaultRepoName := ""
@@ -218,7 +218,7 @@ func (o *ImportOptions) PickNewOrExistingGitRepository() (*CreateRepoData, error
 		if err != nil {
 			return nil, err
 		}
-		log.Logger().Infof(QuestionAnswer("Using repository", repoName))
+		log.Logger().Info(QuestionAnswer("Using repository", repoName))
 	}
 
 	fullName := scm.Join(owner, repoName)

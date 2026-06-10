@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/jenkins-x-plugins/jx-project/pkg/cmd/root/version"
+
 	"github.com/jenkins-x-plugins/jx-project/pkg/cmd/root/enable"
 
 	"github.com/jenkins-x-plugins/jx-project/pkg/cmd/common"
@@ -66,11 +68,13 @@ type WizardOptions struct {
 func NewCmdMain() (*cobra.Command, *WizardOptions) {
 	options := &WizardOptions{}
 	cmd := &cobra.Command{
-		Use:     common.BinaryName,
+		Annotations: map[string]string{
+			cobra.CommandDisplayNameAnnotation: common.BinaryName,
+		},
 		Short:   "Create a new project by importing code, creating a quickstart or custom wizard for spring",
 		Long:    createProjectLong,
 		Example: fmt.Sprintf(createProjectExample, common.BinaryName),
-		Run: func(cmd *cobra.Command, args []string) {
+		Run: func(cmd *cobra.Command, _ []string) {
 			setLoggingLevel(cmd)
 			err := options.Run()
 			helper.CheckErr(err)
@@ -83,6 +87,7 @@ func NewCmdMain() (*cobra.Command, *WizardOptions) {
 	cmd.AddCommand(NewCmdCreateSpring())
 	cmd.AddCommand(importcmd.NewCmdImport())
 	cmd.AddCommand(pullrequest.NewCmdCreatePullRequest())
+	cmd.AddCommand(version.NewCmdVersion())
 
 	return cmd, options
 }

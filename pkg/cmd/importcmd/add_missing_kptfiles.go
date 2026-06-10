@@ -6,18 +6,15 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/jenkins-x/jx-helpers/v3/pkg/yamls"
-	"github.com/jenkins-x/lighthouse-client/pkg/config/job"
-	"github.com/jenkins-x/lighthouse-client/pkg/triggerconfig"
-	"github.com/jenkins-x/lighthouse-client/pkg/triggerconfig/inrepo"
-	tektonv1beta1 "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1beta1"
-	"sigs.k8s.io/yaml"
-
 	"github.com/jenkins-x/jx-helpers/v3/pkg/files"
 	"github.com/jenkins-x/jx-helpers/v3/pkg/gitclient"
 	"github.com/jenkins-x/jx-helpers/v3/pkg/gitclient/gitdiscovery"
 	"github.com/jenkins-x/jx-helpers/v3/pkg/stringhelpers"
+	"github.com/jenkins-x/jx-helpers/v3/pkg/yamls"
 	"github.com/jenkins-x/jx-logging/v3/pkg/log"
+	"github.com/jenkins-x/lighthouse-client/pkg/config/job"
+	"github.com/jenkins-x/lighthouse-client/pkg/triggerconfig"
+	"github.com/jenkins-x/lighthouse-client/pkg/triggerconfig/inrepo"
 	"github.com/pkg/errors"
 )
 
@@ -163,7 +160,7 @@ func loadJobBaseFromSourcePath(path string) (bool, error) {
 		return false, errors.Errorf("empty file file %s", path)
 	}
 
-	pr, err := LoadTektonResourceAsPipelineRun(data, "for file "+path)
+	pr, err := inrepo.ConvertTektonResourceAsPipelineRun(data, "for file "+path, nil)
 	if err != nil {
 		return false, errors.Wrapf(err, "failed to unmarshal YAML file %s", path)
 	}
@@ -192,62 +189,4 @@ func loadJobBaseFromSourcePath(path string) (bool, error) {
 
 func isUsesImage(image string) bool {
 	return strings.HasPrefix(image, "uses:")
-}
-
-// LoadTektonResourceAsPipelineRun loads a PipelineRun, Pipeline, Task or TaskRun and convert it to a PipelineRun
-func LoadTektonResourceAsPipelineRun(data []byte, message string) (*tektonv1beta1.PipelineRun, error) {
-	defaultValues, err := inrepo.NewDefaultValues()
-	if err != nil {
-		return nil, errors.Wrapf(err, "failed to parse default values")
-	}
-
-	kindPrefix := "kind:"
-	kind := "PipelineRun"
-	lines := strings.Split(string(data), "\n")
-	for _, line := range lines {
-		if !strings.HasPrefix(line, kindPrefix) {
-			continue
-		}
-		k := strings.TrimSpace(line[len(kindPrefix):])
-		if k != "" {
-			kind = k
-			break
-		}
-	}
-	switch kind {
-	case "Pipeline":
-		pipeline := &tektonv1beta1.Pipeline{}
-		err := yaml.Unmarshal(data, pipeline)
-		if err != nil {
-			return nil, errors.Wrapf(err, "failed to unmarshal Pipeline YAML %s", message)
-		}
-		return inrepo.ConvertPipelineToPipelineRun(pipeline, message, defaultValues)
-
-	case "PipelineRun":
-		prs := &tektonv1beta1.PipelineRun{}
-		err := yaml.Unmarshal(data, prs)
-		if err != nil {
-			return nil, errors.Wrapf(err, "failed to unmarshal PipelineRun YAML %s", message)
-		}
-		return prs, nil
-
-	case "Task":
-		task := &tektonv1beta1.Task{}
-		err := yaml.Unmarshal(data, task)
-		if err != nil {
-			return nil, errors.Wrapf(err, "failed to unmarshal Task YAML %s", message)
-		}
-		return inrepo.ConvertTaskToPipelineRun(task, message, defaultValues)
-
-	case "TaskRun":
-		tr := &tektonv1beta1.TaskRun{}
-		err := yaml.Unmarshal(data, tr)
-		if err != nil {
-			return nil, errors.Wrapf(err, "failed to unmarshal TaskRun YAML %s", message)
-		}
-		return inrepo.ConvertTaskRunToPipelineRun(tr, message, defaultValues)
-
-	default:
-		return nil, errors.Errorf("kind %s is not supported for %s", kind, message)
-	}
 }

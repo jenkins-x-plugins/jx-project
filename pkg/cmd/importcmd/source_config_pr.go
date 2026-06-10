@@ -6,7 +6,6 @@ import (
 
 	"github.com/jenkins-x-plugins/jx-gitops/pkg/cmd/repository/add"
 	"github.com/jenkins-x-plugins/jx-promote/pkg/environments"
-	"github.com/jenkins-x/go-scm/scm"
 	v1 "github.com/jenkins-x/jx-api/v4/pkg/apis/jenkins.io/v1"
 	"github.com/jenkins-x/jx-helpers/v3/pkg/kube/jxenv"
 	"github.com/jenkins-x/jx-helpers/v3/pkg/stringhelpers"
@@ -91,15 +90,8 @@ func (o *ImportOptions) addSourceConfigPullRequest(gitURL, gitKind string) (bool
 		log.Logger().Infof("defaulting the user name to %s so we can create a PullRequest", pro.Username)
 	}
 	*/
-	prDetails := &scm.PullRequest{
-		Labels: []*scm.Label{
-			{
-				Name: "env/dev",
-			},
-		},
-	}
 
-	pr, err := pro.Create(devGitURL, "", prDetails, false)
+	pr, err := pro.Create(devGitURL, "", []string{"env/dev"}, false)
 	if err != nil {
 		return remoteCluster, errors.Wrapf(err, "failed to create Pull Request on the development environment git repository %s", devGitURL)
 	}

@@ -41,7 +41,7 @@ const (
 )
 
 // PickImportDestination picks where to import the project to
-func (o *ImportOptions) PickImportDestination(devEnvCloneDir, jenkinsfile string) (ImportDestination, error) {
+func (o *ImportOptions) PickImportDestination(devEnvCloneDir string) (ImportDestination, error) {
 	sourceConfig, err := sourceconfigs.LoadSourceConfig(devEnvCloneDir, true)
 	if err != nil {
 		return o.Destination, errors.Wrapf(err, "failed to load the source config")

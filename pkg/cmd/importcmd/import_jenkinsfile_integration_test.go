@@ -43,7 +43,6 @@ func TestImportJenkinsfileProject(t *testing.T) {
 	o.BatchMode = true
 	o.Dir = testDir
 	o.DisableMaven = true
-	o.UseDefaultGit = true
 	o.WaitForSourceRepositoryPullRequest = false
 
 	callback := func(env *v1.Environment) error {

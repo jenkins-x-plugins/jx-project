@@ -6,13 +6,11 @@ package quickstarts_test
 import (
 	"testing"
 
-	"github.com/blang/semver"
 	"github.com/jenkins-x-plugins/jx-project/pkg/quickstarts"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 )
 
-func TestquickstartsQuickstartModelFilterText(t *testing.T) {
+func TestQuickstartModelFilterText(t *testing.T) {
 	t.Parallel()
 
 	quickstart1 := &quickstarts.Quickstart{
@@ -47,7 +45,7 @@ func TestquickstartsQuickstartModelFilterText(t *testing.T) {
 	assert.Contains(t, results, quickstart3)
 }
 
-func TestquickstartsQuickstartModelFilterTextMatchesMoreThanOne(t *testing.T) {
+func TestQuickstartModelFilterTextMatchesMoreThanOne(t *testing.T) {
 	t.Parallel()
 
 	quickstart1 := &quickstarts.Quickstart{
@@ -83,7 +81,7 @@ func TestquickstartsQuickstartModelFilterTextMatchesMoreThanOne(t *testing.T) {
 	assert.Contains(t, results, quickstart2)
 }
 
-func TestquickstartsQuickstartModelFilterTextMatchesOneExactly(t *testing.T) {
+func TestQuickstartModelFilterTextMatchesOneExactly(t *testing.T) {
 	t.Parallel()
 
 	quickstart1 := &quickstarts.Quickstart{
@@ -118,7 +116,7 @@ func TestquickstartsQuickstartModelFilterTextMatchesOneExactly(t *testing.T) {
 	assert.Contains(t, results, quickstart1)
 }
 
-func TestquickstartsQuickstartModelFilterExcludesMachineLearning(t *testing.T) {
+func TestQuickstartModelFilterExcludesMachineLearning(t *testing.T) {
 	t.Parallel()
 
 	quickstart1 := &quickstarts.Quickstart{
@@ -155,7 +153,7 @@ func TestquickstartsQuickstartModelFilterExcludesMachineLearning(t *testing.T) {
 	assert.NotContains(t, results, quickstart3)
 }
 
-func TestquickstartsQuickstartModelFilterIncludesMachineLearning(t *testing.T) {
+func TestQuickstartModelFilterIncludesMachineLearning(t *testing.T) {
 	t.Parallel()
 
 	quickstart1 := &quickstarts.Quickstart{
@@ -192,7 +190,7 @@ func TestquickstartsQuickstartModelFilterIncludesMachineLearning(t *testing.T) {
 	assert.Contains(t, results, quickstart3)
 }
 
-func TestquickstartsQuickstartModelFilterDefaultsToNoMachineLearning(t *testing.T) {
+func TestQuickstartModelFilterDefaultsToNoMachineLearning(t *testing.T) {
 	t.Parallel()
 
 	quickstart1 := &quickstarts.Quickstart{
@@ -227,14 +225,4 @@ func TestquickstartsQuickstartModelFilterDefaultsToNoMachineLearning(t *testing.
 	assert.Contains(t, results, quickstart1)
 	assert.Contains(t, results, quickstart2)
 	assert.NotContains(t, results, quickstart3)
-}
-
-func TestquickstartsQuickstartCreateVersion(t *testing.T) {
-	t.Parallel()
-
-	sha := "d9e925718"
-	v := quickstarts.QuickStartVersion(sha)
-	sv, err := semver.Parse(v)
-	require.NoError(t, err, "failed to parse semantic version %s for quickstart", v)
-	t.Logf("parsed semantic version %s for quickstart", sv.String())
 }

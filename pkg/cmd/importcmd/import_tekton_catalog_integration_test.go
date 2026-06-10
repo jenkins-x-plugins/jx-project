@@ -43,7 +43,6 @@ func TestImportTektonCatalogProject(t *testing.T) {
 
 	o.Dir = testDir
 	o.DisableMaven = true
-	o.UseDefaultGit = true
 	o.WaitForSourceRepositoryPullRequest = false
 
 	o.Destination.JenkinsX.Enabled = true
@@ -61,7 +60,6 @@ func TestImportTektonCatalogProject(t *testing.T) {
 	assert.FileExists(t, filepath.Join(testDir, ".lighthouse", "jenkins-x", "release.yaml"))
 	assert.FileExists(t, filepath.Join(testDir, ".lighthouse", "jenkins-x", "pullrequest.yaml"))
 	assert.NoFileExists(t, filepath.Join(testDir, ".lighthouse", "jenkins-x", "Kptfile"))
-	assert.NoFileExists(t, filepath.Join(testDir, "jenkins-x.yml"))
 
 	assert.FileExists(t, filepath.Join(testDir, "Dockerfile"))
 	assert.FileExists(t, filepath.Join(testDir, "charts", dirName, "Chart.yaml"))

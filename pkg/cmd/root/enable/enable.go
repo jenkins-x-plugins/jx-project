@@ -10,9 +10,7 @@ import (
 	"github.com/jenkins-x-plugins/jx-project/pkg/cmd/importcmd"
 	"github.com/jenkins-x/jx-helpers/v3/pkg/cobras/helper"
 	"github.com/jenkins-x/jx-helpers/v3/pkg/cobras/templates"
-	"github.com/jenkins-x/lighthouse-client/pkg/triggerconfig"
 	"github.com/spf13/cobra"
-	tektonv1beta1 "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1beta1"
 )
 
 // Options contains the command line options
@@ -32,14 +30,6 @@ var (
 	`)
 )
 
-// Trigger the found trigger configs
-type Trigger struct {
-	Path      string
-	Config    *triggerconfig.Config
-	Names     []string
-	Pipelines map[string]*tektonv1beta1.PipelineRun
-}
-
 // NewCmdPipelineEnable creates the command
 func NewCmdPipelineEnable() (*cobra.Command, *Options) {
 	o := &Options{}
@@ -47,7 +37,6 @@ func NewCmdPipelineEnable() (*cobra.Command, *Options) {
 	o.ImportOptions.NoDevPullRequest = true
 	o.ImportOptions.DisableStartPipeline = true
 	o.ImportOptions.DisableStartPipeline = true
-	o.ImportOptions.IgnoreJenkinsXFile = true
 
 	if o.RegenCharts {
 		o.ImportOptions.PackFilter = func(pack *importcmd.Pack) {
@@ -69,7 +58,7 @@ func NewCmdPipelineEnable() (*cobra.Command, *Options) {
 		Long:    cmdLong,
 		Example: cmdExample,
 		Aliases: []string{"dump"},
-		Run: func(cmd *cobra.Command, args []string) {
+		Run: func(_ *cobra.Command, _ []string) {
 			err := o.Run()
 			helper.CheckErr(err)
 		},

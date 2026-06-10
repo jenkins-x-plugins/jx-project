@@ -74,7 +74,7 @@ type CreatePullRequestOptions struct {
 
 // NewCmdCreatePullRequest creates a command object for the "create" command
 func NewCmdCreatePullRequest() *cobra.Command {
-	options := &CreatePullRequestOptions{}
+	o := &CreatePullRequestOptions{}
 
 	cmd := &cobra.Command{
 		Use:     "pullrequest",
@@ -82,23 +82,23 @@ func NewCmdCreatePullRequest() *cobra.Command {
 		Aliases: []string{"pr", "pull request"},
 		Long:    createPullRequestLong,
 		Example: createPullRequestExample,
-		Run: func(cmd *cobra.Command, args []string) {
-			err := options.Run()
+		Run: func(_ *cobra.Command, _ []string) {
+			err := o.Run()
 			helper.CheckErr(err)
 		},
 	}
 
-	cmd.Flags().StringVarP(&options.Title, optionTitle, "t", "", "The title of the pullrequest to create")
-	cmd.Flags().StringVarP(&options.Body, "body", "", "", "The body of the pullrequest")
-	cmd.Flags().StringVarP(&options.Base, "base", "", "", "The base branch to create the pull request into, instead of the default branch")
-	cmd.Flags().StringArrayVarP(&options.Labels, "label", "l", []string{}, "The labels to add to the pullrequest")
-	cmd.Flags().BoolVarP(&options.Push, "push", "", false, "If true the contents of the source directory will be committed, pushed, and used to create the pull request")
-	cmd.Flags().BoolVarP(&options.Fork, "fork", "", false, "If true, and the username configured to push the repo is different from the org name a PR is being created against, assume that this is a fork")
+	cmd.Flags().StringVarP(&o.Title, optionTitle, "t", "", "The title of the pullrequest to create")
+	cmd.Flags().StringVarP(&o.Body, "body", "", "", "The body of the pullrequest")
+	cmd.Flags().StringVarP(&o.Base, "base", "", "", "The base branch to create the pull request into, instead of the default branch")
+	cmd.Flags().StringArrayVarP(&o.Labels, "label", "l", []string{}, "The labels to add to the pullrequest")
+	cmd.Flags().BoolVarP(&o.Push, "push", "", false, "If true the contents of the source directory will be committed, pushed, and used to create the pull request")
+	cmd.Flags().BoolVarP(&o.Fork, "fork", "", false, "If true, and the username configured to push the repo is different from the org name a PR is being created against, assume that this is a fork")
 
-	cmd.Flags().BoolVarP(&options.BatchMode, "batch-mode", "b", false, "Enables batch mode which avoids prompting for user input")
+	cmd.Flags().BoolVarP(&o.BatchMode, "batch-mode", "b", false, "Enables batch mode which avoids prompting for user input")
 
-	options.Options.DiscoverFromGit = true
-	options.Options.AddFlags(cmd)
+	o.Options.DiscoverFromGit = true
+	o.Options.AddFlags(cmd)
 	return cmd
 }
 

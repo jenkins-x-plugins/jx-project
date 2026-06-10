@@ -9,7 +9,6 @@ import (
 	v1 "github.com/jenkins-x/jx-api/v4/pkg/apis/jenkins.io/v1"
 
 	"github.com/jenkins-x-plugins/jx-gitops/pkg/apis/gitops/v1alpha1"
-	"github.com/jenkins-x-plugins/jx-project/pkg/config"
 	"github.com/jenkins-x-plugins/jx-project/pkg/gitresolver"
 	"github.com/jenkins-x/jx-helpers/v3/pkg/files"
 	"github.com/jenkins-x/jx-helpers/v3/pkg/gitclient"
@@ -17,22 +16,18 @@ import (
 	"github.com/jenkins-x/jx-helpers/v3/pkg/yamls"
 
 	jxdraft "github.com/jenkins-x-plugins/jx-project/pkg/draft"
-	"github.com/jenkins-x-plugins/jx-project/pkg/jenkinsfile"
 	"github.com/jenkins-x/jx-logging/v3/pkg/log"
 	"github.com/pkg/errors"
 )
 
 // InvokeDraftPack used to pass arguments into the draft pack invocation
 type InvokeDraftPack struct {
-	Dir                         string
-	DevEnvCloneDir              string
-	CustomDraftPack             string
-	Jenkinsfile                 string
-	InitialisedGit              bool
-	DisableAddFiles             bool
-	UseNextGenPipeline          bool
-	CreateJenkinsxYamlIfMissing bool
-	ProjectConfig               *config.ProjectConfig
+	Dir             string
+	DevEnvCloneDir  string
+	CustomDraftPack string
+	Jenkinsfile     string
+	InitialisedGit  bool
+	DisableAddFiles bool
 }
 
 // InitBuildPacks initialise the build packs
@@ -151,8 +146,6 @@ func (o *ImportOptions) InvokeDraftPack(i *InvokeDraftPack) (string, error) {
 	// was:
 	// lets configure the draft pack mode based on the team settings
 	// if settings.GetImportMode() != v1.ImportModeTypeJenkinsfile {
-	i.UseNextGenPipeline = true
-	i.CreateJenkinsxYamlIfMissing = true
 
 	dir := i.Dir
 	customDraftPack := i.CustomDraftPack
@@ -161,20 +154,10 @@ func (o *ImportOptions) InvokeDraftPack(i *InvokeDraftPack) (string, error) {
 	gradleName := filepath.Join(dir, "build.gradle")
 	jenkinsPluginsName := filepath.Join(dir, "plugins.txt")
 	packagerConfigName := filepath.Join(dir, "packager-config.yml")
-	jenkinsxYaml := filepath.Join(dir, config.ProjectConfigFileName)
 	envChart := filepath.Join(dir, "env", "Chart.yaml")
 	lpack := ""
-	if customDraftPack == "" {
-		if i.ProjectConfig == nil {
-			i.ProjectConfig, _, err = config.LoadProjectConfig(dir)
-			if err != nil {
-				return "", err
-			}
-		}
-		customDraftPack = i.ProjectConfig.BuildPack
-	}
 
-	if len(customDraftPack) > 0 {
+	if customDraftPack != "" {
 		log.Logger().Infof("trying to use draft pack: %s", customDraftPack)
 		lpack = filepath.Join(packsDir, customDraftPack)
 		f, err := files.DirExists(lpack)
@@ -256,7 +239,7 @@ func (o *ImportOptions) InvokeDraftPack(i *InvokeDraftPack) (string, error) {
 					}
 				}
 				if lpack == "" {
-					exists, err2 := files.FileExists(filepath.Join(dir, jenkinsfile.Name))
+					exists, err2 := files.FileExists(filepath.Join(dir, JenkinsfileName))
 					if exists && err2 == nil {
 						lpack = filepath.Join(packsDir, "custom-jenkins")
 						err = nil
@@ -284,10 +267,6 @@ func (o *ImportOptions) InvokeDraftPack(i *InvokeDraftPack) (string, error) {
 	}
 
 	chartsDir := filepath.Join(dir, "charts")
-	jenkinsxYamlExists, err := files.FileExists(jenkinsxYaml)
-	if err != nil {
-		return pack, err
-	}
 
 	err = o.copyBuildPack(dir, lpack)
 	if err != nil {
@@ -309,31 +288,6 @@ func (o *ImportOptions) InvokeDraftPack(i *InvokeDraftPack) (string, error) {
 		}
 	}
 
-	if !jenkinsxYamlExists && i.CreateJenkinsxYamlIfMissing {
-		// lets check if we have a lighthouse trigger
-		g := filepath.Join(dir, ".lighthouse", "*", "triggers.yaml")
-		matches, err := filepath.Glob(g)
-		if err != nil {
-			return pack, errors.Wrapf(err, "failed to evaluate glob %s", g)
-		}
-		if len(matches) == 0 {
-			pipelineConfig, err := config.LoadProjectConfigFile(jenkinsxYaml)
-			if err != nil {
-				return pack, err
-			}
-
-			// only update the build pack if its not currently set to none so that build packs can
-			// use a custom pipeline plugin mechanism
-			if pipelineConfig.BuildPack != pack && pipelineConfig.BuildPack != "none" {
-				pipelineConfig.BuildPack = pack
-				err = pipelineConfig.SaveConfig(jenkinsxYaml)
-				if err != nil {
-					return pack, err
-				}
-			}
-		}
-	}
-
 	lighthouseDir := filepath.Join(packsDir, pack, ".lighthouse")
 	exists, err = files.DirExists(lighthouseDir)
 	if err != nil {
@@ -344,24 +298,6 @@ func (o *ImportOptions) InvokeDraftPack(i *InvokeDraftPack) (string, error) {
 		if err != nil {
 			return pack, errors.Wrapf(err, "failed to add missing Kptfiles for pipeline catalog")
 		}
-	}
-	return pack, nil
-}
-
-// DiscoverBuildPack discovers the build pack given the build pack configuration
-func (o *ImportOptions) DiscoverBuildPack(dir string, projectConfig *config.ProjectConfig, packConfig string) (string, error) {
-	if packConfig != "" {
-		return packConfig, nil
-	}
-	args := &InvokeDraftPack{
-		Dir:             dir,
-		CustomDraftPack: packConfig,
-		ProjectConfig:   projectConfig,
-		DisableAddFiles: true,
-	}
-	pack, err := o.InvokeDraftPack(args)
-	if err != nil {
-		return pack, errors.Wrapf(err, "failed to discover task pack in dir %s", dir)
 	}
 	return pack, nil
 }
@@ -418,11 +354,6 @@ func (o *ImportOptions) copyBuildPack(dest, src string) error {
 				}
 			}
 		}
-	}
-
-	// let's remove any files we think should be zapped
-	for _, file := range []string{jenkinsfile.PipelineConfigFileName, jenkinsfile.PipelineTemplateFileName} {
-		delete(p.Files, file)
 	}
 
 	if o.PackFilter != nil {

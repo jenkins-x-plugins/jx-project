@@ -13,7 +13,7 @@ ORG := jenkins-x-plugins
 ORG_REPO := $(ORG)/$(NAME)
 RELEASE_ORG_REPO := $(ORG_REPO)
 ROOT_PACKAGE := github.com/$(ORG_REPO)
-GO_VERSION := $(shell $(GO) version | sed -e 's/^[^0-9.]*\([0-9.]*\).*/\1/')
+GO_VERSION := 1.23
 GO_DEPENDENCIES := $(call rwildcard,pkg/,*.go) $(call rwildcard,cmd/j,*.go)
 
 BRANCH     := $(shell git rev-parse --abbrev-ref HEAD 2> /dev/null  || echo 'unknown')
@@ -97,6 +97,8 @@ make-reports-dir:
 test: ## Run tests with the "unit" build tag
 	# lets reuse a tmp home dir to avoid modifying the real ~/.git-credentials
 	mkdir -p $(TMP_HOME)
+	XDG_CONFIG_HOME=$(TMP_HOME) git config --global --add user.name Test
+    XDG_CONFIG_HOME=$(TMP_HOME) git config --global --add user.email test@jx.com
 	KUBECONFIG=/cluster/connections/not/allowed XDG_CONFIG_HOME=$(TMP_HOME) CGO_ENABLED=$(CGO_ENABLED) $(GOTEST) --tags="integration unit" -failfast -short ./... $(TEST_BUILDFLAGS)
 
 # lets use a tmp dir for HOME to avoid the tests breaking the actual git creds
