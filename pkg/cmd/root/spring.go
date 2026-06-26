@@ -108,7 +108,7 @@ func (o *CreateSpringOptions) Run() error {
 
 	model, err := spring.LoadSpringBoot(cacheDir)
 	if err != nil {
-		return fmt.Errorf("Failed to load Spring Boot model %s", err)
+		return fmt.Errorf("failed to load Spring Boot model %s", err)
 	}
 	err = model.CreateSurvey(data, o.Advanced, o.BatchMode)
 	if err != nil {

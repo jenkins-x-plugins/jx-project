@@ -142,8 +142,8 @@ func (o *CreateQuickstartOptions) CreateQuickStart(q *quickstarts.QuickstartForm
 	}
 
 	var details *importcmd.CreateRepoData
-	o.GitRepositoryOptions.Namespace = o.ImportOptions.Organisation
-	o.GitRepositoryOptions.Name = o.ImportOptions.Repository
+	o.GitRepositoryOptions.Namespace = o.Organisation
+	o.GitRepositoryOptions.Name = o.Repository
 	repoName := o.GitRepositoryOptions.Name
 	if !o.BatchMode {
 		var err error
@@ -156,7 +156,7 @@ func (o *CreateQuickstartOptions) CreateQuickStart(q *quickstarts.QuickstartForm
 		}
 		o.Filter.ProjectName = repoName
 		if repoName == "" {
-			return fmt.Errorf("No project name")
+			return fmt.Errorf("no project name")
 		}
 		q.Name = repoName
 	} else {
@@ -253,8 +253,6 @@ func (o *CreateQuickstartOptions) CreateQuickStart(q *quickstarts.QuickstartForm
 		}
 	}
 	o.GetReporter().CreatedProject(genDir)
-
-	o.Options.ImportOptions.ScmFactory.ScmClient = o.ScmFactory.ScmClient
 
 	if details != nil {
 		o.ConfigureImportOptions(details)

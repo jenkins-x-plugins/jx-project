@@ -97,8 +97,8 @@ func NewCmdCreatePullRequest() *cobra.Command {
 
 	cmd.Flags().BoolVarP(&o.BatchMode, "batch-mode", "b", false, "Enables batch mode which avoids prompting for user input")
 
-	o.Options.DiscoverFromGit = true
-	o.Options.AddFlags(cmd)
+	o.DiscoverFromGit = true
+	o.AddFlags(cmd)
 	return cmd
 }
 
