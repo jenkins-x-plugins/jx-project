@@ -202,12 +202,12 @@ func (o *CreateMLQuickstartOptions) Run() error {
 			w.ImportOptions = projectImportOptions // Reset the options each time as they are modified by Import (DraftPack)
 			if interactive {
 				log.Logger().Debugf("Setting Quickstart from surveys.\n")
-				w.ImportOptions.Organisation = details.Organisation
+				w.Organisation = details.Organisation
 				w.GitRepositoryOptions = o.GitRepositoryOptions
 			}
 			w.Filter.Text = project.Repo
 			w.Filter.ProjectName = prefix + project.Tail
-			w.ImportOptions.Repository = w.Filter.ProjectName // For Draft
+			w.Repository = w.Filter.ProjectName // For Draft
 			w.Filter.Language = ""
 			log.Logger().Debugf("Invoking CreateQuickstart for %s...\n", project.Repo)
 
@@ -223,7 +223,7 @@ func (o *CreateMLQuickstartOptions) Run() error {
 		return w.Run()
 	}
 	log.Logger().Info("")
-	log.Logger().Infof("Once your training script completes, remember to check the PR on %s/%s/%s%s/pulls to merge the trained model into your service.\n", o.ImportOptions.ScmFactory.GitServerURL, details.Organisation, prefix, ps[0].Tail)
+	log.Logger().Infof("Once your training script completes, remember to check the PR on %s/%s/%s%s/pulls to merge the trained model into your service.\n", o.ScmFactory.GitServerURL, details.Organisation, prefix, ps[0].Tail)
 	return e
 
 }

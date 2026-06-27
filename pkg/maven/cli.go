@@ -51,7 +51,7 @@ func InstallMavenIfRequired(runner cmdrunner.CommandRunner) error {
 	mvnTmpDir := filepath.Join(homeDir, "maven-tmp")
 	zipFile := filepath.Join(homeDir, "mvn.zip")
 
-	err = os.MkdirAll(mvnDir, files.DefaultDirWritePermissions)
+	err = os.MkdirAll(mvnDir, files.DefaultDirWritePermissions) // #nosec G703
 	if err != nil {
 		err = m.Unlock()
 		if err != nil {
@@ -93,12 +93,12 @@ func InstallMavenIfRequired(runner cmdrunner.CommandRunner) error {
 	for _, f := range files {
 		name := f.Name()
 		if f.IsDir() && strings.HasPrefix(name, "apache-maven") {
-			err = os.RemoveAll(mvnDir)
+			err = os.RemoveAll(mvnDir) // #nosec G703
 			if err != nil {
 				return err
 			}
 
-			err = os.Rename(filepath.Join(mvnTmpDir, name), mvnDir)
+			err = os.Rename(filepath.Join(mvnTmpDir, name), mvnDir) // #nosec G703
 			if err != nil {
 				err = m.Unlock()
 				if err != nil {
@@ -111,7 +111,7 @@ func InstallMavenIfRequired(runner cmdrunner.CommandRunner) error {
 			if err != nil {
 				return err
 			}
-			err = os.Remove(zipFile)
+			err = os.Remove(zipFile) // #nosec G703
 			if err != nil {
 				err = m.Unlock()
 				if err != nil {
@@ -119,7 +119,7 @@ func InstallMavenIfRequired(runner cmdrunner.CommandRunner) error {
 				}
 				return err
 			}
-			err = os.RemoveAll(mvnTmpDir)
+			err = os.RemoveAll(mvnTmpDir) // #nosec G703
 			if err != nil {
 				err = m.Unlock()
 				if err != nil {

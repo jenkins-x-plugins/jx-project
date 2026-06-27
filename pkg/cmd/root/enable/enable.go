@@ -34,12 +34,12 @@ var (
 func NewCmdPipelineEnable() (*cobra.Command, *Options) {
 	o := &Options{}
 
-	o.ImportOptions.NoDevPullRequest = true
-	o.ImportOptions.DisableStartPipeline = true
-	o.ImportOptions.DisableStartPipeline = true
+	o.NoDevPullRequest = true
+	o.DisableStartPipeline = true
+	o.DisableStartPipeline = true
 
 	if o.RegenCharts {
-		o.ImportOptions.PackFilter = func(pack *importcmd.Pack) {
+		o.PackFilter = func(pack *importcmd.Pack) {
 			// let's exclude everything from the pack other than lighthouse files
 			m := map[string]io.ReadCloser{}
 			for k, v := range pack.Files {
@@ -68,7 +68,7 @@ func NewCmdPipelineEnable() (*cobra.Command, *Options) {
 	cmd.Flags().StringVarP(&o.Dir, "dir", "", ".", "Specify the directory to import")
 	cmd.Flags().StringVarP(&o.Pack, "pack", "", "", "The name of the pipeline catalog pack to use. If none is specified it will be chosen based on matching the source code languages")
 
-	o.BaseOptions.AddBaseFlags(cmd)
+	o.AddBaseFlags(cmd)
 	o.ScmFactory.AddFlags(cmd)
 
 	return cmd, o

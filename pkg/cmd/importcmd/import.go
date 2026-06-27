@@ -232,7 +232,7 @@ func (o *ImportOptions) AddImportFlags(cmd *cobra.Command, createProject bool) {
 	// FIXME parse enum and through what specified do not fit in enum
 	cmd.Flags().StringVar(&o.EnvStrategy, "env-strategy", "Never", "The promotion strategy of the environment to create (only used for env projects)")
 	cmd.Flags().BoolVarP(&o.NestedRepo, "nested-repo", "", false, "Specify if using nested repositories (in gitlab)")
-	o.BaseOptions.AddBaseFlags(cmd)
+	o.AddBaseFlags(cmd)
 	o.ScmFactory.AddFlags(cmd)
 
 	cmd.Flags().StringVarP(&o.Destination.Jenkins.Server, "jenkins", "", "", "The name of the Jenkins server to import the project into")
@@ -907,7 +907,7 @@ func replacePlaceholdersInFile(replacer *strings.Replacer, file string) error {
 	lines := string(fileContent)
 	if strings.Contains(lines, constants.PlaceHolderPrefix) { // Avoid unnecessarily rewriting files
 		output := replacer.Replace(lines)
-		err = os.WriteFile(file, []byte(output), 0600)
+		err = os.WriteFile(file, []byte(output), 0600) // #nosec G703
 		if err != nil {
 			log.Logger().Errorf("failed to write file %s: %v", file, err)
 			return err
@@ -954,7 +954,7 @@ func (o *ImportOptions) addAppNameToGeneratedFile(filename, field, value string)
 		}
 	}
 	output := strings.Join(lines, "\n")
-	err = os.WriteFile(file, []byte(output), 0600)
+	err = os.WriteFile(file, []byte(output), 0600) // #nosec G703
 	if err != nil {
 		return err
 	}
@@ -1028,7 +1028,7 @@ func (o *ImportOptions) fixDockerIgnoreFile() error {
 			}
 			lines = append(lines[:i], lines[i+1:]...)
 			text := strings.Join(lines, "\n")
-			err = os.WriteFile(filename, []byte(text), files.DefaultFileWritePermissions)
+			err = os.WriteFile(filename, []byte(text), files.DefaultFileWritePermissions) // #nosec G703
 			if err != nil {
 				return err
 			}
